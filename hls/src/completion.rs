@@ -237,7 +237,7 @@ fn path(workspace: &EditorWorkspace, folder: &str, addon: &str, path: &str) -> V
         } else if item.is_dir().unwrap_or(false) {
             let dir_name = item.filename();
             items.push(CompletionItem {
-                label: dir_name.clone(),
+                label: dir_name,
                 kind: Some(CompletionItemKind::FOLDER),
                 ..Default::default()
             });

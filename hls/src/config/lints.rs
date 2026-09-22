@@ -200,7 +200,7 @@ pub async fn process(url: Url, client: Client) {
     };
     let mut futures = JoinSet::new();
     for path in recheck_addons {
-        futures.spawn(check_addon(path.clone(), workspace.clone()));
+        futures.spawn(check_addon(path, workspace.clone()));
     }
     tokio::spawn(async move {
         futures.join_all().await;

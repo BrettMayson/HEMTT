@@ -48,8 +48,8 @@ fn ace_gunbag() {
 
     // Test that valid paths (not starting with backslash) return no invalid paths
     let (invalid_textures, invalid_materials) = p3d.invalid_paths();
-    assert!(invalid_textures.is_empty());
-    assert!(invalid_materials.is_empty());
+    assert_eq!(invalid_textures, [] as [std::string::String; 0]);
+    assert_eq!(invalid_materials, [] as [std::string::String; 0]);
 }
 
 #[test]
@@ -58,6 +58,6 @@ fn kat_iv() {
 
     let p3d = P3D::read(&mut fs_err::File::open("tests/kat_iv.p3d").unwrap()).unwrap();
     let (invalid_textures, invalid_materials) = p3d.invalid_paths();
-    assert!(invalid_textures.is_empty());
-    assert!(invalid_materials.is_empty());
+    assert_eq!(invalid_textures, [] as [std::string::String; 0]);
+    assert_eq!(invalid_materials, [] as [std::string::String; 0]);
 }
