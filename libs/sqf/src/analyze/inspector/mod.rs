@@ -677,7 +677,7 @@ impl<'a> Inspector<'a> {
                     statements.span().clone(),
                 )])
             }
-            Expression::ConsumeableArray(_, _) => unreachable!(""),
+            Expression::ConsumableArray(_, _) => unreachable!(""),
         };
         #[cfg(debug_assertions)]
         trace!(
