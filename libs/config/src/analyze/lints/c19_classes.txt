@@ -1,4 +1,5 @@
 // Vanila Root Classes
+// Note: cfgBuldozer, cfgFormations, cfgGroupIcons, cfgWaypoints have been capitlized for consistant style
 AAMissileCrater
 AAMissileExplosion
 AbstractUI
