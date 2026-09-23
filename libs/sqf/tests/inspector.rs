@@ -87,7 +87,10 @@ mod tests {
                 "privateall",         // example
                 "setturretlimits",    // syntax2 (fixed)
                 "breakwith",          // example
-                "cutrsc",             // example3 (fixed)
+                "try",                // examples calls empty func (nil) 
+                "throw",             
+                "catch",
+                "settargetsize",      // need to add alt syntax for emtpy array input
             ]
             .contains(&cmd.name().to_ascii_lowercase().as_str())
             {

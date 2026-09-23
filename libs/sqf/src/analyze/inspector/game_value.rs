@@ -307,6 +307,7 @@ impl GameValue {
             | Value::ArraySized { .. }
             | Value::ArrayUnknown
             | Value::ArrayUnsized { .. }
+            | Value::Vector3d
             | Value::Position // position is often too generic to match?
             | Value::Waypoint => IndexSet::from([Self::Array(None, None)]),
             // Value::Position3dAGLS => Self::Array(None, Some(ArrayType::PosAGLS)),
