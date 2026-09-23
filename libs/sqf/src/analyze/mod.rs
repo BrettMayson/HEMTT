@@ -14,7 +14,7 @@ use hemtt_workspace::{
     lint::LintManager,
     lint_manager,
     position::Position,
-    reporting::{Codes, Processed},
+    reporting::{Code, Codes, Processed},
 };
 use lints::s02_event_handlers::{
     EventHandlerRunner, LintS02EventIncorrectCommand, LintS02EventInsufficientVersion,
@@ -49,26 +49,16 @@ pub fn analyze(
     processed: &Processed,
     addon: Arc<Addon>,
     database: Arc<Database>,
+    manager: Option<Arc<LintManager<LintData>>>,
 ) -> (Codes, Option<SqfReport>) {
-    let mut manager: LintManager<LintData> = LintManager::new(
-        project.map_or_else(Default::default, |project| project.lints().sqf().clone()),
-        project.map_or_else(RuntimeArguments::default, |p| p.runtime().clone()),
-    );
-    if let Err(lint_errors) =
-        manager.extend(SQF_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>())
-    {
-        return (lint_errors, None);
-    }
-    if let Err(lint_errors) = manager.push_group(
-        vec![
-            Arc::new(Box::new(LintS02EventUnknown)),
-            Arc::new(Box::new(LintS02EventIncorrectCommand)),
-            Arc::new(Box::new(LintS02EventInsufficientVersion)),
-        ],
-        Box::new(EventHandlerRunner),
-    ) {
-        return (lint_errors, None);
-    }
+    let manager: Arc<LintManager<LintData>> = if let Some(manager) = manager {
+        manager
+    } else {
+        match create_lint_manager(project) {
+            Ok(manager) => Arc::new(manager),
+            Err(codes) => return (codes, None),
+        }
+    };
     let localizations = Arc::new(Mutex::new(vec![]));
     let functions_used = Arc::new(Mutex::new(vec![]));
     let functions_defined = Arc::new(Mutex::new(HashSet::new()));
@@ -388,15 +378,8 @@ pub fn lint_all(
     project_config: Option<&ProjectConfig>,
     addons: &Vec<Addon>,
     database: Arc<Database>,
+    manager: &LintManager<LintData>,
 ) -> Codes {
-    let mut manager = LintManager::new(
-        project_config.map_or_else(Default::default, |project| project.lints().sqf().clone()),
-        project_config.map_or_else(RuntimeArguments::default, |p| p.runtime().clone()),
-    );
-    if let Err(e) = manager.extend(SQF_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>()) {
-        return e;
-    }
-
     manager.run(
         &LintData {
             addon: None,
@@ -409,4 +392,30 @@ pub fn lint_all(
         None,
         addons,
     )
+}
+
+/// Creates and configures the SQF lint manager.
+/// # Errors
+/// Returns Lint Manager or Err containing the lint error codes.
+pub fn create_lint_manager(
+    project: Option<&ProjectConfig>,
+) -> Result<LintManager<LintData>, Vec<Arc<dyn Code>>> {
+    let mut manager: LintManager<LintData> = LintManager::new(
+        project.map_or_else(Default::default, |project| project.lints().sqf().clone()),
+        project.map_or_else(RuntimeArguments::default, |p| p.runtime().clone()),
+    );
+    manager.extend(SQF_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>())?;
+    manager.push_group(
+        vec![
+            Arc::new(Box::new(LintS02EventUnknown)),
+            Arc::new(Box::new(LintS02EventIncorrectCommand)),
+            Arc::new(Box::new(LintS02EventInsufficientVersion)),
+        ],
+        Box::new(EventHandlerRunner),
+    )?;
+    let codes = manager.check_config_usage("sqf", "s");
+    if !codes.is_empty() {
+        return Err(codes);
+    }
+    Ok(manager)
 }
