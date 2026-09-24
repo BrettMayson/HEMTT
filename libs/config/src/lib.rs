@@ -214,6 +214,12 @@ impl ConfigReport {
     }
 
     #[must_use]
+    /// Get the `Localizations`
+    pub const fn localizations(&self) -> &Vec<(String, Position)> {
+        &self.localized
+    }
+
+    #[must_use]
     /// Get the `MagazineWellInfo`
     pub const fn magazine_well_info(&self) -> &MagazineWellInfo {
         &self.magazine_well_info
