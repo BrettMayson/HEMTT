@@ -67,12 +67,14 @@ pub fn parse(
             let localizations = Arc::new(Mutex::new(vec![]));
             let functions_defined = Arc::new(Mutex::new(HashSet::new()));
             let magazine_well_info = Arc::new(Mutex::new((Vec::new(), Vec::new())));
+            let quoted_code = Arc::new(Mutex::new(Vec::new()));
             let codes = config.analyze(
                 &LintData {
                     path: String::new(),
                     localizations: localizations.clone(),
                     functions_defined: functions_defined.clone(),
                     magazine_well_info: magazine_well_info.clone(),
+                    quoted_code: quoted_code.clone(),
                 },
                 project,
                 processed,
@@ -94,6 +96,10 @@ pub fn parse(
                     .expect("not poisoned")
                     .into_inner()
                     .expect("not poisoned"),
+                quoted_code: Arc::<Mutex<Vec<Processed>>>::try_unwrap(quoted_code)
+                    .expect("not poisoned")
+                    .into_inner()
+                    .expect("not poisoned"),
             })
         },
     )
@@ -107,6 +113,7 @@ pub struct ConfigReport {
     localized: Vec<(String, Position)>,
     functions_defined: DefinedFunctions,
     magazine_well_info: MagazineWellInfo,
+    quoted_code: Vec<Processed>,
 }
 
 impl ConfigReport {
@@ -205,6 +212,11 @@ impl ConfigReport {
             .expect("not poisoned")
             .1
             .extend(magwell_codes);
+        build_data
+            .quoted_code()
+            .lock()
+            .expect("not poisoned")
+            .extend(self.quoted_code.clone());
     }
 
     #[must_use]
@@ -217,5 +229,11 @@ impl ConfigReport {
     /// Get the `MagazineWellInfo`
     pub const fn magazine_well_info(&self) -> &MagazineWellInfo {
         &self.magazine_well_info
+    }
+
+    #[must_use]
+    /// Get the quoted code
+    pub const fn quoted_code(&self) -> &Vec<Processed> {
+        &self.quoted_code
     }
 }

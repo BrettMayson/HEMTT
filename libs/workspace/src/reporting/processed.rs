@@ -12,7 +12,7 @@ use super::{Code, Codes, Output, Token, definition::Definition};
 
 pub type Sources = Vec<(WorkspacePath, String)>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// A processed file
 pub struct Processed {
     sources: Sources,
@@ -293,6 +293,40 @@ pub fn clean_output(processed: &mut Processed) {
     processed.clean_output_line_indexes = indexes;
 }
 
+fn unescape_quoted(source: &str) -> (String, Vec<usize>) {
+    let source_chars = source.chars().collect::<Vec<_>>();
+    let quoted = source_chars.len() >= 2
+        && source_chars.first() == Some(&'"')
+        && source_chars.last() == Some(&'"');
+    let content_start = usize::from(quoted);
+    let content_end = source_chars.len() - usize::from(quoted);
+    let mut boundaries = vec![0; source_chars.len() + 1];
+    let mut output = String::new();
+    let mut output_offset = 0;
+    let mut source_offset = 0;
+    while source_offset < source_chars.len() {
+        boundaries[source_offset] = output_offset;
+        let consumed = if source_offset < content_start || source_offset >= content_end {
+            1
+        } else if source_chars[source_offset] == '"'
+            && source_offset + 1 < content_end
+            && source_chars[source_offset + 1] == '"'
+        {
+            output.push('"');
+            output_offset += 1;
+            boundaries[source_offset + 1] = output_offset;
+            2
+        } else {
+            output.push(source_chars[source_offset]);
+            output_offset += 1;
+            1
+        };
+        source_offset += consumed;
+        boundaries[source_offset] = output_offset;
+    }
+    (output, boundaries)
+}
+
 impl Processed {
     /// Process the output of the preprocessor
     ///
@@ -473,6 +507,71 @@ impl Processed {
     /// Return the entire clean output
     pub fn clean_output(&self) -> &str {
         &self.clean_output
+    }
+
+    #[must_use]
+    pub fn sub_from_quote(&self, span: &Range<usize>) -> Self {
+        let (output, boundaries) = unescape_quoted(&self.extract(span));
+
+        let mappings: Vec<Mapping> = self
+            .mappings
+            .iter()
+            .filter_map(|m| {
+                let start = m.processed_start().offset().max(span.start);
+                let end = m.processed_end().offset().min(span.end);
+                if start >= end {
+                    return None;
+                }
+                let start = boundaries[start - span.start];
+                let end = boundaries[end - span.start];
+                if start >= end {
+                    return None;
+                }
+                Some(Mapping {
+                    source: m.source,
+                    processed: (
+                        LineCol::from_content(&output, start),
+                        LineCol::from_content(&output, end),
+                    ),
+                    original: m.original.clone(),
+                    token: m.token.clone(),
+                    was_macro: m.was_macro,
+                })
+            })
+            .collect();
+
+        let mappings_interval = mappings
+            .iter()
+            .enumerate()
+            .map(|(idx, map)| {
+                (
+                    map.processed_start().offset()..map.processed_end().offset(),
+                    idx,
+                )
+            })
+            .collect();
+
+        let total_chars = output.chars().count();
+        let mut sub = Self {
+            sources: self.sources.clone(),
+            included_files: self.included_files.clone(),
+            output,
+            clean_output: String::new(),
+            clean_output_line_indexes: Vec::new(),
+            total_chars,
+            line_offsets: self.line_offsets.clone(),
+            mappings_interval,
+            mappings,
+            macros: self.macros.clone(),
+            #[cfg(feature = "lsp")]
+            usage: self.usage.clone(),
+            warnings: self.warnings.clone(),
+            no_rapify: self.no_rapify,
+            expansions: self.expansions.clone(),
+        };
+
+        clean_output(&mut sub);
+        sub
     }
 
     #[must_use]

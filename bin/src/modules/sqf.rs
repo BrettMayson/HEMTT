@@ -52,6 +52,7 @@ impl Module for SQFCompiler {
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
         let mut entries = Vec::new();
+        let mut quoted_codes = Vec::new();
         for addon in ctx.addons() {
             let addon = Arc::new(addon.clone());
             for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
@@ -62,6 +63,9 @@ impl Module for SQFCompiler {
                     entries.push((addon.clone(), entry));
                 }
             }
+            let quoted_code_lock = addon.build_data().quoted_code();
+            let addon_qc = quoted_code_lock.lock().expect("mutex");
+            quoted_codes.extend(addon_qc.iter().cloned().map(|code| (addon.clone(), code)));
         }
         let database = self
             .database
@@ -69,7 +73,7 @@ impl Module for SQFCompiler {
             .expect("database not initialized")
             .clone();
         let progress = progress_bar(entries.len() as u64).with_message("Compiling SQF");
-        let reports = entries
+        let mut reports = entries
             .par_iter()
             .map(|(addon, entry)| {
                 trace!("sqf compiling {}", entry);
@@ -112,6 +116,19 @@ impl Module for SQFCompiler {
                 Ok(report)
             })
             .collect::<Result<Vec<Report>, Error>>()?;
+
+        for (addon, processed) in quoted_codes {
+            let mut report = Report::new();
+            let checked =
+                hemtt_sqf::check::check(&processed, Some(ctx.config()), &addon, database.clone());
+            if let Some(sqf_report) = checked.report {
+                sqf_report.push_to_addon(&addon);
+            }
+            for code in checked.codes {
+                report.push(code);
+            }
+            reports.push(report);
+        }
         for new_report in reports {
             report.merge(new_report);
         }
