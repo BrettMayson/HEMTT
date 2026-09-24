@@ -242,6 +242,16 @@ type RequiredVersion = (Version, WorkspacePath, Range<usize>);
 pub type UsedFunctions = Vec<(String, Position, Mapping, Mapping, WorkspacePath)>;
 pub type DefinedFunctions = HashSet<(String, Arc<str>)>;
 pub type MagazineWellInfo = (Vec<String>, Vec<(String, Arc<dyn Code>)>);
+pub type VariableUsage = Vec<VarUsed>;
+
+#[derive(Debug, Clone)]
+pub enum VarUsed {
+    MissionAssignemnt(String),
+    MissionAccess(String),
+    MissionAccessWeak(String),
+    ThingAssignemnt(String),
+    ThingAccessWeak(String),
+}
 
 #[derive(Debug, Clone, Default)]
 pub struct BuildData {
@@ -250,6 +260,7 @@ pub struct BuildData {
     functions_defined: Arc<Mutex<DefinedFunctions>>,
     functions_used: Arc<Mutex<UsedFunctions>>,
     magazine_well_info: Arc<Mutex<MagazineWellInfo>>,
+    variables_used: Arc<Mutex<VariableUsage>>,
 }
 
 impl BuildData {
@@ -261,6 +272,7 @@ impl BuildData {
             functions_defined: Arc::new(Mutex::new(HashSet::new())),
             functions_used: Arc::new(Mutex::new(Vec::new())),
             magazine_well_info: Arc::new(Mutex::new((Vec::new(), Vec::new()))),
+            variables_used: Arc::new(Mutex::new(Vec::new())),
         }
     }
 
@@ -309,6 +321,11 @@ impl BuildData {
     /// Fetches the `MagazineWellInfos` (tuple of missing mag and error)
     pub fn magazine_well_info(&self) -> Arc<Mutex<MagazineWellInfo>> {
         self.magazine_well_info.clone()
+    }
+    #[must_use]
+    /// Fetches the use of variables (both defined and used)
+    pub fn variables_used(&self) -> Arc<Mutex<VariableUsage>> {
+        self.variables_used.clone()
     }
 }
 
