@@ -140,8 +140,7 @@ fn test_collect_cfgfunctions() {
 #[test]
 fn test_collect_localizations() {
     let (_, report) = lint(stringify!(collect_localizations), None);
-    let mut localizations: Vec<&String> =
-        report.localizations().iter().map(|(s, _)| s).collect();
+    let mut localizations: Vec<&String> = report.localizations().iter().map(|(s, _)| s).collect();
     localizations.sort();
     insta::assert_compact_debug_snapshot!(localizations);
 }
