@@ -1,0 +1,5 @@
+---
+source: libs/config/tests/lints.rs
+expression: localizations
+---
+["str_abe_basic", "str_abe_inarray", "str_abe_innestedarray"]
