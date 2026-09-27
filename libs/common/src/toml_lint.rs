@@ -13,7 +13,9 @@ use serde::{Deserialize, Serialize};
 /// # Panics
 /// Panics if the path provided is not in the .hemtt folder
 pub fn load_toml_lints(path: &std::path::Path) -> Result<Vec<TomlLint>, crate::Error> {
-    let Some(parent) = path.parent() else { return Ok(Vec::new())};
+    let Some(parent) = path.parent() else {
+        return Ok(Vec::new());
+    };
     let lints_dir = parent.join("lints");
     if !lints_dir.is_dir() {
         return Ok(Vec::new());

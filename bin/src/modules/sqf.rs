@@ -3,7 +3,7 @@ use std::sync::Arc;
 use hemtt_common::version::Version;
 use hemtt_sqf::{
     analyze::{lint_all, lint_check},
-    parser::{database::Database},
+    parser::database::Database,
 };
 use hemtt_workspace::reporting::{Code, CodesExt, Diagnostic, Severity};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};

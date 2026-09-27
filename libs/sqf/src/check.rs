@@ -36,9 +36,9 @@ pub struct Checked {
 /// Callers are left with what genuinely differs between them - the CLI
 /// compiles the statements and pushes the report to the addon, the language
 /// server turns the codes into LSP diagnostics.
-/// 
+///
 /// # Panics
-/// 
+///
 /// Panics if reading the SQF file fails.
 pub fn check(
     processed: &Processed,
@@ -125,10 +125,14 @@ mod tests {
             None,
             &Arc::new(Addon::test_addon()),
             &{
-                Workspace::builder()
+                let file = Workspace::builder()
                     .memory()
                     .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
                     .expect("workspace")
+                    .join("test.sqf")
+                    .expect("join");
+                file.create_file().expect("create");
+                file
             },
             Arc::new(Database::a3(false)),
         )

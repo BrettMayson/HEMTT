@@ -17,7 +17,7 @@ help = "resolve the conflict before committing"
 label = "conflict marker"
 
 [sqf.file]
-patterns = ["^(<<<<<<<|=======|>>>>>>>)"]
+patterns = ["(?m)^(<<<<<<<|=======|>>>>>>>)"]
 ```
 
 ### Fields
