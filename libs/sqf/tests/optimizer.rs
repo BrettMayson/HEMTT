@@ -26,6 +26,9 @@ optimize!(to_string);
 optimize!(array_all_positives);
 optimize!(array_all_negatives);
 
+optimize!(statement_1);
+optimize!(statement_2);
+
 const ROOT: &str = "tests/optimizer/";
 
 fn optimize(file: &str) -> Statements {

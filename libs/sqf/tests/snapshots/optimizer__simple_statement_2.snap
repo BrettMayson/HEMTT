@@ -1,0 +1,81 @@
+---
+source: libs/sqf/tests/optimizer.rs
+expression: optimize(stringify! (statement_2))
+---
+Statements {
+    content: [
+        AssignLocal(
+            "_time",
+            NularCommand(
+                NularCommand {
+                    name: "diag_tickTime",
+                },
+                16..29,
+            ),
+            0..29,
+        ),
+        AssignGlobal(
+            "start",
+            BinaryCommand(
+                Add,
+                Variable(
+                    "_time",
+                    39..44,
+                ),
+                Number(
+                    FloatOrd(
+                        1.0,
+                    ),
+                    47..48,
+                ),
+                45..46,
+            ),
+            31..48,
+        ),
+        Expression(
+            BinaryCommand(
+                Named(
+                    "call",
+                ),
+                Array(
+                    [],
+                    53..54,
+                ),
+                Variable(
+                    "unknown",
+                    60..67,
+                ),
+                55..59,
+            ),
+            52..67,
+        ),
+        Expression(
+            BinaryCommand(
+                Named(
+                    "vectorAdd",
+                ),
+                UnaryCommand(
+                    Named(
+                        "getPos",
+                    ),
+                    NularCommand(
+                        NularCommand {
+                            name: "player",
+                        },
+                        92..98,
+                    ),
+                    85..91,
+                ),
+                Variable(
+                    "offset",
+                    115..121,
+                ),
+                105..114,
+            ),
+            100..121,
+        ),
+    ],
+    source: "private _time = diag_tickTime;\nstart = _time + 1; \n\n[] call unknown;\n\nprivate _pos = getPos player;\n_pos vectorAdd offset \n",
+    span: 0..121,
+    issues: [],
+}
