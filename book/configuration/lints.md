@@ -6,6 +6,8 @@ Lints can be kept in the `project.toml` file under the `lints` section, or in a 
 
 See the Analysis section for [Config](../lints/config.md) and [SQF](../lints/sqf.md) lints.
 
+You can also define your own simple pattern-based lints without writing any code, see [TOML Lints](toml-lints.md).
+
 ## Configuration
 
 > [!NOTE]

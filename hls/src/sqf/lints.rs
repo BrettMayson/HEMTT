@@ -128,6 +128,7 @@ async fn check_sqf(
                     &processed,
                     workspace.config().as_ref(),
                     &addon,
+                    &source,
                     database,
                 );
                 if let Some(report) = checked.report {
