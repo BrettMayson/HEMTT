@@ -214,8 +214,8 @@ pub fn lint_all(project: Option<&ProjectConfig>, addons: &Vec<Addon>) -> Codes {
             .map(|l| (**l).clone())
             .collect::<Vec<_>>(),
     );
-
-    manager.run(
+    let mut codes = manager.check_config_usage("config", "c");
+    codes.extend(manager.run(
         &LintData {
             path: String::new(),
             localizations: Arc::new(Mutex::new(vec![])),
@@ -225,5 +225,6 @@ pub fn lint_all(project: Option<&ProjectConfig>, addons: &Vec<Addon>) -> Codes {
         project,
         None,
         addons,
-    )
+    ));
+    codes
 }

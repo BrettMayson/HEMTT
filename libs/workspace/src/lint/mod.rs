@@ -1,6 +1,9 @@
 pub mod macros;
 
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
 
 use codespan_reporting::diagnostic::Severity;
 use hemtt_common::config::{
@@ -93,7 +96,7 @@ pub trait LintGroupRunner<D> {
     }
 }
 
-pub trait AnyLintGroupRunner<D> {
+pub trait AnyLintGroupRunner<D>: Send + Sync {
     fn run(
         &self,
         project: Option<&ProjectConfig>,
@@ -105,7 +108,7 @@ pub trait AnyLintGroupRunner<D> {
     ) -> Codes;
 }
 
-impl<T: LintGroupRunner<D>, D> AnyLintGroupRunner<D> for T {
+impl<T: LintGroupRunner<D> + Send + Sync, D> AnyLintGroupRunner<D> for T {
     fn run(
         &self,
         project: Option<&ProjectConfig>,
@@ -130,6 +133,7 @@ pub struct LintManager<D> {
     lints: Lints<D>,
     groups: Vec<(Lints<D>, Box<dyn AnyLintGroupRunner<D>>)>,
     configs: HashMap<String, LintConfigOverride>,
+    used_configs: HashSet<String>,
     runtime: RuntimeArguments,
 }
 
@@ -140,6 +144,7 @@ impl<D> LintManager<D> {
             lints: vec![],
             groups: vec![],
             configs,
+            used_configs: HashSet::new(),
             runtime,
         }
     }
@@ -183,7 +188,7 @@ impl<D> LintManager<D> {
     ///
     /// # Errors
     /// Returns a list of lints that are enabled OR codes if the lint config is invalid
-    pub fn check_and_filter(&self, lints: Lints<D>) -> Result<Lints<D>, Codes> {
+    pub fn check_and_filter(&mut self, lints: Lints<D>) -> Result<Lints<D>, Codes> {
         fn enabled(config: &LintConfig, runtime: &RuntimeArguments) -> bool {
             config.enabled() == LintEnabled::Enabled
                 || (runtime.is_pedantic() && config.enabled() == LintEnabled::Pedantic)
@@ -198,6 +203,7 @@ impl<D> LintManager<D> {
             }
             let mut config = lint.default_config();
             if let Some(config_override) = self.configs.get(lint.ident()) {
+                self.used_configs.insert(lint.ident().to_string());
                 config = config_override.apply(config);
                 if config.severity() < lint.minimum_severity() {
                     errors.push(Arc::new(InvalidLintConfig {
@@ -264,6 +270,36 @@ impl<D> LintManager<D> {
             }))
             .collect()
     }
+
+    #[must_use]
+    /// Checks configured lints and reports entries that are unused.
+    /// # Panics
+    pub fn check_config_usage(&self, lint_name: &str, lint_prefix: &str) -> Codes {
+        self.configs
+            .keys()
+            .filter(|config| !self.used_configs.contains(*config))
+            .map(|config| {
+                let possible = self.lints.iter().find_map(|lint| {
+                    if config.eq_ignore_ascii_case(
+                        format!("{}{:02}", lint_prefix, lint.sort() / 10).as_str(),
+                    ) || config.eq_ignore_ascii_case(
+                        format!("L-{}{:02}", lint_prefix, lint.sort() / 10).as_str(),
+                    ) || config.eq_ignore_ascii_case(format!("{:02}", lint.sort() / 10).as_str())
+                    {
+                        Some(format!("Did you mean `{lint_name}.{}`?", lint.ident()))
+                    } else {
+                        None
+                    }
+                });
+                Arc::new(UnusedLintConfig {
+                    message: format!(
+                        "Lint config `{lint_name}.{config}` does not exist and has no effect"
+                    ),
+                    possible,
+                }) as Arc<dyn Code>
+            })
+            .collect()
+    }
 }
 
 struct InvalidLintConfig {
@@ -280,6 +316,28 @@ impl Code for InvalidLintConfig {
 
     fn diagnostic(&self) -> Option<Diagnostic> {
         Some(Diagnostic::from_code(self))
+    }
+}
+
+struct UnusedLintConfig {
+    message: String,
+    possible: Option<String>,
+}
+impl Code for UnusedLintConfig {
+    fn ident(&self) -> &'static str {
+        "ULC"
+    }
+    fn message(&self) -> String {
+        self.message.clone()
+    }
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        Some(Diagnostic::from_code(self))
+    }
+    fn severity(&self) -> Severity {
+        Severity::Warning
+    }
+    fn help(&self) -> Option<String> {
+        self.possible.clone()
     }
 }
 
@@ -423,6 +481,7 @@ mod tests {
             lints: vec![Arc::new(Box::new(LintA)), Arc::new(Box::new(LintB))],
             groups: vec![],
             configs: HashMap::new(),
+            used_configs: HashSet::new(),
             runtime: RuntimeArguments::default(),
         };
 
