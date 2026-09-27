@@ -6,7 +6,7 @@ use hemtt_workspace::{
     reporting::{Code, Codes, Diagnostic, Processed, Severity},
 };
 
-use crate::{analyze::LintData, BinaryCommand, Expression, Statement};
+use crate::{BinaryCommand, Expression, Statement, UnaryCommand, analyze::LintData};
 
 crate::analyze::lint!(LintS26ShortCircuitBoolVar);
 
@@ -90,14 +90,32 @@ fn is_comparison(cmd: &BinaryCommand) -> bool {
 }
 
 /// A value that can be evaluated without calling a command, so it cannot error or have side effects.
-const fn is_simple_operand(expr: &Expression) -> bool {
-    matches!(
-        expr,
-        Expression::Variable(..)
-            | Expression::Number(..)
-            | Expression::String(..)
-            | Expression::Boolean(..)
-    )
+fn is_simple_operand(expr: &Expression, banned_var: Option<&str>) -> bool {
+    match expr {
+        Expression::Variable(var_name, _) => {
+            banned_var.is_none_or(|bv| !bv.eq_ignore_ascii_case(var_name))
+        }
+        Expression::Number(..) | Expression::String(..) | Expression::Boolean(..) => true,
+        _ => false,
+    }
+}
+/// Returns the variable name if the expression has a `isNil` check
+fn get_nil_var(expr: &Expression) -> Option<&str> {
+    match expr {
+        Expression::UnaryCommand(UnaryCommand::Named(cmd), nil_rhs, _) => {
+            if cmd.as_str().eq_ignore_ascii_case("isNil") && let Expression::String(isnil_input_str, _, _) = nil_rhs.as_ref() {
+                return Some(isnil_input_str);
+            }
+        }
+        Expression::UnaryCommand(UnaryCommand::Not, not_rhs, _) => {
+            return get_nil_var(not_rhs);
+        }
+        Expression::BinaryCommand(_, lhs, rhs, _) => {
+            return get_nil_var(lhs).or_else(|| get_nil_var(rhs));
+        }
+        _ => {}
+    }
+    None
 }
 
 struct Runner;
@@ -131,16 +149,11 @@ impl LintRunner<LintData> for Runner {
         let Statement::Expression(ref inner, ref range) = statements.content()[0] else {
             return Vec::new();
         };
+        let banned_var = get_nil_var(left.as_ref());
         let note = match inner {
             Expression::Variable(bool_var_name, _) => {
                 // `!isNil "z" && {z}` is guarding against z being undefined, the { } is load bearing
-                if let Expression::UnaryCommand(not_cmd, not_rhs, _) = &**left
-                    && not_cmd.as_str().eq_ignore_ascii_case("!")
-                    && let Expression::UnaryCommand(isnil_cmd, isnil_rhs, _) = &**not_rhs
-                    && isnil_cmd.as_str().eq_ignore_ascii_case("isNil")
-                    && let Expression::String(isnil_input_str, _, _) = &**isnil_rhs
-                    && isnil_input_str.eq_ignore_ascii_case(bool_var_name)
-                {
+                if banned_var.is_some_and(|bv| bv.eq_ignore_ascii_case(bool_var_name)) {
                     return Vec::new();
                 }
                 "remove the { } and use the variable directly (if safe to do so)"
@@ -148,8 +161,8 @@ impl LintRunner<LintData> for Runner {
             // a comparison of simple values cannot error, so the short circuit is not guarding it
             Expression::BinaryCommand(inner_cmd, inner_left, inner_right, _)
                 if is_comparison(inner_cmd)
-                    && is_simple_operand(inner_left)
-                    && is_simple_operand(inner_right) =>
+                    && is_simple_operand(inner_left, banned_var)
+                    && is_simple_operand(inner_right, banned_var) =>
             {
                 "remove the { } and use the comparison directly, it is cheaper than the short circuit"
             }

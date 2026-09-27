@@ -30,3 +30,12 @@ if (_test1 && {alive player isEqualTo true}) then { };
 // not a comparison, ignore
 if (_test1 && {_a + _b}) then { };
 if (_test1 && {_a isKindOf "Man"}) then { };
+
+// Handle `isNil and/or` short circuit protection
+if (isNil "_isEngineer" || {_isEngineer isNotEqualTo true}) exitWith {};
+if (isNil "_isEngineer" || {_isEngineer}) exitWith {};
+if (!isNil "_isEngineer" && {_isEngineer}) exitWith {};
+if (!isNil "_isEngineer" && {_isEngineer == 55}) exitWith {};
+
+if (a && isNil "_depth1" || {_depth1 isNotEqualTo true}) exitWith {};
+if (a && b && c && d && isNil "_depth4" || {_depth4 != 1}) exitWith {};
