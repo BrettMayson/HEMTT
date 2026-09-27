@@ -250,7 +250,7 @@ pub struct BuildData {
     functions_defined: Arc<Mutex<DefinedFunctions>>,
     functions_used: Arc<Mutex<UsedFunctions>>,
     magazine_well_info: Arc<Mutex<MagazineWellInfo>>,
-    quoted_code: Arc<Mutex<Vec<Processed>>>,
+    quoted_code: Arc<Mutex<Vec<Arc<Processed>>>>,
 }
 
 impl BuildData {
@@ -314,7 +314,7 @@ impl BuildData {
     }
     #[must_use]
     /// Fetches the quoted code
-    pub fn quoted_code(&self) -> Arc<Mutex<Vec<Processed>>> {
+    pub fn quoted_code(&self) -> Arc<Mutex<Vec<Arc<Processed>>>> {
         self.quoted_code.clone()
     }
 }

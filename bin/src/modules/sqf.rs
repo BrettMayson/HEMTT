@@ -63,9 +63,16 @@ impl Module for SQFCompiler {
                     entries.push((addon.clone(), entry));
                 }
             }
-            let quoted_code_lock = addon.build_data().quoted_code();
-            let addon_qc = quoted_code_lock.lock().expect("mutex");
-            quoted_sqf.extend(addon_qc.iter().cloned().map(|code| (addon.clone(), code)));
+            quoted_sqf.extend(
+                addon
+                    .build_data()
+                    .quoted_code()
+                    .lock()
+                    .expect("mutex")
+                    .iter()
+                    .cloned()
+                    .map(|code| (addon.clone(), code)),
+            );
         }
         let database = self
             .database

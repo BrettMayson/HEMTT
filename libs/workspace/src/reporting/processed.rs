@@ -12,7 +12,7 @@ use super::{Code, Codes, Output, Token, definition::Definition};
 
 pub type Sources = Vec<(WorkspacePath, String)>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 /// A processed file
 pub struct Processed {
     sources: Sources,

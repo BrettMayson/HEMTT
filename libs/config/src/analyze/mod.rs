@@ -27,7 +27,7 @@ pub struct LintData {
     pub(crate) localizations: Arc<Mutex<Vec<(String, Position)>>>,
     pub(crate) functions_defined: Arc<Mutex<DefinedFunctions>>,
     pub(crate) magazine_well_info: Arc<Mutex<MagazineWellInfo>>,
-    pub(crate) quoted_code: Arc<Mutex<Vec<Processed>>>,
+    pub(crate) quoted_code: Arc<Mutex<Vec<Arc<Processed>>>>,
 }
 
 lint_manager!(config, vec![]);

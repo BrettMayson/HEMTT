@@ -96,7 +96,7 @@ pub fn parse(
                     .expect("not poisoned")
                     .into_inner()
                     .expect("not poisoned"),
-                quoted_code: Arc::<Mutex<Vec<Processed>>>::try_unwrap(quoted_code)
+                quoted_code: Arc::<Mutex<Vec<Arc<Processed>>>>::try_unwrap(quoted_code)
                     .expect("not poisoned")
                     .into_inner()
                     .expect("not poisoned"),
@@ -113,7 +113,7 @@ pub struct ConfigReport {
     localized: Vec<(String, Position)>,
     functions_defined: DefinedFunctions,
     magazine_well_info: MagazineWellInfo,
-    quoted_code: Vec<Processed>,
+    quoted_code: Vec<Arc<Processed>>,
 }
 
 impl ConfigReport {
@@ -239,7 +239,7 @@ impl ConfigReport {
 
     #[must_use]
     /// Get the quoted code
-    pub const fn quoted_code(&self) -> &Vec<Processed> {
+    pub const fn quoted_code(&self) -> &Vec<Arc<Processed>> {
         &self.quoted_code
     }
 }

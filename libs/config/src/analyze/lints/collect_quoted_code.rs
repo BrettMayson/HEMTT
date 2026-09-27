@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use hemtt_common::config::{LintConfig, ProjectConfig};
 use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Processed},
@@ -83,7 +85,7 @@ fn check_property(
 
             let range = value.span();
             let (output, boundaries) = unescape_quoted(&processed.extract(range));
-            let processed = processed.select_sub_region(output, range, &boundaries, source_extra_inject);
+            let processed = Arc::new(processed.select_sub_region(output, range, &boundaries, source_extra_inject));
 
             data.quoted_code.lock().expect("mutex").push(processed);
             }
