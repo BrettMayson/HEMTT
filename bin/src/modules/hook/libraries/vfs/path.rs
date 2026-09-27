@@ -61,6 +61,7 @@ pub mod path_functions {
         res.map_or_else(|| Ok(true), Err)
     }
 
+    #[allow(clippy::used_underscore_items)]
     #[rhai_fn(global, name = "move", return_raw, pure)]
     pub fn _move(path: &mut VfsPath, other: VfsPath) -> Result<bool, Box<EvalAltResult>> {
         let res = if path.is_dir().map_err(|e| e.to_string())? {

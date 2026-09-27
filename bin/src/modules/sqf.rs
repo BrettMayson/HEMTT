@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use hemtt_common::version::Version;
 use hemtt_sqf::{
-    analyze::{lint_all, lint_check},
+    analyze::{create_lint_manager, lint_all, lint_check},
     parser::database::Database,
 };
 use hemtt_workspace::reporting::{Code, CodesExt, Diagnostic, Severity};
@@ -68,6 +68,13 @@ impl Module for SQFCompiler {
             .as_ref()
             .expect("database not initialized")
             .clone();
+        let manager = match create_lint_manager(Some(ctx.config())) {
+            Ok(manager) => Arc::new(manager),
+            Err(errors) => {
+                report.extend(errors);
+                return Ok(report);
+            }
+        };
         let progress = progress_bar(entries.len() as u64).with_message("Compiling SQF");
         let reports = entries
             .par_iter()
@@ -96,6 +103,7 @@ impl Module for SQFCompiler {
                     addon,
                     entry,
                     database.clone(),
+                    Some(manager.clone()),
                 );
                 if let Some(sqf_report) = checked.report {
                     sqf_report.push_to_addon(addon);
@@ -123,6 +131,7 @@ impl Module for SQFCompiler {
             Some(ctx.config()),
             &ctx.addons().to_vec(),
             database,
+            &manager,
         ));
 
         Ok(report)

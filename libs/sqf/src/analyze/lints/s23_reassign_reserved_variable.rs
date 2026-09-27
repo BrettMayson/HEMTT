@@ -110,7 +110,7 @@ impl LintRunner<LintData> for StatementsRunner {
         }
 
         for (saved, (original, span, saved_span)) in need_to_restore {
-            codes.push(Arc::new(CodeS23ReassignReservedVariable::new(Variant::NeverRestored((saved, span.clone()), (original, saved_span.clone())), processed, config.severity())));
+            codes.push(Arc::new(CodeS23ReassignReservedVariable::new(Variant::NeverRestored((saved, span), (original, saved_span)), processed, config.severity())));
         }
 
         codes

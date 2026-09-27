@@ -10,12 +10,13 @@ use std::sync::Arc;
 use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{
     addons::Addon,
+    lint::LintManager,
     reporting::{Codes, Processed},
 };
 
 use crate::{
     Statements,
-    analyze::{SqfReport, analyze, analyze_toml},
+    analyze::{LintData, SqfReport, analyze, analyze_toml},
     parser::{ParserError, database::Database},
 };
 
@@ -46,12 +47,20 @@ pub fn check(
     addon: &Arc<Addon>,
     path: &hemtt_workspace::WorkspacePath,
     database: Arc<Database>,
+    manager: Option<Arc<LintManager<LintData>>>,
 ) -> Checked {
     // Preprocessor warnings belong to the file as much as lint codes do
     let mut codes: Codes = processed.warnings().to_vec();
     match crate::parser::run(&database, processed) {
         Ok(statements) => {
-            let (lints, report) = analyze(&statements, project, processed, addon.clone(), database);
+            let (lints, report) = analyze(
+                &statements,
+                project,
+                processed,
+                addon.clone(),
+                database,
+                manager,
+            );
             codes.extend(lints);
             codes.extend(analyze_toml(
                 &statements,
@@ -135,6 +144,7 @@ mod tests {
                 file
             },
             Arc::new(Database::a3(false)),
+            None,
         )
     }
 
