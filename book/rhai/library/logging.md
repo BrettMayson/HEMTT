@@ -70,9 +70,21 @@ error("Hello World!");
 ERROR [post_release/test.rhai] Hello World!
 ```
 
+### `fail(string)`
+
+Prints a string to the console with an error prefix, HEMTT will mark the build as failed and exit immediately.
+
+```js
+fail("Hello World!");
+```
+
+```sh
+ERROR [post_release/test.rhai] Hello World!
+```
+
 ### `fatal(string)`
 
-Prints string to the console with an error prefix, HEMTT will mark the build as failed and exit.
+Similar to `fail(string)`, but indicates a fatal error and HEMTT will print an error showing where the fatal was called.
 
 ```js
 fatal("Hello World!");
@@ -80,5 +92,9 @@ fatal("Hello World!");
 
 ```sh
 ERROR [post_release/test.rhai] Hello World!
-error: Hook signaled failure: post_release/test.rhai
+error[BHE4]: Script /.hemtt/hooks/post_release/test.rhai failed at runtime
+  ┌─ .hemtt/hooks/post_release/test.rhai:6:5
+  │
+6 │     fatal("Hello World!");
+  │     ^ runtime error: Script called fatal (line 6, position 5)
 ```

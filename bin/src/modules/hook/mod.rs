@@ -103,6 +103,9 @@ impl Hooks {
                 file.as_str().trim_start_matches("/.hemtt/hooks/")
             );
             report.merge(Self::run(ctx, file, vfs)?.0);
+            if report.failed() {
+                break;
+            }
             ctx.config().version().invalidate();
         }
         Ok(report)
@@ -162,13 +165,15 @@ impl Hooks {
         engine.register_fn("error", move |s: &str| {
             error!("[{inner_name}] {s}");
         });
-        let inner_name = name;
+        let inner_name = name.clone();
         engine.register_fn("fatal", move |s: &str| -> Result<(), Box<EvalAltResult>> {
             error!("[{inner_name}] {s}");
-            Err(Box::new(EvalAltResult::ErrorRuntime(
-                "Script called fatal".into(),
-                rhai::Position::NONE,
-            )))
+            Err("Script called fatal".into())
+        });
+        let inner_name = name;
+        engine.register_fn("fail", move |s: &str| -> Result<(), Box<EvalAltResult>> {
+            error!("[{inner_name}] {s}");
+            Err("Script called fail".into())
         });
         match engine.eval_with_scope(&mut scope, &path.read_to_string()?) {
             Err(e) => {

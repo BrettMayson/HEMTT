@@ -16,7 +16,7 @@ pub struct RuntimeError {
 
 impl Code for RuntimeError {
     fn ident(&self) -> &'static str {
-        "BHE3"
+        "BHE4"
     }
 
     fn message(&self) -> String {
@@ -24,6 +24,9 @@ impl Code for RuntimeError {
     }
 
     fn diagnostic(&self) -> Option<Diagnostic> {
+        if self.error.contains("Script called fail") {
+            return None;
+        }
         let content = self.script.read_to_string().ok()?;
         Some(
             Diagnostic::from_code(self).with_label(
