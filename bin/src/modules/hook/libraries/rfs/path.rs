@@ -73,7 +73,7 @@ pub mod path_functions {
         };
         res.map_or_else(|| Ok(true), Err)
     }
-
+    #[allow(clippy::used_underscore_items)]
     #[rhai_fn(global, name = "move", return_raw, pure)]
     pub fn _move(path: &mut PathBuf, other: PathBuf) -> Result<bool, Box<EvalAltResult>> {
         fs_err::rename(path, other)

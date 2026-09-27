@@ -13,3 +13,6 @@ hemtt-common = { path = "../libs/common" }
 
 arma-rs = "1.12.1"
 serde_json = { workspace = true }
+
+[lints]
+workspace = true

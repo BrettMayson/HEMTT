@@ -58,7 +58,7 @@ impl From<FilesSectionFile> for FilesConfig {
                 .iter()
                 .map(std::string::ToString::to_string)
                 {
-                    files.push(default.clone());
+                    files.push(default);
                 }
                 files.sort();
                 files.dedup();
@@ -91,6 +91,6 @@ exclude = ["test"]
         let file: FilesSectionFile = toml::from_str(toml).expect("failed to deserialize");
         let config = FilesConfig::from(file);
         assert!(config.include().contains(&"/mod.cpp".to_string()));
-        assert!(config.exclude().is_empty());
+        assert_eq!(config.exclude(), &[] as &[String; 0]);
     }
 }

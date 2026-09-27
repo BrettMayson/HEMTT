@@ -62,6 +62,7 @@ impl Photoshoot {
     fn gamma_rgba(pixel: &mut Rgba<u8>) {
         #[allow(clippy::cast_possible_truncation)]
         #[allow(clippy::cast_sign_loss)]
+        #[allow(clippy::needless_range_loop)]
         for i in 0..3 {
             pixel.0[i] = ((f32::from(pixel.0[i]) / 255.0).powf(1.8) * 255.0_f32) as u8;
         }
@@ -70,6 +71,7 @@ impl Photoshoot {
     fn gamma_rgb(pixel: &mut Rgb<u8>) {
         #[allow(clippy::cast_possible_truncation)]
         #[allow(clippy::cast_sign_loss)]
+        #[allow(clippy::needless_range_loop)]
         for i in 0..3 {
             pixel.0[i] = ((f32::from(pixel.0[i]) / 255.0).powf(2.2) * 255.0_f32) as u8;
         }

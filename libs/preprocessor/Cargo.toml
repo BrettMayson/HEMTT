@@ -16,8 +16,7 @@ hemtt-common = { path = "../common" }
 hemtt-workspace = { path = "../workspace" }
 
 automod = { workspace = true }
-dashmap = { workspace = true }
-lsp-types = { workspace = true, optional = true }
+lsp-types = { workspace = true, optional = true } #cargo::unused_dependencies false positive
 peekmore = { workspace = true }
 pest = { workspace = true }
 pest_derive = { workspace = true }
