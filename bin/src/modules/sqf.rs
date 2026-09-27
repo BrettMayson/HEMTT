@@ -101,6 +101,7 @@ impl Module for SQFCompiler {
                     &processed,
                     Some(ctx.config()),
                     addon,
+                    entry,
                     database.clone(),
                     Some(manager.clone()),
                 );

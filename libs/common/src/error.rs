@@ -7,6 +7,8 @@
 pub enum Error {
     #[error("Prefix error: {0}")]
     Prefix(#[from] crate::prefix::Error),
+    #[error("Toml lint error: {0}")]
+    TomlLint(#[from] crate::toml_lint::Error),
 
     #[error("Invalid config: {0}")]
     ConfigInvalid(String),
