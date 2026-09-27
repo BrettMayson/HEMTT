@@ -1,0 +1,6 @@
+---
+source: libs/config/tests/lints.rs
+expression: lint(stringify! (c14_many_unused_external)).0
+---
+[0m[1m[38;5;11mwarning[L-C14][0m[1m: There are 7 unused external classes[0m
+ [0m[36m=[0m [36mnote[0m: A list has been generated in .hemttout/unused_external_classes.txt, use `hemtt check -Lc14` to output warnings

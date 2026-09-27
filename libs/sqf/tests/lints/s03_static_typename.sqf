@@ -7,3 +7,6 @@ if (typeName 0 == typeName _thing) then {
 };
 
 private _aliveIsBool = typeName true == typeName alive player;
+
+// a number the engine cannot represent is NaN, not SCALAR
+hint typeName 1e39;

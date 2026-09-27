@@ -22,12 +22,15 @@ pub mod path;
 pub mod pdrive;
 pub mod position;
 pub mod reporting;
+pub mod source;
 
 use pdrive::search as pdrive_search;
 
 pub use error::Error;
 #[allow(clippy::module_name_repetitions)]
 pub use path::WorkspacePath;
+#[allow(clippy::module_name_repetitions)]
+pub use source::{FileId, SourceDatabase, SourceOrigin, SourceSnapshot};
 
 #[derive(Debug, PartialEq, Eq)]
 /// A workspace (directory) containing addons and / or missions

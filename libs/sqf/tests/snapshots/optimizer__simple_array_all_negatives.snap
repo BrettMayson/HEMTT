@@ -1,0 +1,51 @@
+---
+source: libs/sqf/tests/optimizer.rs
+expression: optimize(stringify! (array_all_negatives))
+---
+Statements {
+    content: [
+        AssignGlobal(
+            "a",
+            UnaryCommand(
+                Named(
+                    "selectRandom",
+                ),
+                Array(
+                    [
+                        Array(
+                            [],
+                            21..22,
+                        ),
+                    ],
+                    20..22,
+                ),
+                6..18,
+            ),
+            2..23,
+        ),
+        Expression(
+            BinaryCommand(
+                Named(
+                    "forEach",
+                ),
+                Code(
+                    Statements {
+                        content: [],
+                        source: "}",
+                        span: 29..30,
+                        issues: [],
+                    },
+                ),
+                Array(
+                    [],
+                    40..41,
+                ),
+                31..38,
+            ),
+            28..41,
+        ),
+    ],
+    source: "\n\na = selectRandom [[]];   \n{} forEach [];           \n",
+    span: 2..42,
+    issues: [],
+}

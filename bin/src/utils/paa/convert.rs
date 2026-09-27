@@ -13,6 +13,13 @@ pub struct PaaConvertArgs {
     dest: String,
 }
 
+fn invalid_data(message: impl Into<String>) -> Error {
+    Error::Io(std::io::Error::new(
+        std::io::ErrorKind::InvalidData,
+        message.into(),
+    ))
+}
+
 /// Execute the convert command
 ///
 /// # Errors
@@ -33,11 +40,12 @@ pub fn execute(args: &PaaConvertArgs) -> Result<(), Error> {
             .as_str(),
     ) {
         let paa = hemtt_paa::Paa::read(fs_err::File::open(from)?)?;
-        if let Err(e) = paa.maps()[0].0.get_image().save(output) {
-            error!("Failed to save image: {}", e);
-        } else {
-            info!("PAA converted");
-        }
+        let Some(map) = paa.maps().first() else {
+            return Err(invalid_data("PAA has no maps"));
+        };
+        let image = map.0.get_image().map_err(invalid_data)?;
+        image.save(output)?;
+        info!("PAA converted");
     } else {
         let image = image::open(from)?;
         let (width, height) = image.dimensions();

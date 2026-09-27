@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use hemtt_common::version::Version;
 use hemtt_sqf::{
-    analyze::{analyze, analyze_toml, lint_all, lint_check},
-    parser::{ParserError, database::Database},
+    analyze::{lint_all, lint_check},
+    parser::{database::Database},
 };
 use hemtt_workspace::reporting::{Code, CodesExt, Diagnostic, Severity};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
@@ -51,13 +51,12 @@ impl Module for SQFCompiler {
 
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
-        let sqf_ext = Some(String::from("sqf"));
         let mut entries = Vec::new();
         for addon in ctx.addons() {
             let addon = Arc::new(addon.clone());
             for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
                 if entry.is_file()? {
-                    if entry.extension() != sqf_ext || entry.filename().ends_with(".inc.sqf") {
+                    if !hemtt_sqf::is_compilation_unit(&entry) {
                         continue;
                     }
                     entries.push((addon.clone(), entry));
@@ -75,71 +74,43 @@ impl Module for SQFCompiler {
             .map(|(addon, entry)| {
                 trace!("sqf compiling {}", entry);
                 let mut report = Report::new();
-                let processed =
-                    match hemtt_preprocessor::Processor::run(entry, ctx.config().preprocessor())
-                        .map_err(|(_, e)| e)
-                    {
-                        Ok(p) => p,
-                        Err(e) => {
-                            if let hemtt_preprocessor::Error::Code(code) = e {
-                                report.push(code);
-                                return Ok(report);
-                            }
-                            return Err(e.into());
-                        }
-                    };
-                for warning in processed.warnings() {
-                    report.push(warning.clone());
-                }
-                match hemtt_sqf::parser::run(&database, &processed) {
-                    Ok(sqf) => {
-                        let (mut codes, sqf_report) = analyze(
-                            &sqf,
-                            Some(ctx.config()),
-                            &processed,
-                            addon.clone(),
-                            database.clone(),
-                        );
-                        if let Some(sqf_report) = sqf_report {
-                            sqf_report.push_to_addon(addon);
-                        }
-                        codes.extend(analyze_toml(
-                            &sqf,
-                            &entry.read_to_string()?,
-                            entry,
-                            Some(ctx.config()),
-                            &processed,
-                        ));
-                        if !codes.failed() {
-                            let mut out = entry.with_extension("sqfc")?.create_file()?;
-                            sqf.optimize().compile_to_writer(&processed, &mut out)?;
-                            progress.inc(1);
-                        }
-                        for code in codes {
+                let processed = match hemtt_preprocessor::Processor::run_with_sources(
+                    entry,
+                    ctx.config().preprocessor(),
+                    ctx.sources(),
+                )
+                .map_err(|(_, e)| e)
+                {
+                    Ok(p) => p,
+                    Err(e) => {
+                        if let hemtt_preprocessor::Error::Code(code) = e {
                             report.push(code);
+                            return Ok(report);
                         }
-
-                        Ok(report)
+                        return Err(e.into());
                     }
-                    Err(ParserError::ParsingError(e)) => {
-                        if processed.as_str().starts_with("force ")
-                            || processed.as_str().contains("\nforce ")
-                        {
-                            debug!("skipping apparent CBA settings file: {}", entry);
-                        } else {
-                            for error in e {
-                                report.push(error);
-                            }
-                        }
-                        Ok(report)
-                    }
-                    Err(ParserError::LexingError(e)) => {
-                        for error in e {
-                            report.push(error);
-                        }
-                        Ok(report)
-                    }
+                };
+                let checked = hemtt_sqf::check::check(
+                    &processed,
+                    Some(ctx.config()),
+                    addon,
+                    entry,
+                    database.clone(),
+                );
+                if let Some(sqf_report) = checked.report {
+                    sqf_report.push_to_addon(addon);
                 }
+                if let Some(sqf) = checked.statements
+                    && !checked.codes.failed()
+                {
+                    let mut out = entry.with_extension("sqfc")?.create_file()?;
+                    sqf.optimize().compile_to_writer(&processed, &mut out)?;
+                    progress.inc(1);
+                }
+                for code in checked.codes {
+                    report.push(code);
+                }
+                Ok(report)
             })
             .collect::<Result<Vec<Report>, Error>>()?;
         for new_report in reports {

@@ -10,7 +10,9 @@ use std::{
 };
 
 pub mod analyze;
+pub mod check;
 pub mod display;
+pub mod files;
 mod model;
 pub mod parse;
 pub mod rapify;
@@ -209,6 +211,12 @@ impl ConfigReport {
     /// Get the `DefinedFunctions`
     pub const fn functions_defined(&self) -> &DefinedFunctions {
         &self.functions_defined
+    }
+
+    #[must_use]
+    /// Get the `Localizations`
+    pub const fn localizations(&self) -> &Vec<(String, Position)> {
+        &self.localized
     }
 
     #[must_use]

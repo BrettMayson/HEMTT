@@ -61,6 +61,7 @@ fn check(dir: &str) {
 }
 
 bootstrap!(pe1_unexpected_token);
+bootstrap!(pe1_unexpected_token_va);
 bootstrap!(pe2_unexpected_eof);
 bootstrap!(pe3_expected_ident);
 bootstrap!(pe4_unknown_directive);

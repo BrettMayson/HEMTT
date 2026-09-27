@@ -44,7 +44,7 @@ const BUILTIN_GEN: [&str; 6] = [
 const BUILTIN_SPECIAL: [&str; 1] = ["__EVAL"];
 
 /// Built-in macros that HEMTT intentionally does not support
-const BUILTIN_PROTEST: [&str; 16] = [
+const BUILTIN_PROTEST: [&str; 21] = [
     "__DATE_ARR__",
     "__DATE_STR__",
     "__DATE_STR_ISO8601__",
@@ -61,6 +61,11 @@ const BUILTIN_PROTEST: [&str; 16] = [
     "__GAME_VER_MIN__",
     "__GAME_BUILD__",
     "__EXEC",
+    "__VA_ARGS__",
+    "__VA_OPT__",
+    "__VA_OPT_INV__",
+    "__VA_APPLY__",
+    "__VA_SELECT__",
 ];
 
 // Built-in runtime macros that can be opt-in to be supported

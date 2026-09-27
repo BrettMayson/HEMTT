@@ -20,6 +20,8 @@
   - [build](commands/build.md)
   - [check](commands/check.md)
   - [dev](commands/dev.md)
+  - [keys]()
+    - [generate](commands/keys/generate.md)
   - [launch](commands/launch.md)
   - [license](commands/license.md)
   - [link]()

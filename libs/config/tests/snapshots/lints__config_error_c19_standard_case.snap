@@ -1,0 +1,29 @@
+---
+source: libs/config/tests/lints.rs
+expression: "lint(stringify! (c19_standard_case), None).0"
+---
+[0m[1m[38;5;11mwarning[L-C19][0m[1m: class `cfgVehicles` should use standard casing: `CfgVehicles`[0m
+  [0m[36m┌─[0m c19_standard_case.hpp:1:7
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m class [0m[33mcfgVehicles[0m {};
+  [0m[36m│[0m       [0m[33m^^^^^^^^^^^[0m [0m[33mshould be `CfgVehicles`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: CfgVehicles
+
+
+[0m[1m[38;5;11mwarning[L-C19][0m[1m: class `cfgweapons` should use standard casing: `CfgWeapons`[0m
+  [0m[36m┌─[0m c19_standard_case.hpp:2:7
+  [0m[36m│[0m
+[0m[36m2[0m [0m[36m│[0m class [0m[33mcfgweapons[0m {};
+  [0m[36m│[0m       [0m[33m^^^^^^^^^^[0m [0m[33mshould be `CfgWeapons`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: CfgWeapons
+
+
+[0m[1m[38;5;11mwarning[L-C19][0m[1m: class `CFGAMMO` should use standard casing: `CfgAmmo`[0m
+  [0m[36m┌─[0m c19_standard_case.hpp:3:7
+  [0m[36m│[0m
+[0m[36m3[0m [0m[36m│[0m class [0m[33mCFGAMMO[0m {};
+  [0m[36m│[0m       [0m[33m^^^^^^^[0m [0m[33mshould be `CfgAmmo`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: CfgAmmo

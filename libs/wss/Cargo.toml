@@ -1,7 +1,7 @@
 [package]
 name = "hemtt-wss"
-version = "1.0.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
 description = "A wss library for hemtt"
 license = "GPL-2.0"
 
@@ -14,7 +14,7 @@ thiserror = { workspace = true }
 
 hound = "3.5.1"
 puremp3 = "0.1.0"
-vorbis_rs = "0.5.5"
+vorbis_rs = "0.5.6"
 
 [dev-dependencies]
 fs-err = { workspace = true }

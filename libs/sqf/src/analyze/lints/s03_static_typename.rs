@@ -76,7 +76,12 @@ impl LintRunner<LintData> for Runner {
         let target_span = expresssion.span();
         let (constant_type, span, length) = match &**expresssion {
             Expression::String(s, span, _) => ("STRING", span, s.len() + 2),
-            Expression::Number(FloatOrd(s), span) => ("SCALAR", span, s.to_string().len()),
+            // a literal the engine cannot represent as a finite number reports as NaN, not SCALAR
+            Expression::Number(FloatOrd(s), span) => (
+                if s.is_finite() { "SCALAR" } else { "NaN" },
+                span,
+                s.to_string().len(),
+            ),
             Expression::Boolean(bool, span) => ("BOOL", span, bool.to_string().len()),
             Expression::Code(statements) if statements.content().is_empty() => {
                 ("CODE", &target_span, statements.span().len())

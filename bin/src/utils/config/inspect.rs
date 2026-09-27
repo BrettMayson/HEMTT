@@ -44,7 +44,6 @@ pub fn inspect(file: &PathBuf) -> Result<(), Error> {
                     eprintln!("{}", diag.to_string(&workspacefiles));
                 }
             }
-            Ok(())
         }
         Err(errors) => {
             for error in errors {
@@ -52,9 +51,9 @@ pub fn inspect(file: &PathBuf) -> Result<(), Error> {
                     eprintln!("{}", diag.to_string(&workspacefiles));
                 }
             }
-            Ok(())
         }
     }
+    Ok(())
 }
 
 pub fn get_report(file: &PathBuf) -> Result<Result<ConfigReport, Vec<Arc<dyn Code>>>, Error> {

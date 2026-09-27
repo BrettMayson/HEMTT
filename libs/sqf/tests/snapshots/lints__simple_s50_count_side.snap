@@ -1,0 +1,29 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: "lint(stringify! (s50_count_side), true).0"
+---
+[0m[1m[38;5;14mhelp[L-S50][0m[1m: code can be replaced with `countSide`[0m
+  [0m[36m┌─[0m s50_count_side.sqf:4:18
+  [0m[36m│[0m
+[0m[36m4[0m [0m[36m│[0m private _west = {[0m[36mside _x == west} count _units[0m;
+  [0m[36m│[0m                  [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `countSide`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: west countSide _units
+
+
+[0m[1m[38;5;14mhelp[L-S50][0m[1m: code can be replaced with `countSide`[0m
+  [0m[36m┌─[0m s50_count_side.sqf:5:18
+  [0m[36m│[0m
+[0m[36m5[0m [0m[36m│[0m private _east = {[0m[36meast == side _x} count _units[0m;
+  [0m[36m│[0m                  [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `countSide`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: east countSide _units
+
+
+[0m[1m[38;5;14mhelp[L-S50][0m[1m: code can be replaced with `countSide`[0m
+  [0m[36m┌─[0m s50_count_side.sqf:6:17
+  [0m[36m│[0m
+[0m[36m6[0m [0m[36m│[0m private _civ = {[0m[36mside _x isEqualTo civilian} count _units[0m;
+  [0m[36m│[0m                 [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `countSide`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: civilian countSide _units

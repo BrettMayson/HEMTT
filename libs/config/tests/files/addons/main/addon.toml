@@ -1,0 +1,2 @@
+[rapify]
+exclude = ["/addons/main/skipped.rvmat"]

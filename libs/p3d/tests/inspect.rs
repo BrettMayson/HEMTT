@@ -45,9 +45,19 @@ fn ace_gunbag() {
         .unwrap();
     assert_eq!(missing.0.len(), 1);
     assert_eq!(missing.1.len(), 2);
+
+    // Test that valid paths (not starting with backslash) return no invalid paths
+    let (invalid_textures, invalid_materials) = p3d.invalid_paths();
+    assert!(invalid_textures.is_empty());
+    assert!(invalid_materials.is_empty());
 }
 
 #[test]
 fn kat_iv() {
     assert!(P3D::read(&mut fs_err::File::open("tests/kat_iv.p3d").unwrap()).is_ok());
+
+    let p3d = P3D::read(&mut fs_err::File::open("tests/kat_iv.p3d").unwrap()).unwrap();
+    let (invalid_textures, invalid_materials) = p3d.invalid_paths();
+    assert!(invalid_textures.is_empty());
+    assert!(invalid_materials.is_empty());
 }

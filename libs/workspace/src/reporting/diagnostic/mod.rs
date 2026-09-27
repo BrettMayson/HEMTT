@@ -318,7 +318,20 @@ impl Diagnostic {
         use tower_lsp::lsp_types::Url;
 
         let mut diags = Vec::new();
+        // One diagnostic per primary label. A secondary label is context for
+        // the primary - "previous definition here" and the like - and carries
+        // its own message, so emitting it as its own diagnostic would repeat
+        // the parent's message somewhere it does not apply. If a code somehow
+        // has no primary label, fall back to all of them rather than dropping
+        // the diagnostic entirely.
+        let has_primary = self
+            .labels
+            .iter()
+            .any(|label| label.style == LabelStyle::Primary);
         for label in &self.labels {
+            if has_primary && label.style != LabelStyle::Primary {
+                continue;
+            }
             let start = label.span.start;
             let end = label.span.end;
             let start_line_index = files.line_index(&label.file, start).unwrap_or(0);
@@ -371,5 +384,62 @@ const fn severity_to_lsp(severity: Severity) -> tower_lsp::lsp_types::Diagnostic
         Severity::Error | Severity::Bug => tower_lsp::lsp_types::DiagnosticSeverity::ERROR,
         Severity::Warning => tower_lsp::lsp_types::DiagnosticSeverity::WARNING,
         Severity::Help | Severity::Note => tower_lsp::lsp_types::DiagnosticSeverity::INFORMATION,
+    }
+}
+
+#[cfg(all(test, feature = "lsp"))]
+mod tests {
+    use super::{Diagnostic, Label};
+    use crate::{
+        Workspace, WorkspacePath,
+        reporting::{Severity, files::WorkspaceFiles},
+    };
+
+    fn file(contents: &str) -> WorkspacePath {
+        use std::io::Write;
+        let workspace = Workspace::builder()
+            .memory()
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
+            .expect("workspace");
+        let path = workspace.join("test.hpp").expect("join");
+        let mut handle = path.create_file().expect("create");
+        handle.write_all(contents.as_bytes()).expect("write");
+        drop(handle);
+        path
+    }
+
+    /// A secondary label is context for the primary, not a diagnostic of its
+    /// own - emitting it as one repeats the parent message somewhere it does
+    /// not apply. `PW1` marked the previous definition "redefining macro".
+    #[test]
+    fn secondary_labels_are_not_their_own_diagnostic() {
+        let path = file("line one\nline two\nline three\n");
+        let diag = Diagnostic::new("PW1", "redefining macro")
+            .set_severity(Severity::Warning)
+            .with_label(Label::primary(path.clone(), 9..17))
+            .with_label(Label::secondary(path, 0..8).with_message("previous definition here"));
+
+        let lsp = diag.to_lsp(&WorkspaceFiles::new());
+        assert_eq!(lsp.len(), 1, "{lsp:?}");
+        assert_eq!(lsp[0].1.range.start.line, 1, "should be the primary label");
+        assert_eq!(lsp[0].1.message, "redefining macro");
+    }
+
+    /// Two primaries are two separate places the same problem occurs.
+    #[test]
+    fn every_primary_label_is_a_diagnostic() {
+        let path = file("line one\nline two\nline three\n");
+        let diag = Diagnostic::new("X", "problem")
+            .with_label(Label::primary(path.clone(), 0..8))
+            .with_label(Label::primary(path, 9..17));
+        assert_eq!(diag.to_lsp(&WorkspaceFiles::new()).len(), 2);
+    }
+
+    /// Without a primary the diagnostic would otherwise vanish.
+    #[test]
+    fn secondary_only_still_reports() {
+        let path = file("line one\n");
+        let diag = Diagnostic::new("X", "problem").with_label(Label::secondary(path, 0..8));
+        assert_eq!(diag.to_lsp(&WorkspaceFiles::new()).len(), 1);
     }
 }

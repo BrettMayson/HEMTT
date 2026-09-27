@@ -1,17 +1,16 @@
-use std::{collections::HashMap, path::PathBuf, sync::RwLock};
+use std::{collections::HashMap, sync::RwLock};
 
 use hemtt_config::{
     Config,
     analyze::{analyze_toml, lint_all, lint_check},
-    parse,
     rapify::Rapify,
 };
 use hemtt_workspace::{
     WorkspacePath,
     addons::{Addon, Location},
+    reporting::CodesExt,
 };
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use vfs::VfsFileType;
 
 use crate::{context::Context, error::Error, progress::progress_bar, report::Report};
 
@@ -53,39 +52,12 @@ impl Module for Rapifier {
     fn pre_build(&self, ctx: &Context) -> Result<Report, Error> {
         ctx.state().set(AddonConfigs::default());
         let mut report = Report::new();
-        let glob_options = glob::MatchOptions {
-            require_literal_separator: true,
-            ..Default::default()
-        };
         let mut entries = Vec::new();
-        ctx.addons()
-            .iter()
-            .map(|addon| {
-                let mut globs = Vec::new();
-                if let Some(config) = addon.config() {
-                    if !config.rapify().enabled() {
-                        debug!("rapify disabled for {}", addon.name());
-                        return Ok(());
-                    }
-                    for file in config.rapify().exclude() {
-                        globs.push(glob::Pattern::new(file)?);
-                    }
-                }
-                for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
-                    if entry.metadata()?.file_type == VfsFileType::File && can_rapify(&entry)? {
-                        if globs
-                            .iter()
-                            .any(|pat| pat.matches_with(entry.as_str(), glob_options))
-                        {
-                            debug!("skipping {}", entry.as_str());
-                            continue;
-                        }
-                        entries.push((addon, entry));
-                    }
-                }
-                Ok(())
-            })
-            .collect::<Result<Vec<_>, Error>>()?;
+        for addon in ctx.addons() {
+            for entry in hemtt_config::files::checkable(ctx.workspace_path(), addon)? {
+                entries.push((addon, entry));
+            }
+        }
 
         let progress = progress_bar(entries.len() as u64).with_message("Rapifying Configs");
         let reports = entries
@@ -110,7 +82,11 @@ impl Module for Rapifier {
 
 pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Report, Error> {
     let mut report = Report::new();
-    let processed = match hemtt_preprocessor::Processor::run(path, ctx.config().preprocessor()) {
+    let processed = match hemtt_preprocessor::Processor::run_with_sources(
+        path,
+        ctx.config().preprocessor(),
+        ctx.sources(),
+    ) {
         Ok(processed) => processed,
         Err((_, hemtt_preprocessor::Error::Code(e))) => {
             report.push(e);
@@ -120,17 +96,13 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
             return Err(e.into());
         }
     };
-    for warning in processed.warnings() {
-        report.push(warning.clone());
+    let checked = hemtt_config::check::check(&processed, Some(ctx.config()));
+    let had_errors = checked.codes.failed();
+    for code in checked.codes {
+        report.push(code);
     }
-    let configreport = match parse(Some(ctx.config()), &processed) {
-        Ok(configreport) => configreport,
-        Err(errors) => {
-            for e in &errors {
-                report.push(e.clone());
-            }
-            return Ok(report);
-        }
+    let Some(configreport) = checked.config else {
+        return Ok(report);
     };
     configreport.push_to_addon(addon);
     configreport.notes_and_helps().into_iter().for_each(|e| {
@@ -149,7 +121,7 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
         Some(ctx.config()),
         &processed,
     ));
-    if !configreport.errors().is_empty() {
+    if had_errors {
         return Ok(report);
     }
     let out = if std::path::Path::new(&path.filename())
@@ -198,29 +170,4 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
         return Err(e.into());
     }
     Ok(report)
-}
-
-pub fn can_rapify(entry: &WorkspacePath) -> Result<bool, Error> {
-    let path = entry.as_str();
-    let pathbuf = PathBuf::from(&path);
-    let ext = pathbuf
-        .extension()
-        .unwrap_or_else(|| std::ffi::OsStr::new(""))
-        .to_str()
-        .expect("osstr should be valid utf8");
-    if ext == "cpp" && pathbuf.file_name() != Some(std::ffi::OsStr::new("config.cpp")) {
-        warn!(
-            "{} - cpp files other than config.cpp are usually not intentional. use hpp for includes",
-            path.trim_start_matches('/')
-        );
-    }
-    if !["cpp", "rvmat", "ext", "sqm", "bikb", "bisurf"].contains(&ext) {
-        return Ok(false);
-    }
-    let mut buffer = vec![0; 4];
-    if entry.open_file()?.read_exact(&mut buffer).is_err() {
-        // The file is less than 4 bytes, so it is not rapified
-        return Ok(true);
-    }
-    Ok(buffer != b"\0raP")
 }

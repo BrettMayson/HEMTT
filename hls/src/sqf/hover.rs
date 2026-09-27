@@ -26,7 +26,7 @@ impl SqfAnalyzer {
             warn!("Failed to find workspace for {:?}", url);
             return None;
         };
-        let database = self.get_database(&workspace);
+        let database = self.get_database(&workspace).ok()?;
         let Some(tokens) = self.tokens.get(&url) else {
             warn!("No tokens found for {:?}", url);
             return None;
@@ -285,6 +285,18 @@ fn markdown_syntax(command: &Command, syntax: &Syntax) -> String {
         )
         .expect("Failed to write to string");
     }
+    let (typ, _info) = syntax.ret();
+    let typ = typ.to_string();
+    let typ = if typ == "Unknown" {
+        typ
+    } else {
+        format!(
+            "[{}](https://community.bistudio.com/wiki/{})",
+            typ,
+            typ.replace(' ', "_")
+        )
+    };
+    writeln!(string, "\nReturns: {typ}").expect("Failed to write to string");
     string
 }
 

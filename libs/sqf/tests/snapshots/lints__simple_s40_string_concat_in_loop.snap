@@ -1,0 +1,37 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: "lint(stringify! (s40_string_concat_in_loop), true).0"
+---
+[0m[1m[38;5;14mhelp[L-S40][0m[1m: String concatenation inside a loop can become slow; use an array and joinString instead[0m
+  [0m[36m┌─[0m s40_string_concat_in_loop.sqf:3:5
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m private _myString = "";
+  [0m[36m│[0m [0m[36m----------------------[0m [0m[36maccumulator declaration[0m
+[0m[36m2[0m [0m[36m│[0m for "_i" from 0 to 10000 do {
+[0m[36m3[0m [0m[36m│[0m     [0m[36m_myString = _myString + "123"[0m;
+  [0m[36m│[0m     [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36mstring concatenation in loop[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: If the array being iterated is large, this can become slow
+  [0m[36m=[0m [33mhelp[0m: use an array of fragments and `joinString` after the loop
+
+
+[0m[1m[38;5;14mhelp[L-S40][0m[1m: String concatenation inside a loop can become slow; use an array and joinString instead[0m
+  [0m[36m┌─[0m s40_string_concat_in_loop.sqf:8:5
+  [0m[36m│[0m
+[0m[36m6[0m [0m[36m│[0m private _myString2 = "";
+  [0m[36m│[0m [0m[36m-----------------------[0m [0m[36maccumulator declaration[0m
+[0m[36m7[0m [0m[36m│[0m for [{ _i = 0 }, { _i < 10000 }, { _i = _i + 1 }] do {
+[0m[36m8[0m [0m[36m│[0m     [0m[36m_myString2 = _myString2 + "123"[0m;
+  [0m[36m│[0m     [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36mstring concatenation in loop[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: If the array being iterated is large, this can become slow
+  [0m[36m=[0m [33mhelp[0m: use an array of fragments and `joinString` after the loop
+
+
+[0m[1m[38;5;14mhelp[L-S42][0m[1m: Use `for .. from .. to .. do` instead of `for [{{}},{{}},{{}}]`[0m
+  [0m[36m┌─[0m s40_string_concat_in_loop.sqf:7:1
+  [0m[36m│[0m
+[0m[36m7[0m [0m[36m│[0m [0m[36mfor [{ _i = 0 }, { _i < 10000 }, { _i = _i + 1 }] do[0m {
+  [0m[36m│[0m [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `for .. from .. to .. do`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [32mtry[0m: for _i from 0 to 10000 do

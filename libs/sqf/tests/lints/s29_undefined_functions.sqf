@@ -6,3 +6,5 @@ test_fnc_A = {1};
 [] spawn test_fnc_Y;
 
 [] call a3_fnc_shuffle;
+
+[1,2] remoteExec ["test_fnc_globalEventX"];

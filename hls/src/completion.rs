@@ -25,14 +25,13 @@ pub async fn completion(
         );
         return Ok(None);
     };
-    let source = workspace
-        .join_url(&position.text_document.uri)
-        .unwrap_or_else(|_| {
-            hemtt_workspace::Workspace::builder()
-                .memory()
-                .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
-                .expect("Failed to create in-memory workspace")
-        });
+    let Ok(source) = workspace.join_url(&position.text_document.uri) else {
+        warn!(
+            "Failed to join url {:?} to workspace",
+            position.text_document.uri
+        );
+        return Ok(None);
+    };
     let text = crate::files::FileCache::get()
         .text(&position.text_document.uri)
         .unwrap_or_default();
@@ -223,15 +222,19 @@ fn path(workspace: &EditorWorkspace, folder: &str, addon: &str, path: &str) -> V
         return Vec::new();
     };
     let mut items = Vec::new();
-    for item in path.read_dir().expect("Failed to read directory") {
-        if item.is_file().expect("Failed to get directory entry") {
+    let Ok(entries) = path.read_dir() else {
+        tracing::warn!("Failed to read directory: {list_path}");
+        return Vec::new();
+    };
+    for item in entries {
+        if item.is_file().unwrap_or(false) {
             let file_name = item.filename();
             items.push(CompletionItem {
                 label: file_name,
                 kind: Some(CompletionItemKind::FILE),
                 ..Default::default()
             });
-        } else if item.is_dir().expect("Failed to get directory entry") {
+        } else if item.is_dir().unwrap_or(false) {
             let dir_name = item.filename();
             items.push(CompletionItem {
                 label: dir_name.clone(),
@@ -245,4 +248,29 @@ fn path(workspace: &EditorWorkspace, folder: &str, addon: &str, path: &str) -> V
         return Vec::new();
     }
     items
+}
+
+#[cfg(test)]
+mod tests {
+    use tower_lsp::lsp_types::CompletionItem;
+
+    use super::path;
+    use crate::workspace::tests::fixture;
+
+    #[test]
+    fn lists_addon_files() {
+        let items = path(&fixture("project"), "addons", "valid", "");
+        assert!(items.iter().any(|i| i.label == "script.sqf"), "{items:?}");
+    }
+
+    /// A half-typed `#include` path names a directory that does not exist.
+    #[test]
+    fn missing_directory_is_empty() {
+        let empty = [] as [CompletionItem; 0];
+        assert_eq!(path(&fixture("project"), "addons", "valid", "nope/"), empty);
+        assert_eq!(
+            path(&fixture("project"), "addons", "nosuchaddon", ""),
+            empty
+        );
+    }
 }

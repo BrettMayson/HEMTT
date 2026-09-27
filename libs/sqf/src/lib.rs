@@ -1,3 +1,5 @@
+#[cfg(feature = "parser")]
+pub mod check;
 #[cfg(feature = "compiler")]
 pub mod compiler;
 #[cfg(feature = "parser")]
@@ -14,7 +16,29 @@ use analyze::inspector::Issue;
 use arma3_wiki::model::Version;
 #[doc(no_inline)]
 pub use float_ord::FloatOrd as Scalar;
+use hemtt_workspace::WorkspacePath;
 use parser::database::Database;
+
+#[must_use]
+/// Is this a `.sqf` file that can be compiled and linted on its own?
+///
+/// `.inc.sqf` files rely on the macros of whatever `#include`s them, so they
+/// are never their own compilation unit.
+pub fn is_compilation_unit(path: &WorkspacePath) -> bool {
+    path.extension()
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("sqf"))
+        && !path.filename().to_ascii_lowercase().ends_with(".inc.sqf")
+}
+
+#[must_use]
+/// Does this preprocessed source look like a CBA settings file?
+///
+/// They use `force` as a statement prefix, which is not valid SQF, so they
+/// never parse and are skipped rather than reported. Takes the preprocessed
+/// output because `force` lines are commonly produced by macros.
+pub fn is_cba_settings(processed: &str) -> bool {
+    processed.starts_with("force ") || processed.contains("\nforce ")
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Statements {
@@ -46,6 +70,25 @@ impl Statements {
     pub const fn issues(&self) -> &Vec<Issue> {
         &self.issues
     }
+
+    #[must_use]
+    pub fn walk_statements(&self) -> Vec<&Statement> {
+        let mut root = vec![];
+        for statement in &self.content {
+            root.extend(statement.walk_statements());
+        }
+        root
+    }
+
+    #[must_use]
+    pub fn walk_expressions(&self) -> Vec<&Expression> {
+        let mut root = vec![];
+        for statement in &self.content {
+            root.extend(statement.walk_expressions());
+        }
+        root
+    }
+
     #[must_use]
     /// Gets the highest version required by any command in this code chunk.
     pub fn required_version(&self, database: &Database) -> (String, Version, Range<usize>) {
@@ -108,6 +151,7 @@ impl Statements {
         }
         (command, version, span)
     }
+
     pub fn testing_clear_issues(&mut self) {
         self.issues.clear();
     }
@@ -175,7 +219,7 @@ pub enum Expression {
     Number(Scalar<f32>, Range<usize>),
     Boolean(bool, Range<usize>),
     Array(Vec<Self>, Range<usize>),
-    ConsumeableArray(Vec<Self>, Range<usize>),
+    ConsumableArray(Vec<Self>, Range<usize>),
     NularCommand(NularCommand, Range<usize>),
     UnaryCommand(UnaryCommand, Box<Self>, Range<usize>),
     BinaryCommand(BinaryCommand, Box<Self>, Box<Self>, Range<usize>),
@@ -198,7 +242,7 @@ impl Expression {
             }
             Self::Number(number, _) => number.0.to_string(),
             Self::Boolean(boolean, _) => boolean.to_string(),
-            Self::ConsumeableArray(array, _) | Self::Array(array, _) => {
+            Self::ConsumableArray(array, _) | Self::Array(array, _) => {
                 let mut out = String::new();
                 out.push('[');
                 for (i, element) in array.iter().enumerate() {
@@ -259,9 +303,7 @@ impl Expression {
         let mut root = vec![self];
         match self {
             Self::Code(code) => {
-                for statement in code.content() {
-                    root.extend(statement.walk_expressions());
-                }
+                root.extend(code.walk_expressions());
             }
             Self::UnaryCommand(_, child, _) => {
                 root.extend(child.walk_expressions());
@@ -285,7 +327,7 @@ impl Expression {
         match self {
             Self::Code(code) => code.span().clone(),
             #[allow(clippy::range_plus_one)]
-            Self::ConsumeableArray(items, span) | Self::Array(items, span) => {
+            Self::ConsumableArray(items, span) | Self::Array(items, span) => {
                 if items.is_empty() {
                     span.start - 1..span.end
                 } else {
@@ -306,7 +348,7 @@ impl Expression {
     pub fn full_span(&self) -> Range<usize> {
         match self {
             Self::Code(code) => code.span().clone(),
-            Self::ConsumeableArray(_, _) | Self::Array(_, _) => self.span(),
+            Self::ConsumableArray(_, _) | Self::Array(_, _) => self.span(),
             Self::String(_, span, _)
             | Self::Number(_, span)
             | Self::Boolean(_, span)
@@ -402,6 +444,7 @@ pub enum BinaryCommand {
     LessEq,
     /// `>>`
     ConfigPath,
+    /// `:`
     Associate,
     Else,
     Add,
@@ -450,5 +493,76 @@ impl BinaryCommand {
             Self::Associate => ":",
             Self::Select => "#",
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use hemtt_workspace::{Workspace, WorkspacePath};
+
+    use super::{is_cba_settings, is_compilation_unit};
+
+    /// Build an in-memory workspace holding a single file at `path`.
+    fn path(path: &str) -> WorkspacePath {
+        let workspace = Workspace::builder()
+            .memory()
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
+            .expect("failed to build workspace");
+        let file = workspace.join(path).expect("failed to join path");
+        file.create_file().expect("failed to create file");
+        file
+    }
+
+    #[test]
+    fn compilation_unit_sqf() {
+        assert!(is_compilation_unit(&path("script.sqf")));
+        assert!(is_compilation_unit(&path("fnc_thing.sqf")));
+        assert!(is_compilation_unit(&path("script.SQF")));
+        assert!(is_compilation_unit(&path("script.Sqf")));
+    }
+
+    #[test]
+    fn compilation_unit_not_sqf() {
+        assert!(!is_compilation_unit(&path("config.cpp")));
+        assert!(!is_compilation_unit(&path("script.hpp")));
+        assert!(!is_compilation_unit(&path("script")));
+        assert!(!is_compilation_unit(&path("script.sqf.bak")));
+    }
+
+    /// Regression for #1308: `.inc.sqf` is not its own compilation unit.
+    #[test]
+    fn regression_1308_include_sqf() {
+        assert!(!is_compilation_unit(&path("initSettings.inc.sqf")));
+        assert!(!is_compilation_unit(&path("thing.INC.SQF")));
+        assert!(!is_compilation_unit(&path("thing.Inc.Sqf")));
+    }
+
+    #[test]
+    fn compilation_unit_inc_not_at_end() {
+        // only `.inc` directly before the extension disqualifies a file
+        assert!(is_compilation_unit(&path("thing.inc.settings.sqf")));
+        assert!(is_compilation_unit(&path("incsqf.sqf")));
+        assert!(is_compilation_unit(&path("my.inc.file.sqf")));
+    }
+
+    /// Regression for #1309: CBA settings files are skipped, not reported.
+    #[test]
+    fn regression_1309_cba_settings_detected() {
+        assert!(is_cba_settings("force ace_medical_level = 2;"));
+        assert!(is_cba_settings(
+            "// a comment\nforce ace_medical_level = 2;"
+        ));
+        assert!(is_cba_settings(
+            "ace_medical_level = 1;\nforce cba_thing = 2;\n"
+        ));
+    }
+
+    #[test]
+    fn cba_settings_not_detected() {
+        assert!(!is_cba_settings(""));
+        assert!(!is_cba_settings("private _x = 1;"));
+        assert!(!is_cba_settings("_unit forceAddUniform \"uniform\";"));
+        assert!(!is_cba_settings("private _f = force _x;"));
+        assert!(!is_cba_settings("    force ace_thing = 1;"));
     }
 }

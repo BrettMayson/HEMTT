@@ -1,0 +1,42 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: "lint(stringify! (s45_array_append), true).0"
+---
+[0m[1m[38;5;14mhelp[L-S45][0m[1m: Use `append` instead of `array = array + [...]`[0m
+  [0m[36m┌─[0m s45_array_append.sqf:2:1
+  [0m[36m│[0m
+[0m[36m2[0m [0m[36m│[0m [0m[36mWMO_noRoadway = WMO_noRoadway + ["NonSteerable_Parachute_F", "RopeSegment"][0m;
+  [0m[36m│[0m [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36marray is copied to extend it[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: `append` extends the array in place, so anything else holding a reference to it will see the new elements
+  [0m[36m=[0m [32mtry[0m: WMO_noRoadway append ["NonSteerable_Parachute_F","RopeSegment"]
+
+
+[0m[1m[38;5;14mhelp[L-S45][0m[1m: Use `pushBack` instead of `array = array + [...]`[0m
+  [0m[36m┌─[0m s45_array_append.sqf:5:1
+  [0m[36m│[0m
+[0m[36m5[0m [0m[36m│[0m [0m[36m_local = _local + [3][0m;
+  [0m[36m│[0m [0m[36m^^^^^^^^^^^^^^^^^^^^^[0m [0m[36marray is copied to extend it[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: `pushBack` extends the array in place, so anything else holding a reference to it will see the new elements
+  [0m[36m=[0m [32mtry[0m: _local pushBack 3
+
+
+[0m[1m[38;5;14mhelp[L-S45][0m[1m: Use `pushBack` instead of `array = array + [...]`[0m
+   [0m[36m┌─[0m s45_array_append.sqf:23:1
+   [0m[36m│[0m
+[0m[36m23[0m [0m[36m│[0m [0m[36mGVAR_gunList = GVAR_gunList + [_gun][0m;
+   [0m[36m│[0m [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36marray is copied to extend it[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: `pushBack` extends the array in place, so anything else holding a reference to it will see the new elements
+   [0m[36m=[0m [32mtry[0m: GVAR_gunList pushBack _gun
+
+
+[0m[1m[38;5;14mhelp[L-S45][0m[1m: Use `pushBack` instead of `array = array + [...]`[0m
+   [0m[36m┌─[0m s45_array_append.sqf:24:1
+   [0m[36m│[0m
+[0m[36m24[0m [0m[36m│[0m [0m[36m_local = _local + [_gunProfileEntry][0m;
+   [0m[36m│[0m [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36marray is copied to extend it[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: `pushBack` extends the array in place, so anything else holding a reference to it will see the new elements
+   [0m[36m=[0m [32mtry[0m: _local pushBack _gunProfileEntry

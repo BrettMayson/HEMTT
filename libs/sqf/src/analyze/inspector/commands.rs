@@ -29,7 +29,7 @@ impl Inspector<'_> {
                     var,
                     true,
                     IndexSet::from([GameValue::Nothing(NilSource::PrivateArray)]),
-                    VarSource::Private(source.clone()),
+                    VarSource::PrivateCmd(source.clone()),
                 );
             }
         }

@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use hemtt_common::config::PreprocessorOptions;
 use hemtt_workspace::{
-    WorkspacePath,
+    SourceDatabase, WorkspacePath,
     position::Position,
     reporting::{
         Codes, Definition, ExpansionMetadata, ExpansionMetadataStore, MacroExpander, Output,
@@ -39,6 +39,11 @@ pub struct Processor {
 
     included_files: Vec<WorkspacePath>,
     file_stack: Vec<WorkspacePath>,
+
+    /// Source database used to resolve file content (workspace/VFS or LSP
+    /// overlay) and to memoize parsing across includes. See
+    /// [`Processor::run_with_sources`].
+    sources: SourceDatabase,
 
     pub(crate) token_count: usize,
 
@@ -93,22 +98,56 @@ impl Processor {
 
     /// Preprocess a file
     ///
+    /// Uses a throwaway [`SourceDatabase`] with no overlays. Prefer
+    /// [`Processor::run_with_sources`] when a [`SourceDatabase`] is
+    /// available (e.g. from an LSP), so that unsaved editor buffers are
+    /// used, and so parsing is shared across a batch of files that include
+    /// common headers.
+    ///
     /// # Errors
     /// See [`Error`]
     pub fn run(
         path: &WorkspacePath,
         options: &PreprocessorOptions,
     ) -> Result<Processed, (Vec<WorkspacePath>, Error)> {
-        let mut processor = Self::default();
+        Self::run_with_sources(path, options, &SourceDatabase::new())
+    }
+
+    /// Preprocess a file, resolving all file content (the root file and any
+    /// `#include`d files) through the given [`SourceDatabase`].
+    ///
+    /// This is the entry point that makes the preprocessor source-agnostic:
+    /// `sources` may serve content from the [`hemtt_workspace::Workspace`]/VFS,
+    /// from an LSP overlay (unsaved editor buffer), or a mix of both, and the
+    /// preprocessor does not need to know which.
+    ///
+    /// # Errors
+    /// See [`Error`]
+    pub fn run_with_sources(
+        path: &WorkspacePath,
+        options: &PreprocessorOptions,
+        sources: &SourceDatabase,
+    ) -> Result<Processed, (Vec<WorkspacePath>, Error)> {
+        let mut processor = Self {
+            sources: sources.clone(),
+            ..Self::default()
+        };
 
         processor.defines.option_runtime(options.runtime_macros());
 
         processor.file_stack.push(path.clone());
 
-        let tokens = crate::parse::file(path).map_err(|e| (processor.included_files.clone(), e))?;
+        // Drop any dependency edges recorded by a previous run of this file
+        // (e.g. an earlier LSP preprocess before the include set changed),
+        // so re-running doesn't accumulate stale forward/reverse edges.
+        let root_id = processor.sources.file_id(path);
+        processor.sources.clear_dependencies_of(root_id);
+
+        let tokens = crate::parse::file_with_sources(path, &processor.sources)
+            .map_err(|e| (processor.included_files.clone(), e))?;
         let mut pragma = Pragma::root();
         let mut buffer = Vec::with_capacity(tokens.len());
-        let mut stream = tokens.into_iter().peekmore();
+        let mut stream = tokens.iter().cloned().peekmore();
 
         processor
             .file(&mut pragma, &mut stream, &mut buffer)
@@ -131,6 +170,7 @@ impl Processor {
             buffer,
             processor.macros,
             processor.included_files.clone(),
+            &processor.sources,
             #[cfg(feature = "lsp")]
             processor.usage,
             processor.warnings,
@@ -384,5 +424,111 @@ pub mod tests {
             .write_all(content.as_bytes())
             .unwrap();
         crate::parse::file(&test).unwrap().into_iter().peekmore()
+    }
+
+    /// End-to-end proof that `Processor::run_with_sources` prefers LSP
+    /// overlay content over the on-disk/VFS content, and that this holds
+    /// for included files too, not just the root file being preprocessed.
+    #[test]
+    fn run_with_sources_prefers_overlay_over_workspace() {
+        use hemtt_workspace::SourceDatabase;
+
+        let workspace = hemtt_workspace::Workspace::builder()
+            .memory()
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
+            .unwrap();
+
+        let included = workspace.join("included.hpp").unwrap();
+        included
+            .create_file()
+            .unwrap()
+            .write_all(b"disk_included_value")
+            .unwrap();
+
+        let root = workspace.join("root.hpp").unwrap();
+        root.create_file()
+            .unwrap()
+            .write_all(b"disk_root_value #include \"included.hpp\"")
+            .unwrap();
+
+        let sources = SourceDatabase::new();
+        let root_id = sources.file_id(&root);
+        let included_id = sources.file_id(&included);
+        sources.set_overlay(
+            root_id,
+            "overlay_root_value\n#include \"included.hpp\"\n",
+            1,
+        );
+        sources.set_overlay(included_id, "overlay_included_value", 1);
+
+        let processed = crate::Processor::run_with_sources(
+            &root,
+            &hemtt_common::config::PreprocessorOptions::default(),
+            &sources,
+        )
+        .unwrap();
+
+        let output = processed.as_str();
+        assert!(output.contains("overlay_root_value"));
+        assert!(output.contains("overlay_included_value"));
+        assert!(!output.contains("disk_root_value"));
+        assert!(!output.contains("disk_included_value"));
+
+        // The include dependency edge should have been recorded on the
+        // shared `SourceDatabase`, in both directions.
+        assert_eq!(sources.dependencies_of(root_id), vec![included_id]);
+        assert_eq!(sources.dependents_of(included_id), vec![root_id]);
+    }
+
+    /// `Processor::run_with_sources` clears stale forward dependency edges
+    /// for the root file it's (re)processing before recording new ones, so
+    /// repeated LSP-style re-preprocessing after an edit that removes an
+    /// `#include` doesn't leave a dangling dependency edge behind.
+    #[test]
+    fn run_with_sources_clears_stale_dependencies_on_rerun() {
+        use hemtt_workspace::SourceDatabase;
+
+        let workspace = hemtt_workspace::Workspace::builder()
+            .memory()
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
+            .unwrap();
+
+        let included = workspace.join("included.hpp").unwrap();
+        included
+            .create_file()
+            .unwrap()
+            .write_all(b"included_value")
+            .unwrap();
+
+        let root = workspace.join("root.hpp").unwrap();
+        root.create_file()
+            .unwrap()
+            .write_all(b"root_value")
+            .unwrap();
+
+        let sources = SourceDatabase::new();
+        let root_id = sources.file_id(&root);
+        let included_id = sources.file_id(&included);
+
+        // First run: root includes included.hpp.
+        sources.set_overlay(root_id, "root_value\n#include \"included.hpp\"\n", 1);
+        crate::Processor::run_with_sources(
+            &root,
+            &hemtt_common::config::PreprocessorOptions::default(),
+            &sources,
+        )
+        .unwrap();
+        assert_eq!(sources.dependencies_of(root_id), vec![included_id]);
+
+        // Second run: the edit removed the #include.
+        sources.set_overlay(root_id, "root_value only\n", 2);
+        crate::Processor::run_with_sources(
+            &root,
+            &hemtt_common::config::PreprocessorOptions::default(),
+            &sources,
+        )
+        .unwrap();
+        assert!(sources.dependencies_of(root_id).is_empty());
+        assert!(sources.dependents_of(included_id).is_empty());
     }
 }

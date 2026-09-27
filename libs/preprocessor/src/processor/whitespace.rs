@@ -63,6 +63,7 @@ impl Processor {
                 return Err(UnexpectedToken::code(
                     token.as_ref().clone(),
                     vec!["newline".to_string()],
+                    None,
                 ));
             }
         }

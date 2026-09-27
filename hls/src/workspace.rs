@@ -2,10 +2,12 @@ use std::{
     collections::HashMap,
     path::PathBuf,
     sync::{Arc, LazyLock, RwLock},
+    time::Duration,
 };
 
 use hemtt_common::config::{PDriveOption, ProjectConfig};
 use hemtt_workspace::{LayerType, Workspace, WorkspacePath};
+use tokio::sync::Notify;
 use tower_lsp::{
     Client,
     lsp_types::{DidChangeWorkspaceFoldersParams, WorkspaceFolder},
@@ -15,15 +17,26 @@ use url::Url;
 
 use crate::{config::ConfigAnalyzer, sqf::SqfAnalyzer};
 
+/// Safety-net timeout for [`EditorWorkspaces::guess_workspace_retry`]. A
+/// workspace is expected to be registered almost immediately, so this only
+/// guards against a folder that never gets added (e.g. a client bug), rather
+/// than acting as a polling interval.
+const WORKSPACE_REGISTRATION_TIMEOUT: Duration = Duration::from_secs(5);
+
 #[derive(Clone)]
 pub struct EditorWorkspaces {
     workspaces: Arc<RwLock<HashMap<Url, EditorWorkspace>>>,
+    /// Notified whenever a workspace folder is added, so callers resolving a
+    /// `Url` that arrived just before its owning workspace was registered
+    /// can wake up immediately instead of polling.
+    added: Arc<Notify>,
 }
 
 impl EditorWorkspaces {
     pub fn get() -> Self {
         static SINGLETON: LazyLock<EditorWorkspaces> = LazyLock::new(|| EditorWorkspaces {
             workspaces: Arc::new(RwLock::new(HashMap::new())),
+            added: Arc::new(Notify::new()),
         });
         (*SINGLETON).clone()
     }
@@ -83,16 +96,19 @@ impl EditorWorkspaces {
     }
 
     pub async fn guess_workspace_retry(&self, uri: &Url) -> Option<EditorWorkspace> {
-        let mut tries = 5;
         loop {
+            // Subscribe before checking so an `add()` that happens between
+            // the check and the wait below is never missed.
+            let added = self.added.notified();
             if let Some(workspace) = self.guess_workspace(uri) {
-                break Some(workspace);
+                return Some(workspace);
             }
-            tries -= 1;
-            if tries == 0 {
+            if tokio::time::timeout(WORKSPACE_REGISTRATION_TIMEOUT, added)
+                .await
+                .is_err()
+            {
                 return None;
             }
-            tokio::time::sleep(std::time::Duration::from_millis(200)).await;
         }
     }
 
@@ -106,6 +122,7 @@ impl EditorWorkspaces {
         debug!("adding workspace {}", added.uri);
         if let Some(workspace) = EditorWorkspace::new(added) {
             workspaces.insert(added.uri.clone(), workspace.clone());
+            self.added.notify_waiters();
             let config_workspace = workspace.clone();
             let config_client = client.clone();
             tokio::spawn(async move {
@@ -130,17 +147,15 @@ pub struct EditorWorkspace {
 impl EditorWorkspace {
     pub fn new(folder: &WorkspaceFolder) -> Option<Self> {
         if folder.uri.scheme() == "file" {
-            let root = PathBuf::from(
-                urlencoding::decode(
-                    folder
-                        .uri
-                        .to_string()
-                        .replace(if cfg!(windows) { "file:///" } else { "file://" }, "")
-                        .as_str(),
-                )
-                .expect("Failed to decode URL")
-                .to_string(),
-            );
+            let raw = folder
+                .uri
+                .to_string()
+                .replace(if cfg!(windows) { "file:///" } else { "file://" }, "");
+            let Ok(decoded) = urlencoding::decode(&raw) else {
+                debug!("failed to decode workspace url {}", folder.uri);
+                return None;
+            };
+            let root = PathBuf::from(decoded.to_string());
             let mut builder = Workspace::builder().physical(&root, LayerType::Source);
             let include = root.join("include");
             if include.is_dir() {
@@ -219,5 +234,51 @@ impl EditorWorkspace {
     #[allow(dead_code)]
     pub const fn url(&self) -> &Url {
         &self.url
+    }
+}
+
+#[cfg(test)]
+pub mod tests {
+    use tower_lsp::lsp_types::WorkspaceFolder;
+    use url::Url;
+
+    use super::EditorWorkspace;
+
+    /// Path to a fixture folder under `hls/tests/fixtures/`.
+    pub fn fixture_path(name: &str) -> std::path::PathBuf {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests")
+            .join("fixtures")
+            .join(name);
+        assert!(root.is_dir(), "missing fixture {}", root.display());
+        root
+    }
+
+    /// Open a fixture folder under `hls/tests/fixtures/` as an editor workspace.
+    pub fn fixture(name: &str) -> EditorWorkspace {
+        let root = fixture_path(name);
+        EditorWorkspace::new(&WorkspaceFolder {
+            uri: Url::from_directory_path(&root).expect("failed to build fixture url"),
+            name: name.to_string(),
+        })
+        .expect("failed to open fixture workspace")
+    }
+
+    #[test]
+    fn to_url_round_trips() {
+        let workspace = fixture("project");
+        let path = workspace
+            .root()
+            .join("addons/valid/script.sqf")
+            .expect("join");
+        let url = workspace.to_url(&path);
+        assert!(url.path().ends_with("/addons/valid/script.sqf"), "{url}");
+        assert_eq!(workspace.join_url(&url).expect("join_url"), path);
+    }
+
+    /// Guards the `expect` in `to_url`, which is safe only while this is empty.
+    #[test]
+    fn workspace_root_is_the_empty_prefix() {
+        assert_eq!(fixture("project").root().as_str(), "");
     }
 }

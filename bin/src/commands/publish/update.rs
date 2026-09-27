@@ -1,17 +1,15 @@
+use markdown_bbcode::MdToBbcode;
 use steamworks::UGC;
 
 use crate::{Error, commands::publish::APP_ID, report::Report};
 
 pub fn execute(cmd: &super::Command, ugc: &UGC, create: bool) -> Result<Report, Error> {
     let mut executor = crate::commands::release::executor(&cmd.release, &cmd.build)?;
-    let version = format!(
-        "Version {}",
-        executor
-            .ctx()
-            .config()
-            .version()
-            .get(executor.ctx().workspace_path().vfs())?
-    );
+    let version = executor
+        .ctx()
+        .config()
+        .version()
+        .get(executor.ctx().workspace_path().vfs())?;
     let report = executor.run()?;
 
     let Ok(id) = super::get_id() else {
@@ -33,7 +31,30 @@ pub fn execute(cmd: &super::Command, ugc: &UGC, create: bool) -> Result<Report, 
             .add_key_value_tag("bis_platform", "-")
             .add_key_value_tag("bis_displayName", executor.ctx().config().name());
     }
-    let _upload_handle = handle.submit(Some(&version), |upload_result| match upload_result {
+    if let Some(description) = executor.ctx().config().hemtt().publish().description() {
+        let content = markdown_headings_to_steam(&fs_err::read_to_string(description)?);
+        let mut buf = Vec::new();
+        MdToBbcode::new(&content, &mut buf)
+            .serialize()
+            .expect("valid markdown");
+        handle = handle.description(&String::from_utf8(buf).expect("valid UTF-8"));
+    }
+    let changelog = if let Some(changelog) = executor.ctx().config().hemtt().publish().changelog() {
+        let content = fs_err::read_to_string(changelog)?;
+        let changelog = parse_changelog::parse(&content).expect("valid changelog");
+        let Some(change) = changelog.get(version.to_string().as_str()) else {
+            error!("No changelog entry found for version {}", version);
+            std::process::exit(1);
+        };
+
+        Some(markdown_headings_to_steam(&format!(
+            "# Version {}\n\n{}",
+            version, change.notes
+        )))
+    } else {
+        Some(format!("Version {version}"))
+    };
+    let _upload_handle = handle.submit(changelog.as_deref(), |upload_result| match upload_result {
         Ok((published_id, needs_to_agree_to_terms)) => {
             info!("Uploaded item with id {:?}", published_id);
             if needs_to_agree_to_terms {
@@ -59,4 +80,21 @@ pub fn execute(cmd: &super::Command, ugc: &UGC, create: bool) -> Result<Report, 
         );
     }
     Ok(report)
+}
+
+pub fn markdown_headings_to_steam(input: &str) -> String {
+    input
+        .lines()
+        .map(|line| {
+            let hashes = line.chars().take_while(|&c| c == '#').count();
+
+            if (1..=usize::MAX).contains(&hashes) && line.chars().nth(hashes) == Some(' ') {
+                let level = hashes.min(3);
+                format!("[h{level}]{}[/h{level}]", &line[hashes + 1..])
+            } else {
+                line.to_string()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }

@@ -1,5 +1,5 @@
-url1 = 'http://www.zombo.com';// "Great Site"
-url2 = "http://www.zombo.com";
+url1 = 'https://hemtt.dev';// "Great Site"
+url2 = "https://hemtt.dev";
 
 "'//'
 '// a
