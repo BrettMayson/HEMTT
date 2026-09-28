@@ -40,7 +40,7 @@ if (alive player) then { objNull } else { player };
 
     fn default_config(&self) -> LintConfig {
         // Disabled by default because it requires a lot of code moving to remove a single `!`
-        LintConfig::help().with_enabled(LintEnabled::Pedantic)
+        LintConfig::help().with_enabled(LintEnabled::Disabled) // remove?
     }
 
     fn runners(&self) -> Vec<Box<dyn AnyLintRunner<LintData>>> {

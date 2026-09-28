@@ -227,6 +227,20 @@ impl Expression {
                                 );
                             }
                         }
+                        "then" => {
+                            if let Self::ConsumableArray(else_array, _cr) = &mut right_o
+                                && let Self::UnaryCommand(UnaryCommand::Named(if_cmd), if_rhs, if_range) = &left_o
+                                && if_cmd.eq_ignore_ascii_case("if")
+                                && let Self::UnaryCommand(UnaryCommand::Not, not_rhs, _) = if_rhs.as_ref()
+                            {
+                                debug_assert_eq!(else_array.len(), 2);
+                                else_array.swap(0, 1); // lhs: modify `else` array in-place
+                                // rhs: Make a new `if` with the non-negated condition
+                                left_o = Self::UnaryCommand(UnaryCommand::Named(if_cmd.clone()), not_rhs.clone(), if_range.clone());
+                                #[cfg(debug_assertions)]
+                                trace!("optimizing [B:if[not-else]");
+                            }
+                        }
                         _ => {}
                     },
                     BinaryCommand::Add => {
