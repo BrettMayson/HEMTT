@@ -40,6 +40,7 @@ pub enum GameValue {
     TeamMember,
     WhileType,
     WithType,
+    Flag(FlagType),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -60,10 +61,19 @@ pub enum ArrayType {
 pub enum NilSource {
     Generic,
     ExplicitNil,
-    CommandReturn,
+    CommandReturn,  // poison
+    FunctionReturn, // poison
     PrivateArray,
-    EmptyStack,
-    IfWithoutElse,
+    EmptyStack,    // poison
+    IfWithoutElse, // poison
+    SwitchWithoutDefault,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum FlagType {
+    FromUinamespace(Expression, String),
+    FromProfilenamespace(Expression, String),
+    MismatchedTypes,
 }
 
 impl GameValue {
@@ -297,6 +307,7 @@ impl GameValue {
             | Value::ArraySized { .. }
             | Value::ArrayUnknown
             | Value::ArrayUnsized { .. }
+            | Value::Vector3d
             | Value::Position // position is often too generic to match?
             | Value::Waypoint => IndexSet::from([Self::Array(None, None)]),
             // Value::Position3dAGLS => Self::Array(None, Some(ArrayType::PosAGLS)),
@@ -366,13 +377,44 @@ impl GameValue {
     /// Checks if type is a "poisoned" nil type (should not be used as input or assigned)
     pub fn is_poison_nil(&self) -> bool {
         match self {
-            Self::Nothing(NilSource::CommandReturn | NilSource::IfWithoutElse)
+            Self::Nothing(
+                NilSource::CommandReturn
+                | NilSource::FunctionReturn
+                | NilSource::IfWithoutElse
+                | NilSource::EmptyStack,
+            )
             | Self::Assignment => true,
             Self::Array(Some(outer), _) => outer
                 .iter()
                 .any(|inner| inner.iter().any(|(inner, _)| inner.is_poison_nil())),
             _ => false,
         }
+    }
+    pub fn check_match_and_merge(sets: Vec<IndexSet<Self>>) -> (bool, IndexSet<Self>) {
+        fn match_all_sets(sets: &[IndexSet<GameValue>]) -> bool {
+            if sets.len() < 2 {
+                return true;
+            }
+            for (index, s1) in sets.iter().enumerate() {
+                for s2 in &sets[index + 1..] {
+                    if !s1
+                        .iter()
+                        .any(|v1| s2.iter().any(|v2| GameValue::match_values(v1, v2)))
+                    {
+                        return false;
+                    }
+                }
+            }
+            true
+        }
+        fn merge_sets(sets: Vec<IndexSet<GameValue>>) -> IndexSet<GameValue> {
+            let mut merged = IndexSet::new();
+            for set in sets {
+                merged.extend(set);
+            }
+            merged
+        }
+        (match_all_sets(&sets), merge_sets(sets))
     }
 
     #[must_use]
@@ -472,6 +514,9 @@ impl std::fmt::Display for GameValue {
                 Self::TeamMember => "TeamMember",
                 Self::WhileType => "WhileType",
                 Self::WithType => "WithType",
+                Self::Flag(FlagType::FromUinamespace(_, _)) => "FromUinamespace",
+                Self::Flag(FlagType::FromProfilenamespace(_, _)) => "FromProfilenamespace",
+                Self::Flag(FlagType::MismatchedTypes) => "MismatchedTypes",
             }
         )
     }

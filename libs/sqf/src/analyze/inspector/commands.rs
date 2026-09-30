@@ -5,8 +5,11 @@ use std::{ops::Range, vec};
 use indexmap::IndexSet;
 
 use crate::{
-    Expression, Statement,
-    analyze::inspector::{InvalidArgs, Issue, VarSource, game_value::NilSource},
+    Expression, NularCommand, Statement, UnaryCommand,
+    analyze::inspector::{
+        InvalidArgs, Issue, VarSource,
+        game_value::{FlagType, NilSource},
+    },
 };
 
 use super::{Inspector, game_value::GameValue};
@@ -59,31 +62,50 @@ impl Inspector<'_> {
         IndexSet::new()
     }
     #[must_use]
+    /// # Panics
     pub fn cmd_generic_params(
         &mut self,
         rhs: &IndexSet<GameValue>,
         debug_type: &str,
         source: &Range<usize>,
+        unary: bool,
     ) -> IndexSet<GameValue> {
         let mut error_type = None;
+        // get header for type defaults
+        let header = if unary
+            && self.in_primary_scope()
+            && let Some(self_header) = &self.function_info
+        {
+            Some(self_header.clone())
+        } else {
+            None
+        };
+
         for possible in rhs {
             let GameValue::Array(Some(gv_array), _) = possible else {
                 continue;
             };
 
-            for gv_index in gv_array {
+            for (i, gv_index) in gv_array.iter().enumerate() {
+                let set_from_header = header
+                    .as_ref()
+                    .and_then(|h| h.params().get(i))
+                    .map(|a| GameValue::from_wiki_value(a.typ(), NilSource::Generic));
                 for (element, element_span) in gv_index {
                     match element {
                         GameValue::Anything | GameValue::Array(None, _) => {}
                         GameValue::String(_) => {
                             if let Some(error) = self.cmd_generic_params_element(
-                                &[vec![(element.clone(), element_span.clone())]], // put it in a dummy array
+                                &[vec![(element.clone(), element_span.clone())]], // put it in a dummy
+                                set_from_header.as_ref(),
                             ) {
                                 error_type = Some(error);
                             }
                         }
                         GameValue::Array(Some(arg_array), _) => {
-                            if let Some(error) = self.cmd_generic_params_element(arg_array) {
+                            if let Some(error) =
+                                self.cmd_generic_params_element(arg_array, set_from_header.as_ref())
+                            {
                                 error_type = Some(error);
                             }
                         }
@@ -115,7 +137,32 @@ impl Inspector<'_> {
     pub fn cmd_generic_params_element(
         &mut self,
         element: &[Vec<(GameValue, Range<usize>)>],
+        header_defaults: Option<&IndexSet<GameValue>>,
     ) -> Option<InvalidArgs> {
+        /// get generic params and optionally check that they match header
+        fn match_defaults_to_header(
+            var_types: &mut IndexSet<GameValue>,
+            input: &[(GameValue, Range<usize>)],
+            header_defaults: Option<&IndexSet<GameValue>>,
+        ) -> Option<InvalidArgs> {
+            let mut error_type = None;
+            for (v, v_span) in input {
+                let vg = v.make_generic();
+                if let Some(header_defaults) = header_defaults
+                    && !(header_defaults
+                        .iter()
+                        .any(|hd| GameValue::match_values(&vg, hd)))
+                {
+                    error_type = Some(InvalidArgs::ExpectedDifferentTypeHeader {
+                        expected: header_defaults.iter().cloned().collect(),
+                        found: vec![vg.clone()],
+                        span: v_span.clone(),
+                    });
+                }
+                var_types.insert(vg);
+            }
+            error_type
+        }
         if element.is_empty() || element[0].is_empty() {
             return None;
         }
@@ -133,7 +180,13 @@ impl Inspector<'_> {
                         match type_p {
                             GameValue::Array(Some(type_array), _) => {
                                 for type_i in type_array {
-                                    var_types.extend(type_i.iter().map(|(v, _)| v.make_generic()));
+                                    if let Some(type_error) = match_defaults_to_header(
+                                        &mut var_types,
+                                        type_i,
+                                        header_defaults,
+                                    ) {
+                                        error_type = Some(type_error);
+                                    }
                                 }
                             }
                             GameValue::Array(None, _) | GameValue::Anything => {}
@@ -147,6 +200,9 @@ impl Inspector<'_> {
                         }
                     }
                 }
+                if let Some(header_defaults) = header_defaults {
+                    var_types.extend(header_defaults.iter().cloned());
+                }
                 if var_types.is_empty() {
                     var_types.insert(GameValue::Anything);
                 }
@@ -154,7 +210,13 @@ impl Inspector<'_> {
                 // It would be nice to move this above the is_empty check but not always safe
                 // ie: assume `params ["_z", ""]` is type string, but this is not guaranteed
                 if element.len() > 1 && !element[1].is_empty() {
-                    let default_value = element[1][0].0.clone();
+                    let mut default_value = element[1][0].0.clone();
+                    // if default value is `{}` then just make it generic so it doesn't return nil
+                    if let GameValue::Code(Some(Expression::Code(statements))) = &default_value
+                        && statements.content().is_empty()
+                    {
+                        default_value = GameValue::Code(None);
+                    }
                     // Verify that the default value matches one of the types
                     if !(matches!(default_value, GameValue::Anything)
                         || matches!(default_value, GameValue::Nothing(NilSource::ExplicitNil))
@@ -166,18 +228,23 @@ impl Inspector<'_> {
                             expected: var_types.iter().cloned().collect(),
                             found: vec![default_value.clone()],
                             span: element[1][0].1.clone(),
-                            default: Some(
-                                (element[2]
-                                    .first()
-                                    .map(|(_, s)| s.clone())
-                                    .unwrap_or_default()
-                                    .start)
-                                    ..(element[2]
-                                        .last()
+                            // element[2] could be missing if expected are from header
+                            default: if element.len() > 2 && !element[2].is_empty() {
+                                Some(
+                                    (element[2]
+                                        .first()
                                         .map(|(_, s)| s.clone())
                                         .unwrap_or_default()
-                                        .end),
-                            ),
+                                        .start)
+                                        ..(element[2]
+                                            .last()
+                                            .map(|(_, s)| s.clone())
+                                            .unwrap_or_default()
+                                            .end),
+                                )
+                            } else {
+                                None
+                            },
                         });
                     }
                     var_types.insert(default_value);
@@ -208,6 +275,16 @@ impl Inspector<'_> {
     ) -> IndexSet<GameValue> {
         let mut return_value = IndexSet::new();
         for possible in code_possibilities {
+            if let GameValue::Flag(
+                FlagType::FromProfilenamespace(source, var)
+                | FlagType::FromUinamespace(source, var),
+            ) = possible
+            {
+                self.error_insert(Issue::CallingUserCode {
+                    span: source.span(),
+                    var: var.clone(),
+                });
+            }
             let GameValue::Code(Some(expression)) = possible else {
                 return_value.insert(GameValue::Anything);
                 continue;
@@ -266,47 +343,46 @@ impl Inspector<'_> {
                 return_value.insert(GameValue::Anything);
                 continue;
             }
+            let is_switch = lhs.iter().any(|p| matches!(p, GameValue::SwitchType));
+            let add_switch_nil = is_switch && !statements.content().iter().any(|s| matches!(s, Statement::Expression(Expression::UnaryCommand(UnaryCommand::Named(name), _, _), _) if name.eq_ignore_ascii_case("default")));
             let mut do_run = false;
             for possible in lhs {
-                if let GameValue::ForType(option) = possible {
-                    let Some(for_args_array) = option else {
-                        continue;
-                    };
-                    do_run = true;
-                    for stage in for_args_array {
-                        match stage {
-                            Expression::String(var, source, _) => {
-                                self.var_assign(
-                                    var.as_ref(),
-                                    true,
-                                    IndexSet::from([GameValue::Number(None)]),
-                                    VarSource::ForLoop(source.clone()),
-                                );
+                match possible {
+                    GameValue::ForType(option) => {
+                        let Some(for_args_array) = option else {
+                            continue;
+                        };
+                        do_run = true;
+                        for stage in for_args_array {
+                            match stage {
+                                Expression::String(var, source, _) => {
+                                    self.var_assign(
+                                        var.as_ref(),
+                                        true,
+                                        IndexSet::from([GameValue::Number(None)]),
+                                        VarSource::ForLoop(source.clone()),
+                                    );
+                                }
+                                Expression::Code(stage_statement) => {
+                                    self.code_used(stage);
+                                    self.eval_statements(stage_statement, false);
+                                }
+                                _ => {}
                             }
-                            Expression::Code(stage_statement) => {
-                                self.code_used(stage);
-                                self.eval_statements(stage_statement, false);
-                            }
-                            _ => {}
                         }
                     }
-                } else {
-                    do_run = true;
+                    _ => {
+                        do_run = true;
+                    }
                 }
             }
             if do_run {
-                let add_final =
-                    if let Some(Statement::Expression(Expression::UnaryCommand(named, _, _), _)) =
-                        statements.content().last()
-                    {
-                        // if we know we end on a default, then we don't need to add it's nil return
-                        !named.as_str().eq_ignore_ascii_case("default")
-                    } else {
-                        true
-                    };
-                self.eval_statements(statements, add_final);
+                self.eval_statements(statements, !is_switch);
             }
             return_value.extend(self.stack_pop(stack_index));
+            if add_switch_nil {
+                return_value.insert(GameValue::Nothing(NilSource::SwitchWithoutDefault));
+            }
         }
         if is_loop {
             // repeat the loop, but with error suppression off
@@ -382,48 +458,64 @@ impl Inspector<'_> {
         IndexSet::from([GameValue::Boolean(None)])
     }
     #[must_use]
-    pub fn cmd_b_then(
-        &mut self,
-        rhs: &Expression,
-        rhs_set: &IndexSet<GameValue>,
-    ) -> IndexSet<GameValue> {
+    pub fn cmd_b_then(&mut self, rhs_set: &IndexSet<GameValue>) -> IndexSet<GameValue> {
         let mut return_value = IndexSet::new();
         for possible in rhs_set {
-            if let GameValue::Code(Some(Expression::Code(_statements))) = possible {
-                return_value.extend(self.cmd_generic_call(
-                    &IndexSet::from([possible.clone()]),
-                    None,
-                    false,
-                ));
-            }
-            if let GameValue::Array(Some(gv_array), _) = possible {
-                for gv_index in gv_array {
-                    for (element, _) in gv_index {
-                        if let GameValue::Code(Some(expression)) = element {
-                            return_value.extend(self.cmd_generic_call(
-                                &IndexSet::from([GameValue::Code(Some(expression.clone()))]),
-                                None,
-                                false,
-                            ));
-                        }
+            match possible {
+                GameValue::Code(Some(Expression::Code(_statements))) => {
+                    return_value.extend(self.cmd_generic_call(
+                        &IndexSet::from([possible.clone()]),
+                        None,
+                        false,
+                    ));
+                    // if without else branch, add a possible nil result in addition to then-branch results
+                    return_value.insert(GameValue::Nothing(NilSource::IfWithoutElse));
+                }
+                GameValue::Array(Some(gv_array), _) => {
+                    let sets_vec: Vec<IndexSet<GameValue>> = gv_array
+                        .iter()
+                        .map(|gv_index| {
+                            let mut set = IndexSet::new();
+                            for (element, _element_span) in gv_index {
+                                if let GameValue::Code(Some(expression)) = element {
+                                    set.extend(self.cmd_generic_call(
+                                        &IndexSet::from([GameValue::Code(Some(
+                                            expression.clone(),
+                                        ))]),
+                                        None,
+                                        false,
+                                    ));
+                                }
+                            }
+                            set
+                        })
+                        .collect();
+                    let (matched, merged) = GameValue::check_match_and_merge(sets_vec);
+                    if !matched {
+                        return_value.insert(GameValue::Flag(FlagType::MismatchedTypes));
                     }
+                    return_value.extend(merged);
+                }
+                _ => {
+                    return_value.insert(GameValue::Anything);
                 }
             }
-        }
-        // if without else branch, add a possible nil result in addition to then-branch results
-        if let Expression::Code(_) = rhs {
-            return_value.insert(GameValue::Nothing(NilSource::IfWithoutElse));
         }
         return_value
     }
     #[must_use]
-    /// just merge both sides (this is equilivalent to generating an else array)
+    /// Generate an else array
     pub fn cmd_b_else(
         &self,
         lhs: &IndexSet<GameValue>,
         rhs: &IndexSet<GameValue>,
+        source: &Range<usize>,
     ) -> IndexSet<GameValue> {
-        lhs.iter().chain(rhs.iter()).cloned().collect()
+        let gvs = vec![
+            lhs.iter().map(|gv| (gv.clone(), source.clone())).collect(),
+            rhs.iter().map(|gv| (gv.clone(), source.clone())).collect(),
+        ];
+        IndexSet::from([GameValue::Array(Some(gvs), None)])
     }
     #[must_use]
     pub fn cmd_b_get_or_default_call(&mut self, rhs: &IndexSet<GameValue>) -> IndexSet<GameValue> {
@@ -529,5 +621,36 @@ impl Inspector<'_> {
             IndexSet::from([GameValue::Array(None, None)]),
             VarSource::Ignore,
         );
+    }
+    pub fn cmd_b_getvariable(
+        &mut self,
+        lhs: &Expression,
+        rhs: &Expression,
+    ) -> Option<IndexSet<GameValue>> {
+        // matches `uiNamespace getVariable "var" and ["var", false]`
+        fn get_source_var_lower(e: &Expression) -> Option<String> {
+            match e {
+                Expression::String(str, _, _) => Some(str.to_lowercase()),
+                Expression::Array(arr, _) => arr.first().and_then(get_source_var_lower),
+                _ => None,
+            }
+        }
+        let source_var_lower = get_source_var_lower(rhs)?;
+        if source_var_lower.contains("_fnc_") {
+            // assume functions are compileFinaled
+            return None;
+        }
+        let Expression::NularCommand(NularCommand { name: lhs_cmd }, _) = lhs else {
+            return None;
+        };
+        let flag_type = match lhs_cmd.to_lowercase().as_str() {
+            "uinamespace" => FlagType::FromUinamespace(lhs.clone(), source_var_lower),
+            "profilenamespace" => FlagType::FromProfilenamespace(lhs.clone(), source_var_lower),
+            _ => return None,
+        };
+        Some(IndexSet::from([
+            GameValue::Anything,
+            GameValue::Flag(flag_type),
+        ]))
     }
 }

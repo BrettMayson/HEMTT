@@ -408,18 +408,18 @@ pub fn lint_all(
     database: Arc<Database>,
     manager: &LintManager<LintData>,
 ) -> Codes {
-    manager.run(
-        &LintData {
-            addon: None,
-            database,
-            localizations: Arc::new(Mutex::new(vec![])),
-            functions_used: Arc::new(Mutex::new(vec![])),
-            functions_defined: Arc::new(Mutex::new(HashSet::new())),
-        },
-        project_config,
-        None,
-        addons,
-    )
+    let lint_data = LintData {
+        addon: None,
+        database,
+        localizations: Arc::new(Mutex::new(vec![])),
+        functions_used: Arc::new(Mutex::new(vec![])),
+        functions_defined: Arc::new(Mutex::new(HashSet::new())),
+    };
+    let codes = manager.run(&lint_data, project_config, None, addons);
+    lint_data
+        .database
+        .export_project_functions_to_file(project_config, &lint_data);
+    codes
 }
 
 /// Creates and configures the SQF lint manager.
