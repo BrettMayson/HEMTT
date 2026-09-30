@@ -12,6 +12,7 @@ mod output;
 mod processed;
 mod symbol;
 mod token;
+mod toml_lint;
 mod whitespace;
 
 pub use codespan_reporting::diagnostic::Severity;
@@ -25,6 +26,7 @@ pub use output::Output;
 pub use processed::{CacheProcessed, Mapping, Processed, Sources};
 pub use symbol::Symbol;
 pub use token::Token;
+pub use toml_lint::TomlLintCode;
 pub use whitespace::Whitespace;
 
 pub type Codes = Vec<std::sync::Arc<dyn Code>>;

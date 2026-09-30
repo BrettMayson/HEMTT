@@ -6,7 +6,7 @@ use hemtt::RuntimeArguments;
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
-use crate::error::Error;
+use crate::{error::Error, toml_lint::TomlLint};
 
 use super::deprecated;
 
@@ -60,6 +60,9 @@ pub struct ProjectConfig {
 
     /// Expected combined-path prefix for the project
     expected_path: String,
+
+    /// toml lints, loaded from .hemtt/lints/*.toml
+    toml_lints: Vec<TomlLint>,
 }
 
 impl ProjectConfig {
@@ -145,6 +148,12 @@ impl ProjectConfig {
     /// Expected combined-path prefix for the project (in lowercase, without leading backslash, with trailing backslash)
     pub fn expected_path(&self) -> &str {
         &self.expected_path
+    }
+
+    #[must_use]
+    /// toml lints, loaded from .hemtt/lints/*.toml
+    pub const fn toml_lints(&self) -> &Vec<TomlLint> {
+        &self.toml_lints
     }
 
     /// Read a project file from disk
@@ -274,6 +283,7 @@ impl TryFrom<ProjectFile> for ProjectConfig {
             signing: file.signing.into(),
             runtime: RuntimeArguments::default(),
             expected_path,
+            toml_lints: crate::toml_lint::load_toml_lints(&file.meta_path)?,
         };
 
         let mut lints_path = file.meta_path;

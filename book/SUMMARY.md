@@ -11,6 +11,7 @@
   - [Minimum](configuration/minimum.md)
   - [Version](configuration/version.md)
   - [Lints](configuration/lints.md)
+  - [TOML Lints](configuration/toml-lints.md)
   - [Addon](configuration/addon.md)
   - [Global](configuration/global.md)
   - [P Drive](configuration/p-drive.md)

@@ -822,7 +822,7 @@ impl<'a> Inspector<'a> {
                         possible_values,
                         VarSource::Assignment(
                             source.start..source.start + var.len(),
-                            expression.span().clone(),
+                            expression.span(),
                         ),
                     );
                     if add_returns {
@@ -844,7 +844,7 @@ impl<'a> Inspector<'a> {
                         possible_values,
                         VarSource::Assignment(
                             8 + source.start..8 + source.start + var.len(),
-                            expression.span().clone(),
+                            expression.span(),
                         ),
                     );
                     if add_returns {

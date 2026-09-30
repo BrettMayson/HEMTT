@@ -26,7 +26,9 @@ fn init() -> Extension {
         let mut socket = loop {
             match TcpStream::connect(format!("127.0.0.1:{HEMTT_TCP_PORT}")) {
                 Ok(stream) => {
-                    stream.set_nonblocking(true).unwrap();
+                    stream
+                        .set_nonblocking(true)
+                        .expect("failed to set TCP socket to nonblocking mode");
                     break stream;
                 }
                 Err(_) => {
@@ -53,34 +55,28 @@ fn init() -> Extension {
                             toarma::Message::Photoshoot(photoshoot) => match photoshoot {
                                 toarma::Photoshoot::Weapon(weapon) => {
                                     println!("Weapon: {weapon}");
-                                    ctx.callback_data(
-                                        "hemtt_ps_items",
-                                        "weapon_add",
-                                        weapon.clone(),
-                                    )
-                                    .unwrap();
+                                    ctx.callback_data("hemtt_ps_items", "weapon_add", weapon)
+                                        .expect("callback_data failed");
                                 }
                                 toarma::Photoshoot::Vehicle(vehicle) => {
                                     println!("Vehicle: {vehicle}");
-                                    ctx.callback_data(
-                                        "hemtt_ps_items",
-                                        "vehicle_add",
-                                        vehicle.clone(),
-                                    )
-                                    .unwrap();
+                                    ctx.callback_data("hemtt_ps_items", "vehicle_add", vehicle)
+                                        .expect("callback_data failed");
                                 }
                                 toarma::Photoshoot::Preview(class) => {
                                     println!("Preview: {class}");
-                                    ctx.callback_data("hemtt_ps_previews", "add", class.clone())
-                                        .unwrap();
+                                    ctx.callback_data("hemtt_ps_previews", "add", class)
+                                        .expect("callback_data failed");
                                 }
                                 toarma::Photoshoot::PreviewRun => {
                                     println!("PreviewRun");
-                                    ctx.callback_null("hemtt_ps_previews", "run").unwrap();
+                                    ctx.callback_null("hemtt_ps_previews", "run")
+                                        .expect("callback_null failed");
                                 }
                                 toarma::Photoshoot::Done => {
                                     println!("Done");
-                                    ctx.callback_null("hemtt_ps", "done").unwrap();
+                                    ctx.callback_null("hemtt_ps", "done")
+                                        .expect("callback_null failed");
                                 }
                             },
                         }
@@ -99,13 +95,14 @@ fn init() -> Extension {
             }
 
             if let Ok(message) = recv.recv_timeout(std::time::Duration::from_millis(100)) {
-                crate::send(message, &mut socket);
+                crate::send(&message, &mut socket);
             }
         }
     });
     ext
 }
 
+#[allow(clippy::needless_pass_by_value)]
 fn mission(ctx: Context, mission: String) {
     let Some(sender) = ctx.global().get::<std::sync::mpsc::Sender<Message>>() else {
         println!("`mission` called without a sender");
@@ -113,9 +110,10 @@ fn mission(ctx: Context, mission: String) {
     };
     sender
         .send(Message::Control(Control::Mission(mission)))
-        .unwrap();
+        .expect("send failed");
 }
 
+#[allow(clippy::needless_pass_by_value)]
 fn log(ctx: Context, level: String, message: String) {
     let level = match level.as_str() {
         "trace" => fromarma::Level::Trace,
@@ -132,13 +130,19 @@ fn log(ctx: Context, level: String, message: String) {
         println!("`log` called without a sender");
         return;
     };
-    sender.send(Message::Log(level, message)).unwrap();
+    sender
+        .send(Message::Log(level, message))
+        .expect("send failed");
 }
 
-fn send(message: fromarma::Message, socket: &mut TcpStream) {
-    let message = serde_json::to_string(&message).unwrap();
-    let len = u32::try_from(message.len()).unwrap();
-    socket.write_all(&u32::to_le_bytes(len)).unwrap();
-    socket.write_all(message.as_bytes()).unwrap();
-    socket.flush().unwrap();
+fn send(message: &fromarma::Message, socket: &mut TcpStream) {
+    let message = serde_json::to_string(&message).expect("failed to serialize message");
+    let len = u32::try_from(message.len()).expect("message too large for u32 length prefix");
+    socket
+        .write_all(&u32::to_le_bytes(len))
+        .expect("failed to send message length");
+    socket
+        .write_all(message.as_bytes())
+        .expect("failed to send message payload");
+    socket.flush().expect("flush failed");
 }
