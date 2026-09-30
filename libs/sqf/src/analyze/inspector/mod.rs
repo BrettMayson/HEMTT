@@ -875,9 +875,7 @@ pub fn run_processed(
 
     let inspector_config = database.inspector_config();
     let function_info = headers::extract_from_header(processed, inspector_config);
-    if let Some(function_info) = &function_info
-        && function_info.name().is_some()
-    {
+    if let Some(function_info) = &function_info {
         database.project_functions_push(function_info.clone());
     }
 

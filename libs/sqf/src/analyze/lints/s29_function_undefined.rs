@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeMap, HashSet}, sync::Arc, vec
+    collections::{BTreeMap}, sync::Arc, vec
 };
 
 use hemtt_common::{config::{LintConfig, ProjectConfig}, similar_values};
@@ -192,6 +192,7 @@ struct RunnerFinal;
 impl LintRunner<LintData> for RunnerFinal {
     type Target = Vec<Addon>;
 
+    #[allow(clippy::significant_drop_tightening)]
     fn run(
         &self,
         _project: Option<&hemtt_common::config::ProjectConfig>,
@@ -199,13 +200,13 @@ impl LintRunner<LintData> for RunnerFinal {
         _processed: Option<&hemtt_workspace::reporting::Processed>,
         runtime: &hemtt_common::config::RuntimeArguments,
         target: &Self::Target,
-        _data: &LintData,
+        data: &LintData,
     ) -> Codes {
         let mut codes: Codes = Vec::new();
         if runtime.is_just() { // --just build will be missing EFUNCS
             return codes;
         }
-        let mut all_defined = HashSet::new();
+        let mut all_defined = data.functions_defined.lock().expect("mutex safety");
         for addon in target {
             let defined = addon
                 .build_data()

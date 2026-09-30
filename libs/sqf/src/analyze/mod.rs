@@ -408,33 +408,18 @@ pub fn lint_all(
     database: Arc<Database>,
     manager: &LintManager<LintData>,
 ) -> Codes {
-    if let Some(project_config) = project_config
-        && !project_config.runtime().is_just()
-    {
-        let prefix = project_config.prefix();
-        // All sqf have been processed, export project functions only if not in "--just"
-        database.export_project_functions_to_file(prefix);
-    }
-    let mut manager = LintManager::new(
-        project_config.map_or_else(Default::default, |project| project.lints().sqf().clone()),
-        project_config.map_or_else(RuntimeArguments::default, |p| p.runtime().clone()),
-    );
-    if let Err(e) = manager.extend(SQF_LINTS.iter().map(|l| (**l).clone()).collect::<Vec<_>>()) {
-        return e;
-    }
-
-    manager.run(
-        &LintData {
-            addon: None,
-            database,
-            localizations: Arc::new(Mutex::new(vec![])),
-            functions_used: Arc::new(Mutex::new(vec![])),
-            functions_defined: Arc::new(Mutex::new(HashSet::new())),
-        },
-        project_config,
-        None,
-        addons,
-    )
+    let lint_data = LintData {
+        addon: None,
+        database,
+        localizations: Arc::new(Mutex::new(vec![])),
+        functions_used: Arc::new(Mutex::new(vec![])),
+        functions_defined: Arc::new(Mutex::new(HashSet::new())),
+    };
+    let codes = manager.run(&lint_data, project_config, None, addons);
+    lint_data
+        .database
+        .export_project_functions_to_file(project_config, &lint_data);
+    codes
 }
 
 /// Creates and configures the SQF lint manager.

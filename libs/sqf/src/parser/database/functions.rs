@@ -1,14 +1,13 @@
 //! Handles database of external functions
-
 use std::{io::Write, path::Path, sync::Arc};
-
-const FUNCTION_DIR: &str = ".hemttout/functions";
-
 use arma3_wiki::{Wiki, functions::Functions, model::Function};
+use hemtt_common::config::ProjectConfig;
 use indexmap::IndexMap;
 use tracing::{error, trace};
-
+use crate::analyze::LintData;
 use super::Database;
+
+const FUNCTION_DIR: &str = ".hemttout/functions";
 
 impl Database {
     pub(crate) fn project_functions_push(&self, func: Arc<Function>) {
@@ -74,11 +73,25 @@ impl Database {
         }
     }
 
-    pub(crate) fn export_project_functions_to_file(&self, prefix: &str) {
+    /// Export all project functions to a YAML file
+    pub(crate) fn export_project_functions_to_file(
+        &self,
+        project_config: Option<&ProjectConfig>,
+        lint_data: &LintData,
+    ) {
         let Some(inspector_config) = self.inspector_config() else {
             return;
         };
+        let Some(project_config) = project_config else {
+            return;
+        };
+        if project_config.runtime().is_just() {
+            return;
+        }
+        let prefix = project_config.prefix();
         let export_prefixes = inspector_config.export_functions();
+        let funcs = self.collect_functions(export_prefixes, lint_data);
+
         let path = Path::new(FUNCTION_DIR);
         let Ok(exists) = fs_err::exists(path) else {
             trace!("Failed to even look at {FUNCTION_DIR}?");
@@ -94,19 +107,6 @@ impl Database {
             error!("Failed to create {} for writing", path.display());
             return;
         };
-        let Ok(guard) = self.project_functions.lock() else {
-            unreachable!("Failed to lock project functions mutex");
-        };
-        let mut funcs: Vec<&Function> = guard
-            .iter()
-            .filter(|f| {
-                f.name()
-                    .is_some_and(|n| export_prefixes.iter().any(|p| p == "*" || n.starts_with(p)))
-            })
-            .map(std::convert::AsRef::as_ref)
-            .collect();
-        funcs.sort_by_key(|f| f.name());
-        let funcs = funcs.into_iter().cloned().collect();
         let Ok(str) = Functions::to_string(&funcs) else {
             error!(
                 "Failed to serialize functions for writing to {}",
@@ -118,5 +118,38 @@ impl Database {
             error!("Failed to write functions to {}", path.display());
             return;
         };
+    }
+    /// Collect all project functions that match the export prefixes
+    #[allow(clippy::significant_drop_tightening)]
+    fn collect_functions(&self, export_prefixes: &[String], lint_data: &LintData) -> Vec<Function> {
+        let project_functions = self.project_functions.lock().expect("mutex");
+        let all_defined = lint_data.functions_defined.lock().expect("mutex");
+        let mut funcs: Vec<Function> = project_functions
+            .iter()
+            .filter_map(|f| {
+                let name = f.name()?;
+                if !name.starts_with('#') {
+                    return Some(f.as_ref().clone());
+                }
+                let file = &name[1..]; // use the filename to search in all_defined
+                let mut search = all_defined.iter().filter(|(low, _)| low.ends_with(file));
+                let (Some((_, pretty_name)), None) = (search.next(), search.next()) else {
+                    // println!("DEBUG: Could not func name for: {file}");
+                    return None; // either 0 or 2+ (ambigious, like multiple fnc_handleDamage)
+                };
+                Some(Function::new(
+                    Some(pretty_name.to_string()),
+                    f.ret().cloned(),
+                    f.params().to_vec(),
+                    f.example().to_string(),
+                ))
+            })
+            .filter(|f| {
+                f.name()
+                    .is_some_and(|n| export_prefixes.iter().any(|p| p == "*" || n.starts_with(p)))
+            })
+            .collect();
+        funcs.sort_by(|a, b| a.name().cmp(&b.name()));
+        funcs
     }
 }

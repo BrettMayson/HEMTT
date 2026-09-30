@@ -6,6 +6,10 @@ use std::sync::{Arc, OnceLock};
 use tracing::trace;
 
 const MAX_ARG_INDEX: usize = 100;
+/// Tags to ignore inside <brackets> as they are just html
+const IGNORE_TAGS_LOWER: &[&str] = &["br/", "&amp;", "&lt;", "&gt;"];
+const IGNORE_UNUSED_LOWER: &[&str] = &["not used", "(unused"];
+const OPTIONAL_LOWER: &[&str] = &["(optional", "(default", "(not used", "(unused"];
 
 #[must_use]
 pub(crate) fn extract_from_header(
@@ -45,16 +49,15 @@ enum HeaderError {
 
 #[must_use]
 fn match_value(input_low: &str) -> Option<Value> {
-    const IGNORE_TAGS: &[&str] = &["br/", "&amp;", "&lt;", "&gt;"];
-    fn str_to_type(input: &str) -> Value {
-        if input.starts_with("array of ") {
+    fn str_to_type(input_low: &str) -> Value {
+        if input_low.starts_with("array of ") {
             return Value::ArrayUnknown;
         }
-        if input.contains(',') {
+        if input_low.contains(',') {
             // ToDo: could split on comma, but this tends to be used for array sub elements
             return Value::Anything;
         }
-        match input {
+        match input_low {
             "any" | "anything" | "unknown" => Value::Anything,
             "array" | "vector" => Value::ArrayUnknown,
             "bool" | "boolean" => Value::Boolean,
@@ -73,7 +76,7 @@ fn match_value(input_low: &str) -> Option<Value> {
             "structuredtext" | "structured text" => Value::StructuredText,
             "nil" | "nothing" => Value::Nothing,
             _ => {
-                trace!("header: unknown arg type '{input}'");
+                trace!("header: unknown arg type '{input_low}'");
                 Value::Anything
             }
         }
@@ -86,7 +89,7 @@ fn match_value(input_low: &str) -> Option<Value> {
             let type_str = c.name("type").expect("re").as_str();
             type_str.split(" or ").collect::<Vec<_>>()
         })
-        .filter(|i| !IGNORE_TAGS.contains(i))
+        .filter(|i| !IGNORE_TAGS_LOWER.contains(i))
         .map(str_to_type)
         .collect::<Vec<_>>();
     if types.is_empty() {
@@ -133,14 +136,13 @@ fn parse_args(input: Option<Match<'_>>, re_arg_line: &Regex) -> Result<Vec<Param
         let arg_info = caps.name("info").map_or("#Unknown", |m| m.as_str()).trim();
         let arg_info_low = arg_info.to_lowercase();
         let arg_type = match_value(arg_info_low.as_str());
-        if arg_type.is_none() {
-            println!("header: unknown arg type in info '{arg_info}'");
+        let unused = IGNORE_UNUSED_LOWER.iter().any(|i| arg_info_low.contains(i));
+        if arg_type.is_none() && !unused {
+            // Possible ToDo emit header lint?
+            println!("DEBUG: unknown arg type in info '{arg_info}@{line}'");
         }
-        let arg_optional = arg_type.is_none()
-            || arg_info_low.contains("(optional")
-            || arg_info_low.contains("(unused")
-            || arg_info_low.contains("(not used")
-            || arg_info_low.contains("(default");
+        let arg_optional =
+            arg_type.is_none() || unused || OPTIONAL_LOWER.iter().any(|i| arg_info_low.contains(i));
         let arg_type = arg_type.unwrap_or(Value::Anything);
         out.push(Param::new(
             format!("{}", out.len()),
@@ -199,6 +201,7 @@ fn parse_public(input: Option<Match<'_>>) -> bool {
     false
 }
 #[must_use]
+#[allow(clippy::unnecessary_wraps)]
 fn parse_function_name(input: &str, filename_low: &str) -> Option<String> {
     static RE_FUNC_FINDER: OnceLock<Regex> = OnceLock::new();
     debug_assert_eq!(filename_low, filename_low.to_lowercase());
@@ -210,7 +213,9 @@ fn parse_function_name(input: &str, filename_low: &str) -> Option<String> {
             return Some(func_low);
         }
     }
-    None
+    // don't know actual func name so use filename as a fallback
+    // possible todo: look for examples that don't match the actual function name
+    Some(format!("#{filename_low}"))
 }
 fn match_header(
     source: &str,
