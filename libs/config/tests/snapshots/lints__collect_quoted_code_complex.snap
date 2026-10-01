@@ -1,0 +1,5 @@
+---
+source: libs/config/tests/lints.rs
+expression: quoted_code
+---
+[("['ACE3 Common', \"abe_interact_menu_selfInteractKey\"] call abe_field_fnc_getKeybindName", None), ("['ACE3 Common', \"abe_interact_menu_interactKey\"] call abe_field_fnc_getKeybindName", None), ("'ACE_ATragMX' call abe_field_fnc_getItemName", None)]
