@@ -296,8 +296,7 @@ impl SourceDatabase {
             .expect("SourceDatabase lock poisoned")
             .dependencies
             .get(&id)
-            .map(|set| set.iter().copied().collect())
-            .unwrap_or_default()
+            .map_or_default(|set| set.iter().copied().collect())
     }
 
     #[must_use]
@@ -310,8 +309,7 @@ impl SourceDatabase {
             .expect("SourceDatabase lock poisoned")
             .dependents
             .get(&id)
-            .map(|set| set.iter().copied().collect())
-            .unwrap_or_default()
+            .map_or_default(|set| set.iter().copied().collect())
     }
 
     /// Clear the recorded forward dependency edges for `id` (e.g. before
