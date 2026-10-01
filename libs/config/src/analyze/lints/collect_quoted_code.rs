@@ -5,7 +5,7 @@ use hemtt_workspace::{
     lint::{AnyLintRunner, Lint, LintRunner}, reporting::{Code, Processed},
 };
 
-use crate::{Class, Config, Property, Value, analyze::LintData};
+use crate::{Class, Config, Item, Property, Str, Value, analyze::LintData};
 
 crate::analyze::lint!(LintCollectQuotedCode);
 
@@ -38,7 +38,7 @@ impl LintRunner<LintData> for Runner {
     type Target = Config;
     fn run(
         &self,
-        _project: Option<&ProjectConfig>,
+        project: Option<&ProjectConfig>,
         _config: &LintConfig,
         processed: Option<&Processed>,
         _runtime: &hemtt_common::config::RuntimeArguments,
@@ -48,8 +48,12 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return vec![];
         };
+        let Some(project) = project else {
+            return vec![];
+        };
+        let prefix = project.prefix().to_lowercase();
         for p in &target.0 {
-            check_property(p, processed, data, get_ignores_generic);
+            check_property(p, processed, data, get_ignores_generic, &prefix);
         }
         vec![]
     }
@@ -60,6 +64,7 @@ fn check_property(
     processed: &Processed,
     data: &LintData,
     fn_ignore: fn(&str) -> Option<&'static str>,
+    prefix: &str,
 ) {
     match property {
         Property::Class(Class::Local { name, parent:_, properties, err_missing_braces:_ }) => {
@@ -67,37 +72,64 @@ fn check_property(
                 return;
             };
             for p in properties {
-                check_property(p, processed, data, fn_ignore);
+                check_property(p, processed, data, fn_ignore, prefix);
             }
         }
         Property::Entry { name, value:Value::Str(value), expected_array:_ } => {
-            let value_lower = value.value().to_lowercase();
-            if value_lower.is_empty() || value_lower.starts_with("http") || value_lower.starts_with("$str") {
-                return
-            }
             // based on entry name, see if there is something extra needs to be injected (special vars to ignore)
             // Some means the entry should always contain code 
             // None means unknown, so look for a func call
-            let source_extra_inject = fn_ignore(name.as_str().to_lowercase().as_str());       
-            if source_extra_inject.is_none() && !(value_lower.contains("call ") && value_lower.contains("_fnc_")) {
-                return
+            let source_extra_inject = fn_ignore(name.as_str().to_lowercase().as_str());
+            check_string(value, processed, data, prefix, source_extra_inject);
+        }
+        Property::Entry { name, value:Value::Array(array), expected_array:_ } => {
+            let source_extra_inject = fn_ignore(name.as_str().to_lowercase().as_str());
+            for item in &array.items {
+                check_item(item, processed, data, prefix, source_extra_inject);
             }
-
-            let range = value.span();
-            let (output, boundaries) = unescape_quoted(&processed.extract(range));
-            let processed = Arc::new(processed.select_sub_region(output, range, &boundaries, source_extra_inject));
-
-            data.quoted_code.lock().expect("mutex").push(processed);
-            }
+        }
         _ => { }
     }
 }
-
+fn check_string(value: &Str, processed: &Processed, data: &LintData, prefix: &str, source_extra_inject: Option<&'static str>) {
+    let value_lower = value.value().to_lowercase();
+    if value_lower.is_empty() || value_lower.starts_with("http") || value_lower.starts_with("$str") {
+        return
+    }
+    if !is_project_func(&value_lower, prefix) && source_extra_inject.is_none() 
+        && !(value_lower.contains("_fnc_") && (value_lower.contains("call "))) {     
+        return
+    }
+    let range = value.span().clone();
+    let (output, _boundaries) = unescape_quoted(&processed.extract(&range));
+    
+    let processed = Arc::new(processed.select_sub_region(output, &range, source_extra_inject));
+    data.quoted_code.lock().expect("mutex").push(processed);
+}
+fn check_item(item: &Item, processed: &Processed, data: &LintData, prefix: &str, source_extra_inject: Option<&'static str>) {
+    match item {
+        Item::Str(str) => {
+            check_string(str, processed, data, prefix, source_extra_inject);
+        }
+        Item::Array(array) => {
+            for item in array {
+                check_item(item, processed, data, prefix, source_extra_inject);
+            }
+        }
+        _ => {}
+    }
+}
+#[must_use]
+fn is_project_func(var_lower: &str, prefix: &str,) -> bool {
+    var_lower.starts_with(prefix) && var_lower.contains("_fnc_")
+}
 #[must_use]
 fn get_ignore_fn(classname: &str, current: fn(&str) -> Option<&'static str>) -> Option<fn(&str) -> Option<&'static str>> {
     match classname.to_lowercase().as_str() {
         // ACE Actions on CfgVehicles, Zeus at root
-        "ace_actions" | "ace_selfactions" | "ace_zeusactions" => Some(get_ignores_cfgvehicles),
+        "ace_actions" | "ace_selfactions" | "ace_zeusactions" | "ace_interaction_anims" => Some(get_ignores_cfgvehicles),
+        // ace-like - https://github.com/zen-mod/ZEN/blob/master/addons/context_menu/
+        "zen_context_menu_actions" => Some(get_ignores_zen),
         // 3den at root and Attributes on CfgVehicles
         "cfg3den" | "attributes" => Some(get_ignores_3den),
         // MFD has simple expressions that will fail (e.g. `speed`)
@@ -119,7 +151,7 @@ fn get_ignores_generic(name_lower: &str) -> Option<&'static str> {
 fn get_ignores_cfgvehicles(name_lower: &str) -> Option<&'static str> {
     match name_lower {
         "statement" | "condition" | "insertchildren" | "modifierfunction" => Some(r#"#pragma hemtt ignore_variables ["_target", "_player", "_actionParams"]"#),
-        "position" => Some(r#"#pragma hemtt ignore_variables ["_target"]"#),
+        "position" | "positions" => Some(r#"#pragma hemtt ignore_variables ["_target"]"#),
         _ => get_ignores_generic(name_lower),
     }
 }
@@ -130,9 +162,13 @@ fn get_ignores_3den(name_lower: &str) -> Option<&'static str> {
         _ => get_ignores_generic(name_lower),
     }
 }
-
-
-
+#[must_use]
+fn get_ignores_zen(name_lower: &str) -> Option<&'static str> {
+    match name_lower {
+        "statement" | "condition" | "insertchildren" | "modifierfunction" => Some(r#"#pragma hemtt ignore_variables ["_args", "_position", "_objects", "_groups", "_waypoints", "_markers", "_hoveredEntity"]"#),
+        _ => get_ignores_generic(name_lower),
+    }
+}
 #[must_use]
 fn unescape_quoted(source: &str) -> (String, Vec<usize>) {
     let source_chars = source.chars().collect::<Vec<_>>();

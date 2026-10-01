@@ -477,20 +477,29 @@ impl Processed {
         &self,
         new_output: String,
         from_span: &Range<usize>,
-        boundaries: &[usize],
         add_source: Option<&str>,
     ) -> Self {
+        let mut boundaries = Vec::with_capacity(new_output.chars().count() + 1);
+        let mut byte_offset = 0;
+        for c in new_output.chars() {
+            boundaries.push(byte_offset);
+            byte_offset += c.len_utf8();
+        }
+        boundaries.push(byte_offset);
+
         let mappings: Vec<Mapping> = self
             .mappings
             .iter()
             .filter_map(|m| {
-                let start = m.processed_start().offset().max(from_span.start);
-                let end = m.processed_end().offset().min(from_span.end);
-                if start >= end {
+                let start = m.processed_start().offset();
+                if start < from_span.start || start >= from_span.end {
                     return None;
                 }
-                let start = boundaries[start - from_span.start];
-                let end = boundaries[end - from_span.start];
+                let end = m.processed_end().offset();
+                let start_idx = (start - from_span.start).min(boundaries.len() - 1);
+                let end_idx = (end - from_span.start).min(boundaries.len() - 1);
+                let start = boundaries[start_idx];
+                let end = boundaries[end_idx] + 1;
                 if start >= end {
                     return None;
                 }
