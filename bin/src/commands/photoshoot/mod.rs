@@ -118,8 +118,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
                 super::launch::error::bcle8_mission_not_found::MissionNotFound::code(
                     dev_mission
                         .file_name()
-                        .map(|x| x.to_string_lossy().to_string())
-                        .unwrap_or_default(),
+                        .map_or_default(|x| x.to_string_lossy().to_string()),
                     dev_mission.parent().expect("has parent"),
                 ),
             );

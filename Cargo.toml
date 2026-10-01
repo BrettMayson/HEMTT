@@ -42,6 +42,9 @@ too_many_lines = "allow"
 future_incompatible = "warn"
 nonstandard_style = "warn"
 
+[workspace.lints.cargo]
+unused_dependencies = "allow" #false positives on lzma-rust2 and lsp-types
+
 [workspace.dependencies]
 arma3-wiki = "0.4.5"
 automod =  "1.0.17"
