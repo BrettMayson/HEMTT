@@ -39,3 +39,6 @@ if (!isNil "_isEngineer" && {_isEngineer == 55}) exitWith {};
 
 if (a && isNil "_depth1" || {_depth1 isNotEqualTo true}) exitWith {};
 if (a && b && c && d && isNil "_depth4" || {_depth4 != 1}) exitWith {};
+
+if ((isNil "_aaa" || {isNil "_bbb"}) && {_bbb}) then { }; // skipped
+if ((isNil "_aaa" || {isNil "_bbb"}) && {_ccc}) then { }; // linted because vars are different
