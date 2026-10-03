@@ -4,10 +4,7 @@
 //!
 //! Requires that files first be tokenized by the [`hemtt_preprocessor`] crate.
 
-use std::{
-    collections::HashSet,
-    sync::{Arc, Mutex},
-};
+use std::sync::Arc;
 
 pub mod analyze;
 pub mod check;
@@ -25,7 +22,7 @@ use hemtt_common::{config::RuntimeArguments, version::Version};
 
 use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{
-    addons::{Addon, DefinedFunctions, MagazineWellInfo},
+    addons::{Addon, DefinedFunctions, Localizations, MagazineWellInfo},
     lint::LintManager,
     position::Position,
     reporting::{Code, Codes, Processed, Severity},
@@ -64,36 +61,16 @@ pub fn parse(
                     .map(|l| (**l).clone())
                     .collect::<Vec<_>>(),
             )?;
-            let localizations = Arc::new(Mutex::new(vec![]));
-            let functions_defined = Arc::new(Mutex::new(HashSet::new()));
-            let magazine_well_info = Arc::new(Mutex::new((Vec::new(), Vec::new())));
-            let codes = config.analyze(
-                &LintData {
-                    path: String::new(),
-                    localizations: localizations.clone(),
-                    functions_defined: functions_defined.clone(),
-                    magazine_well_info: magazine_well_info.clone(),
-                },
-                project,
-                processed,
-                &manager,
-            );
+            let lint_data = LintData::default();
+            let codes = config.analyze(&lint_data, project, processed, &manager);
+            let (localized, functions_defined, magazine_well_info) = lint_data.unpack();
             Ok(ConfigReport {
                 codes,
                 patches: config.get_patches(),
-                localized: Arc::<Mutex<Vec<(String, Position)>>>::try_unwrap(localizations)
-                    .expect("not poisoned")
-                    .into_inner()
-                    .expect("not poisoned"),
+                localized,
                 config,
-                functions_defined: Arc::<Mutex<DefinedFunctions>>::try_unwrap(functions_defined)
-                    .expect("not poisoned")
-                    .into_inner()
-                    .expect("not poisoned"),
-                magazine_well_info: Arc::<Mutex<MagazineWellInfo>>::try_unwrap(magazine_well_info)
-                    .expect("not poisoned")
-                    .into_inner()
-                    .expect("not poisoned"),
+                functions_defined,
+                magazine_well_info,
             })
         },
     )
@@ -104,7 +81,7 @@ pub struct ConfigReport {
     config: Config,
     codes: Codes,
     patches: Vec<CfgPatch>,
-    localized: Vec<(String, Position)>,
+    localized: Localizations,
     functions_defined: DefinedFunctions,
     magazine_well_info: MagazineWellInfo,
 }
@@ -175,36 +152,25 @@ impl ConfigReport {
     }
 
     /// Pushes the report's data into an Addon
-    /// # Panics
-    pub fn push_to_addon(&self, addon: &Addon) {
+    pub fn push_to_addon(self, addon: &Addon) {
         let build_data = addon.build_data();
-        build_data
-            .localizations()
-            .lock()
-            .expect("not poisoned")
-            .extend(
-                self.localized
-                    .iter()
-                    .map(|(s, p)| (s.to_owned(), p.clone())),
-            );
-        build_data
-            .functions_defined()
-            .lock()
-            .expect("not poisoned")
-            .extend(self.functions_defined.clone());
-        let (magazines, magwell_codes) = self.magazine_well_info.clone();
-        build_data
-            .magazine_well_info()
-            .lock()
-            .expect("not poisoned")
-            .0
-            .extend(magazines);
-        build_data
-            .magazine_well_info()
-            .lock()
-            .expect("not poisoned")
-            .1
-            .extend(magwell_codes);
+        if !self.localized.is_empty()
+            && let Ok(mut lock) = build_data.localizations().lock()
+        {
+            lock.extend(self.localized);
+        }
+        if !self.functions_defined.is_empty()
+            && let Ok(mut lock) = build_data.functions_defined().lock()
+        {
+            lock.extend(self.functions_defined);
+        }
+        let (magazines, magwell_codes) = self.magazine_well_info;
+        if !(magazines.is_empty() && magwell_codes.is_empty())
+            && let Ok(mut lock) = build_data.magazine_well_info().lock()
+        {
+            lock.0.extend(magazines);
+            lock.1.extend(magwell_codes);
+        }
     }
 
     #[must_use]
@@ -215,7 +181,7 @@ impl ConfigReport {
 
     #[must_use]
     /// Get the `Localizations`
-    pub const fn localizations(&self) -> &Vec<(String, Position)> {
+    pub const fn localizations(&self) -> &Localizations {
         &self.localized
     }
 

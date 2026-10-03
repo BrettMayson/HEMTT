@@ -1,14 +1,11 @@
-use std::{
-    collections::HashSet,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
 use hemtt_common::{
     config::{ProjectConfig, RuntimeArguments},
     toml_lint::{TomlLintConfigTarget, TomlLintDef},
 };
 use hemtt_workspace::{
-    addons::{Addon, DefinedFunctions, MagazineWellInfo},
+    addons::{Addon, DefinedFunctions, Localizations, MagazineWellInfo},
     lint::LintManager,
     lint_manager,
     position::Position,
@@ -22,11 +19,39 @@ pub mod lints {
     automod::dir!(pub "src/analyze/lints");
 }
 
+#[derive(Default)]
 pub struct LintData {
     pub(crate) path: String,
-    pub(crate) localizations: Arc<Mutex<Vec<(String, Position)>>>,
+    pub(crate) localizations: Arc<Mutex<Localizations>>,
     pub(crate) functions_defined: Arc<Mutex<DefinedFunctions>>,
     pub(crate) magazine_well_info: Arc<Mutex<MagazineWellInfo>>,
+}
+impl LintData {
+    fn clone_with_path(&self, path: String) -> Self {
+        Self {
+            path,
+            localizations: self.localizations.clone(),
+            functions_defined: self.functions_defined.clone(),
+            magazine_well_info: self.magazine_well_info.clone(),
+        }
+    }
+    pub(crate) fn unpack(self) -> (Localizations, DefinedFunctions, MagazineWellInfo) {
+        debug_assert_eq!(Arc::strong_count(&self.localizations), 1);
+        (
+            Arc::try_unwrap(self.localizations)
+                .expect("not poisoned")
+                .into_inner()
+                .expect("not poisoned"),
+            Arc::try_unwrap(self.functions_defined)
+                .expect("not poisoned")
+                .into_inner()
+                .expect("not poisoned"),
+            Arc::try_unwrap(self.magazine_well_info)
+                .expect("not poisoned")
+                .into_inner()
+                .expect("not poisoned"),
+        )
+    }
 }
 
 lint_manager!(config, vec![]);
@@ -88,15 +113,10 @@ impl Analyze for Class {
         codes.extend(match self {
             Self::External { .. } => vec![],
             Self::Local { properties, .. } | Self::Root { properties, .. } => {
-                let data = LintData {
-                    path: self.name().map_or_else(
-                        || data.path.clone(),
-                        |name| format!("{}/{}", data.path, name.value),
-                    ),
-                    localizations: data.localizations.clone(),
-                    functions_defined: data.functions_defined.clone(),
-                    magazine_well_info: data.magazine_well_info.clone(),
-                };
+                let data = data.clone_with_path(self.name().map_or_else(
+                    || data.path.clone(),
+                    |name| format!("{}/{}", data.path, name.value),
+                ));
                 properties
                     .iter()
                     .flat_map(|p| p.analyze(&data, project, processed, manager))
@@ -119,12 +139,7 @@ impl Analyze for Property {
         codes.extend(manager.run(data, project, Some(processed), self));
         codes.extend(match self {
             Self::Entry { value, .. } => {
-                let data = LintData {
-                    path: format!("{}.{}", data.path, self.name().value),
-                    localizations: data.localizations.clone(),
-                    functions_defined: data.functions_defined.clone(),
-                    magazine_well_info: data.magazine_well_info.clone(),
-                };
+                let data = data.clone_with_path(format!("{}.{}", data.path, self.name().value));
                 value.analyze(&data, project, processed, manager)
             }
             Self::Class(c) => c.analyze(data, project, processed, manager),
@@ -218,17 +233,7 @@ pub fn lint_all(project: Option<&ProjectConfig>, addons: &Vec<Addon>) -> Codes {
             .collect::<Vec<_>>(),
     );
     let mut codes = manager.check_config_usage("config", "c");
-    codes.extend(manager.run(
-        &LintData {
-            path: String::new(),
-            localizations: Arc::new(Mutex::new(vec![])),
-            functions_defined: Arc::new(Mutex::new(HashSet::new())),
-            magazine_well_info: Arc::new(Mutex::new((Vec::new(), Vec::new()))),
-        },
-        project,
-        None,
-        addons,
-    ));
+    codes.extend(manager.run(&LintData::default(), project, None, addons));
     codes
 }
 
