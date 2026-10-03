@@ -20,8 +20,9 @@ pub fn get_path(url: &Url) -> Option<String> {
     tracing::trace!("get_path called with URL path: {}", url.path());
     let workspace = EditorWorkspaces::get().guess_workspace(url)?;
     let source = workspace.join_url(url).ok()?;
-    tracing::trace!("get_path returning: {}", source.as_virtual_str());
-    Some(source.as_virtual_str())
+    let path = source.as_virtual_str().replace('/', "\\");
+    tracing::trace!("get_path returning: {}", path);
+    Some(path)
 }
 #[derive(Debug, serde::Deserialize)]
 pub struct JsonParams {
