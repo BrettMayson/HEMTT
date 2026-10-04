@@ -90,7 +90,7 @@ fn is_comparison(cmd: &BinaryCommand) -> bool {
 }
 
 /// A value that can be evaluated without calling a command, so it cannot error or have side effects.
-fn is_simple_operand(expr: &Expression, nil_vars: &Vec<String>) -> bool {
+fn is_simple_operand(expr: &Expression, nil_vars: &[String]) -> bool {
     match expr {
         Expression::Variable(var_name, _) => {
             !nil_vars.contains(&var_name.to_lowercase())
@@ -131,13 +131,11 @@ impl LintRunner<LintData> for Runner {
             return Vec::new();
         };
         let nil_vars = pattern_collect(left.as_ref(), &|expr: &Expression| -> Option<String> {
-            if let Expression::UnaryCommand(UnaryCommand::Named(cmd), nil_rhs, _) = expr {
-                if cmd.as_str().eq_ignore_ascii_case("isNil") {
-                    if let Expression::String(isnil_input_str, _, _) = nil_rhs.as_ref() {
+            if let Expression::UnaryCommand(UnaryCommand::Named(cmd), nil_rhs, _) = expr
+                && cmd.as_str().eq_ignore_ascii_case("isNil")
+                    && let Expression::String(isnil_input_str, _, _) = nil_rhs.as_ref() {
                         return Some(isnil_input_str.to_lowercase());
                     }
-                }
-            }
             None
         });
         let note = match inner {

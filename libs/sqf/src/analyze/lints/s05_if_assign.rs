@@ -82,13 +82,11 @@ impl LintRunner<LintData> for Runner {
                     if let (Some(lhs), Some(rhs)) = (lhs, rhs) {
                         // Skip if consts are used in a isNil check (e.g. [x, 5] select (isNil "x") will error in scheduled)
                         let nil_vars = pattern_collect(condition.as_ref(), &|expr: &Expression| -> Option<String> {
-                            if let Expression::UnaryCommand(UnaryCommand::Named(cmd), nil_rhs, _) = expr {
-                                if cmd.as_str().eq_ignore_ascii_case("isNil") {
-                                    if let Expression::String(isnil_input_str, _, _) = nil_rhs.as_ref() {
+                            if let Expression::UnaryCommand(UnaryCommand::Named(cmd), nil_rhs, _) = expr
+                                && cmd.as_str().eq_ignore_ascii_case("isNil")
+                                    && let Expression::String(isnil_input_str, _, _) = nil_rhs.as_ref() {
                                         return Some(isnil_input_str.to_lowercase());
                                     }
-                                }
-                            }
                             None
                         });
                         if nil_vars.contains(&lhs.0.to_lowercase()) || nil_vars.contains(&rhs.0.to_lowercase())  {
