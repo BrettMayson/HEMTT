@@ -38,15 +38,14 @@ pub async fn completion(
     let text_at_cursor = text
         .lines()
         .nth(position.position.line as usize)
-        .map(|line| {
+        .map_or_default(|line| {
             let line = line.trim_end();
             if position.position.character as usize > line.len() {
                 line.to_string()
             } else {
                 line[..position.position.character as usize].to_string()
             }
-        })
-        .unwrap_or_default();
+        });
     let split: Vec<&str> = text_at_cursor.rsplit(' ').collect();
     let mut prefix = (*split.first().unwrap_or(&"")).to_string();
     let mut params = Vec::new();

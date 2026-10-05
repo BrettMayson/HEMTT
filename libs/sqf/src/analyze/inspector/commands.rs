@@ -167,16 +167,8 @@ impl Inspector<'_> {
                             found: vec![default_value.clone()],
                             span: element[1][0].1.clone(),
                             default: Some(
-                                (element[2]
-                                    .first()
-                                    .map(|(_, s)| s.clone())
-                                    .unwrap_or_default()
-                                    .start)
-                                    ..(element[2]
-                                        .last()
-                                        .map(|(_, s)| s.clone())
-                                        .unwrap_or_default()
-                                        .end),
+                                (element[2].first().map_or_default(|(_, s)| s.clone()).start)
+                                    ..(element[2].last().map_or_default(|(_, s)| s.clone()).end),
                             ),
                         });
                     }
