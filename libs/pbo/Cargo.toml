@@ -29,6 +29,3 @@ insta = { workspace = true }
 [[bench]]
 name = "small_files"
 harness = false
-
-[target.x86_64-unknown-linux-gnu]
-rustflags = ["-Clink-arg=-Wl,--no-rosegment"]

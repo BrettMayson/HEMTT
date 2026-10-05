@@ -9,10 +9,6 @@ fn criterion_benchmark(c: &mut Criterion) {
         .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
 
-    // generate, once, outside of the timed section:
-    // 1000 files that are 1 KB each
-    // 1000 files that are 10 KB each
-    // 1000 files that are 100 KB each
     let mut file_names = Vec::new();
     for i in [1usize, 10, 100] {
         for j in 0..1000 {
