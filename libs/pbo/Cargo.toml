@@ -21,5 +21,14 @@ sha-1 = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
+criterion = { workspace = true }
 fs-err = { workspace = true }
+hemtt-workspace = { path = "../workspace" }
 insta = { workspace = true }
+
+[[bench]]
+name = "small_files"
+harness = false
+
+[target.x86_64-unknown-linux-gnu]
+rustflags = ["-Clink-arg=-Wl,--no-rosegment"]

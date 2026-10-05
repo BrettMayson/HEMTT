@@ -87,11 +87,7 @@ impl<I: Seek + Read> WritablePbo<I> {
     #[must_use]
     pub fn files_sorted(&self) -> Vec<Header> {
         let mut sorted = self.files();
-        sorted.sort_by(|a, b| {
-            a.filename()
-                .to_lowercase()
-                .cmp(&b.filename().to_lowercase())
-        });
+        sorted.sort_by_cached_key(|h| h.filename().to_lowercase());
         sorted
     }
 
