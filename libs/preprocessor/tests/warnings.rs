@@ -69,4 +69,4 @@ bootstrap!(pw3_padded_arg);
 bootstrap!(pw3_padded_arg_duplicates);
 bootstrap!(pw3_padded_arg_inner);
 bootstrap!(pw5_undef_not_defined);
-bootstrap!(pw6_include_virgule);
+bootstrap!(pw6_include_forward_slash);

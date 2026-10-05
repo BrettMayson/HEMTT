@@ -1,12 +1,12 @@
 use hemtt_workspace::reporting::{Code, Severity, Token};
 
 #[allow(unused)]
-pub struct IncludeVirgule {
+pub struct IncludeForwardSlash {
     /// The [`Token`] representing the slash in the include path
     token: Box<Token>,
 }
 
-impl Code for IncludeVirgule {
+impl Code for IncludeForwardSlash {
     fn ident(&self) -> &'static str {
         "PW6"
     }
@@ -17,14 +17,17 @@ impl Code for IncludeVirgule {
         Some(&self.token)
     }
     fn message(&self) -> String {
-        "Include path contains a virgule slash".to_string()
+        "Include path contains a forward_slash".to_string()
     }
     fn label_message(&self) -> String {
-        "slash in include path".to_string()
+        "wrong slash type".to_string()
+    }
+    fn help(&self) -> Option<String> {
+        Some("Arma expects include paths to use backslashes".to_string())
     }
 }
 
-impl IncludeVirgule {
+impl IncludeForwardSlash {
     #[must_use]
     pub const fn new(token: Box<Token>) -> Self {
         Self { token }

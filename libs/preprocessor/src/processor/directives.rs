@@ -21,7 +21,7 @@ use crate::{
         pe20_pragma_invalid_scope::PragmaInvalidScope, pe23_if_has_include::IfHasInclude,
         pe27_unexpected_endif::UnexpectedEndif, pe28_unexpected_else::UnexpectedElse,
         pw1_redefine::RedefineMacro, pw4_include_case::IncludeCase,
-        pw5_undef_not_defined::UndefNotDefined, pw6_include_virgule::IncludeVirgule,
+        pw5_undef_not_defined::UndefNotDefined, pw6_include_forward_slash::IncludeForwardSlash,
     },
     defines::{DefineSource, Defines},
     ifstate::IfState,
@@ -244,9 +244,10 @@ impl Processor {
             if path.contains('/')
                 && let Some(slash) = path_tokens.iter().find(|t| t.to_source() == "/")
             {
-                self.warnings.push(Arc::new(IncludeVirgule::new(Box::new(
-                    slash.as_ref().clone(),
-                ))));
+                self.warnings
+                    .push(Arc::new(IncludeForwardSlash::new(Box::new(
+                        slash.as_ref().clone(),
+                    ))));
             }
             found_path
         };
