@@ -57,8 +57,7 @@ fn criterion_benchmark(c: &mut Criterion) {
 
     c.bench_function("lzss compress - repetitive 64k", |b| {
         b.iter(|| {
-            let mut out =
-                Vec::with_capacity(hemtt_lzo::lzss::worst_compress(repetitive_64k.len()));
+            let mut out = Vec::with_capacity(hemtt_lzo::lzss::worst_compress(repetitive_64k.len()));
             hemtt_lzo::lzss::compress(&repetitive_64k, &mut out).unwrap();
             std::hint::black_box(&out);
         });
