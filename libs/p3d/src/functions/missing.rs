@@ -92,7 +92,9 @@ impl P3D {
                 if !exists {
                     missing_textures.push(texture);
                 }
-            } else if let Some(located) = workspace.locate_with_pdrive(&texture)? {
+            } else if !texture.contains('/')
+                && let Some(located) = workspace.locate_with_pdrive(&texture)?
+            {
                 let metadata = located.path.metadata()?;
                 cache.insert(
                     texture.clone(),
