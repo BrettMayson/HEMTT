@@ -1,15 +1,18 @@
 use std::collections::HashSet;
 
+use hemtt_sqf::parser::database::Database;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::{
-    CompletionContext, CompletionItem, CompletionItemKind, CompletionResponse,
-    TextDocumentPositionParams,
+    CompletionContext, CompletionItem, CompletionItemKind, CompletionResponse, Documentation,
+    MarkupContent, MarkupKind, TextDocumentPositionParams,
 };
 use tracing::warn;
 
 use crate::config::ConfigAnalyzer;
 use crate::sqf::SqfAnalyzer;
 use crate::workspace::EditorWorkspace;
+
+const WIKI: &str = "https://community.bistudio.com/wiki/";
 
 pub async fn completion(
     position: TextDocumentPositionParams,
@@ -153,8 +156,77 @@ pub async fn completion(
                 )))
             }
         }
-        _ => Ok(None),
+        _ => {
+            let ext = std::path::Path::new(position.text_document.uri.path())
+                .extension()
+                .and_then(|e| e.to_str())
+                .unwrap_or_default()
+                .to_lowercase();
+            if ext != "sqf" {
+                return Ok(None);
+            }
+            let word = current_word(&text_at_cursor);
+            if word.is_empty() {
+                return Ok(None);
+            }
+            let Ok(database) = SqfAnalyzer::get().get_database(&workspace) else {
+                warn!("Failed to get database for {:?}", workspace.root());
+                return Ok(None);
+            };
+            let items = command_completions(&database, &word);
+            if items.is_empty() {
+                return Ok(None);
+            }
+            Ok(Some(CompletionResponse::Array(items)))
+        }
     }
+}
+
+/// The identifier characters immediately before the cursor
+fn current_word(text_at_cursor: &str) -> String {
+    text_at_cursor
+        .chars()
+        .rev()
+        .take_while(|c| c.is_alphanumeric() || *c == '_')
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+        .collect()
+}
+
+/// Arma 3 commands (including any project-defined custom commands) matching `prefix`
+fn command_completions(database: &Database, prefix: &str) -> Vec<CompletionItem> {
+    let prefix = prefix.to_lowercase();
+    let mut items: Vec<CompletionItem> = database
+        .wiki()
+        .commands()
+        .raw()
+        .values()
+        .filter(|command| command.name().to_lowercase().starts_with(&prefix))
+        .map(|command| {
+            let is_flow = command.groups().iter().any(|g| g == "Program Flow");
+            CompletionItem {
+                label: command.name().to_string(),
+                kind: Some(if is_flow {
+                    CompletionItemKind::KEYWORD
+                } else {
+                    CompletionItemKind::FUNCTION
+                }),
+                detail: Some("Arma 3 Command".to_string()),
+                documentation: Some(Documentation::MarkupContent(MarkupContent {
+                    kind: MarkupKind::Markdown,
+                    value: format!(
+                        "[BI Wiki]({WIKI}{})\n\n{}",
+                        command.name().replace(' ', "_"),
+                        command.description()
+                    ),
+                })),
+                ..Default::default()
+            }
+        })
+        .collect();
+    items.sort_by(|a, b| a.label.cmp(&b.label));
+    items
 }
 
 fn get_functions_defined(addon: &str) -> Vec<String> {
@@ -253,7 +325,8 @@ fn path(workspace: &EditorWorkspace, folder: &str, addon: &str, path: &str) -> V
 mod tests {
     use tower_lsp::lsp_types::CompletionItem;
 
-    use super::path;
+    use super::{command_completions, current_word, path};
+    use crate::sqf::SqfAnalyzer;
     use crate::workspace::tests::fixture;
 
     #[test]
@@ -271,5 +344,25 @@ mod tests {
             path(&fixture("project"), "addons", "nosuchaddon", ""),
             empty
         );
+    }
+
+    #[test]
+    fn current_word_takes_trailing_identifier() {
+        assert_eq!(current_word("hint \"test\"; cutRs"), "cutRs");
+        assert_eq!(current_word("if (hi"), "hi");
+        assert_eq!(current_word(""), "");
+        assert_eq!(current_word("hint ("), "");
+    }
+
+    #[test]
+    fn command_completions_matches_prefix_case_insensitively() {
+        let database = SqfAnalyzer::get()
+            .get_database(&fixture("plain"))
+            .expect("builds");
+        let items = command_completions(&database, "hint");
+        assert!(items.iter().any(|i| i.label == "hint"), "{items:?}");
+
+        let items = command_completions(&database, "HIN");
+        assert!(items.iter().any(|i| i.label == "hint"), "{items:?}");
     }
 }
