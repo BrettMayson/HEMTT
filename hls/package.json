@@ -22,6 +22,28 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "configurationDefaults": {
+      "[sqf]": {
+        "editor.quickSuggestions": {
+          "other": true,
+          "comments": false,
+          "strings": false
+        }
+      },
+      "[arma-config]": {
+        "editor.quickSuggestions": {
+          "other": true,
+          "comments": false,
+          "strings": false
+        }
+      }
+    },
+    "snippets": [
+      {
+        "language": "sqf",
+        "path": "./languages/sqf.snippets.json"
+      }
+    ],
     "grammars": [
       {
         "language": "sqf",

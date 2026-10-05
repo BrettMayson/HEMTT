@@ -1,0 +1,71 @@
+{
+  "if": {
+    "prefix": "if",
+    "body": ["if (${1:condition}) then {", "\t$0", "};"],
+    "description": "if then"
+  },
+  "ifelse": {
+    "prefix": "ifelse",
+    "body": [
+      "if (${1:condition}) then {",
+      "\t$2",
+      "} else {",
+      "\t$0",
+      "};"
+    ],
+    "description": "if then else"
+  },
+  "while": {
+    "prefix": "while",
+    "body": ["while {${1:condition}} do {", "\t$0", "};"],
+    "description": "while do"
+  },
+  "for": {
+    "prefix": "for",
+    "body": [
+      "for \"_${1:i}\" from ${2:0} to ${3:10} do {",
+      "\t$0",
+      "};"
+    ],
+    "description": "for from to do"
+  },
+  "foreach": {
+    "prefix": "foreach",
+    "body": ["{", "\t$0", "} forEach ${1:array};"],
+    "description": "forEach"
+  },
+  "switch": {
+    "prefix": "switch",
+    "body": [
+      "switch (${1:value}) do {",
+      "\tcase ${2:case1}: {",
+      "\t\t$0",
+      "\t};",
+      "\tdefault {",
+      "\t\t",
+      "\t};",
+      "};"
+    ],
+    "description": "switch do case default"
+  },
+  "trycatch": {
+    "prefix": "try",
+    "body": ["try {", "\t$1", "} catch {", "\t$0", "};"],
+    "description": "try catch"
+  },
+  "waituntil": {
+    "prefix": "waituntil",
+    "body": ["waitUntil {${1:condition}};"],
+    "description": "waitUntil"
+  },
+  "params": {
+    "prefix": "params",
+    "body": ["params [\"${1:_param}\"];$0"],
+    "description": "params"
+  },
+  "private": {
+    "prefix": "private",
+    "body": ["private _${1:name} = ${2:value};$0"],
+    "description": "private variable"
+  }
+}
