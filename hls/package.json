@@ -207,6 +207,11 @@
         "enablement": "resourceLangId == 'sqf'"
       },
       {
+        "command": "hemtt.path_copy",
+        "title": "Copy Arma Path",
+        "category": "HEMTT"
+      },
+      {
         "command": "hemtt.convertAudioWav",
         "title": "Convert to wav",
         "category": "HEMTT Audio",
@@ -311,6 +316,10 @@
         {
           "when": "resourceExtname =~ /\\.(png|jpg|jpeg|bmp|tga|paa)$/i",
           "submenu": "hemtt.images"
+        },
+        {
+          "command": "hemtt.path_copy",
+          "title": "Copy Arma Path"
         }
       ],
       "hemtt.audio": [
