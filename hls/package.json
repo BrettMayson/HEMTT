@@ -319,7 +319,7 @@
         },
         {
           "command": "hemtt.path_copy",
-          "title": "Copy ArmA-FS Path"
+          "title": "Copy Arma Path"
         }
       ],
       "hemtt.audio": [
