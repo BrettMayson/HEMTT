@@ -133,7 +133,9 @@ impl P3D {
                 if !exists {
                     missing_materials.push(material);
                 }
-            } else if let Some(located) = workspace.locate_with_pdrive(&material)? {
+            } else if !material.contains('/')
+                && let Some(located) = workspace.locate_with_pdrive(&material)?
+            {
                 let metadata = located.path.metadata()?;
                 cache.insert(
                     material.clone(),
