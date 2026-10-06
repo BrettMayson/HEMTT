@@ -1,0 +1,5 @@
+---
+source: libs/config/tests/lints.rs
+expression: quoted_code
+---
+[("call cba_fnc_someFunc", None), ("abe_fnc_looksLikeProjectFuncQuoted", None), ("someVar", Some("#pragma hemtt ignore_variables [\"_target\", \"_player\", \"_actionParams\"]")), ("[_groups,true] call someThing", Some("#pragma hemtt ignore_variables [\"_args\", \"_position\", \"_objects\", \"_groups\", \"_waypoints\", \"_markers\", \"_hoveredEntity\"]")), ("_this setVariable [\"var\", _value];", Some("#pragma hemtt ignore_variables [\"_value\"]"))]
