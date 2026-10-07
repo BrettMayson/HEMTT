@@ -13,7 +13,7 @@ use hemtt_common::{
     toml_lint::{TomlLintDef, TomlLintSqfTarget},
 };
 use hemtt_workspace::{
-    addons::{Addon, DefinedFunctions, UsedFunctions},
+    addons::{Addon, DefinedFunctions, UsedFunctions, VariableUsage},
     lint::LintManager,
     lint_manager,
     position::Position,
@@ -65,6 +65,7 @@ pub fn analyze(
     let localizations = Arc::new(Mutex::new(vec![]));
     let functions_used = Arc::new(Mutex::new(vec![]));
     let functions_defined = Arc::new(Mutex::new(HashSet::new()));
+    let variables_used = Arc::new(Mutex::new(vec![]));
     let codes = statements.analyze(
         &LintData {
             addon: Some(addon),
@@ -72,6 +73,7 @@ pub fn analyze(
             localizations: localizations.clone(),
             functions_used: functions_used.clone(),
             functions_defined: functions_defined.clone(),
+            variables_used: variables_used.clone(),
         },
         project,
         processed,
@@ -90,12 +92,17 @@ pub fn analyze(
         .expect("not poisoned")
         .into_inner()
         .expect("not poisoned");
+    let variables_used = Arc::<Mutex<VariableUsage>>::try_unwrap(variables_used)
+        .expect("not poisoned")
+        .into_inner()
+        .expect("not poisoned");
     (
         codes,
         Some(SqfReport {
             localizations,
             functions_used,
             functions_defined,
+            variables_used,
         }),
     )
 }
@@ -207,11 +214,13 @@ pub struct LintData {
     pub(crate) localizations: Arc<Mutex<Localizations>>,
     pub(crate) functions_used: Arc<Mutex<UsedFunctions>>,
     pub(crate) functions_defined: Arc<Mutex<DefinedFunctions>>,
+    pub(crate) variables_used: Arc<Mutex<VariableUsage>>,
 }
 pub struct SqfReport {
     localizations: Localizations,
     functions_used: UsedFunctions,
     functions_defined: DefinedFunctions,
+    variables_used: VariableUsage,
 }
 
 impl SqfReport {
@@ -219,22 +228,34 @@ impl SqfReport {
     /// # Panics
     pub fn push_to_addon(&self, addon: &Addon) {
         let build_data = addon.build_data();
-        build_data
-            .localizations()
-            .lock()
-            .expect("not poisoned")
-            .extend(self.localizations.clone());
-        build_data
-            .functions_used()
-            .lock()
-            .expect("not poisoned")
-            .extend(self.functions_used.clone());
-        addon
-            .build_data()
-            .functions_defined()
-            .lock()
-            .expect("not poisoned")
-            .extend(self.functions_defined.clone());
+        if !self.localizations.is_empty() {
+            build_data
+                .localizations()
+                .lock()
+                .expect("not poisoned")
+                .extend(self.localizations.clone());
+        }
+        if !self.functions_used.is_empty() {
+            build_data
+                .functions_used()
+                .lock()
+                .expect("not poisoned")
+                .extend(self.functions_used.clone());
+        }
+        if !self.functions_defined.is_empty() {
+            build_data
+                .functions_defined()
+                .lock()
+                .expect("not poisoned")
+                .extend(self.functions_defined.clone());
+        }
+        if !self.variables_used.is_empty() {
+            build_data
+                .variables_used()
+                .lock()
+                .expect("not poisoned")
+                .extend(self.variables_used.clone());
+        }
     }
 
     #[must_use]
@@ -416,6 +437,7 @@ pub fn lint_all(
             localizations: Arc::new(Mutex::new(vec![])),
             functions_used: Arc::new(Mutex::new(vec![])),
             functions_defined: Arc::new(Mutex::new(HashSet::new())),
+            variables_used: Arc::new(Mutex::new(vec![])),
         },
         project_config,
         None,
