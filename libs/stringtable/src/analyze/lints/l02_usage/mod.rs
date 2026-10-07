@@ -42,12 +42,14 @@ Configuration
 - **ignore_missing**: Bool to ignore missing stringtables (still written to .hemttout when disabled)
 - **ignore_unused**: Bool to ignore missing stringtables (still written to .hemttout when disabled)
 - **ignore_duplicate**: Bool to ignore missing stringtables (still written to .hemttout when disabled)
+- **prefix**: Override the prefix (default `str_<project prefix>`) used to detect missing keys
 ```toml
 [lints.stringtables.usage]
 options.ignore = [
     "str_myproject_mystring",
 ]
 options.ignore_unused = true
+options.prefix = "ls"
 "#
     }
 
@@ -122,8 +124,12 @@ impl LintRunner<LintData> for Runner {
         let mut missing = Vec::new();
         let prefix = format!(
             "str_{}",
-            project.map_or(String::new(), |p| p.prefix().to_lowercase())
+            config.option("prefix").map_or_else(
+                || project.map_or(String::new(), |p| p.prefix().to_lowercase()),
+                |o| o.as_str().map_or_else(String::new, str::to_lowercase)
+            )
         );
+
         for (key, position) in usages {
             if all.iter().any(|(k, _)| k == &key) {
                 if let Some(pos) = unused.iter().position(|k| k == &key) {

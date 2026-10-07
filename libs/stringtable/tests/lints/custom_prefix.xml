@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project name="Legion Studios">
+    <Package name="common">
+        <Key ID="STR_ls_common_confirm">
+            <English>Confirm</English>
+            <Czech>Potvrdit</Czech>
+            <French>Confirmer</French>
+            <Spanish>Confirmar</Spanish>
+            <Italian>Conferma</Italian>
+            <Polish>Potwierdź</Polish>
+            <Portuguese>Confirmar</Portuguese>
+            <Russian>Подтвердить</Russian>
+            <German>Bestätigen</German>
+            <Korean>확인</Korean>
+            <Japanese>確認</Japanese>
+            <Chinese>確認</Chinese>
+            <Chinesesimp>确认</Chinesesimp>
+            <Turkish>Onayla</Turkish>
+            <Ukrainian>Підтвердити</Ukrainian>
+        </Key>
+    </Package>
+</Project>
