@@ -145,7 +145,7 @@ pub fn run(chapter: &mut Chapter) {
 pub fn process_command(name: &str, nested: Option<&str>, mut command: Command) -> String {
     let mut output = format!(
         "# hemtt {}{}\n\n",
-        nested.map(|s| format!("{s} ")).unwrap_or_default(),
+        nested.map_or_default(|s| format!("{s} ")),
         name,
     );
 

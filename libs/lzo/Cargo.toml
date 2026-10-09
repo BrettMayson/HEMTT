@@ -12,7 +12,13 @@ workspace = true
 thiserror = { workspace = true }
 
 [dev-dependencies]
+criterion = { workspace = true }
 rand = { workspace = true }
+
+[[bench]]
+name = "compress"
+harness = false
+required-features = ["compress", "decompress"]
 
 [features]
 default = ["compress", "decompress"]

@@ -14,6 +14,7 @@ import * as paa from "./paa";
 import * as preprocessor from "./preprocessor";
 import * as rpt from "./rpt";
 import fetchHLS from './fetch-hls';
+import * as path from "./path";
 
 import { getPortPromise } from "portfinder";
 
@@ -75,6 +76,7 @@ export async function activate(context: vscode.ExtensionContext) {
   p3d.init(client, channel, context);
   paa.init(client, channel, context);
   preprocessor.init(client, channel, context);
+  path.init(client, channel, context);
   channel.appendLine("HEMTT initialized");
 }
 

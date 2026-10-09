@@ -29,6 +29,14 @@ serde = { workspace = true, features = ["derive"], optional = true }
 serde_json = { workspace = true, optional = true }
 base64 = { version = "0.23.1", optional = true }
 
+[dev-dependencies]
+criterion = { workspace = true }
+
+[[bench]]
+name = "convert"
+harness = false
+required-features = ["generate"]
+
 [features]
 wasm = ["wasm-bindgen", "js-sys"]
 json = ["serde", "serde_json", "base64"]

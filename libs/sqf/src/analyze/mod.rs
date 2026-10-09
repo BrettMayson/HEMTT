@@ -360,40 +360,41 @@ fn extract_constant(expression: &Expression) -> Option<(String, bool)> {
     None
 }
 #[must_use]
-/// Checks if a function returns true for any sub-expression
-fn check_expression_deep(expression: &Expression, f: &impl Fn(&Expression) -> bool) -> bool {
-    match expression {
-        Expression::Array(elements, _) => {
-            for element in elements {
-                if check_expression_deep(element, f) {
-                    return true;
-                }
-            }
+/// Deeply collects all results from the expression tree that match the given pattern function.
+fn pattern_collect<T>(expr: &Expression, f: &impl Fn(&Expression) -> Option<T>) -> Vec<T> {
+    fn collect_inner<T>(
+        expr: &Expression,
+        f: &impl Fn(&Expression) -> Option<T>,
+        results: &mut Vec<T>,
+    ) {
+        if let Some(result) = f(expr) {
+            results.push(result);
         }
-        Expression::Code(statements) => {
-            for statement in &statements.content {
-                match statement {
-                    Statement::Expression(expr, _)
-                    | Statement::AssignLocal(_, expr, _)
-                    | Statement::AssignGlobal(_, expr, _) => {
-                        if check_expression_deep(expr, f) {
-                            return true;
+        match expr {
+            Expression::UnaryCommand(_, rhs, _) => {
+                collect_inner(rhs, f, results);
+            }
+            Expression::BinaryCommand(_, lhs, rhs, _) => {
+                collect_inner(lhs, f, results);
+                collect_inner(rhs, f, results);
+            }
+            Expression::Code(statements) => {
+                for stmt in &statements.content {
+                    match stmt {
+                        Statement::Expression(inner, _)
+                        | Statement::AssignLocal(_, inner, _)
+                        | Statement::AssignGlobal(_, inner, _) => {
+                            collect_inner(inner, f, results);
                         }
                     }
                 }
             }
+            _ => {}
         }
-        Expression::UnaryCommand(_, expr, _) if check_expression_deep(expr, f) => {
-            return true;
-        }
-        Expression::BinaryCommand(_, left, right, _)
-            if (check_expression_deep(left, f) || check_expression_deep(right, f)) =>
-        {
-            return true;
-        }
-        _ => {}
     }
-    f(expression)
+    let mut results = Vec::new();
+    collect_inner(expr, f, &mut results);
+    results
 }
 
 #[must_use]
