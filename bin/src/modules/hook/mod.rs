@@ -92,7 +92,7 @@ impl Hooks {
             return Ok(Report::new());
         }
         let mut entries = folder.read_dir()?;
-        entries.sort_by_key(WorkspacePath::filename);
+        entries.sort_by_cached_key(WorkspacePath::filename);
         let mut report = Report::new();
         for file in entries {
             if !file.is_file()? {

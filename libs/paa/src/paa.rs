@@ -149,15 +149,63 @@ impl Paa {
     ///
     /// # Errors
     /// [`std::io::Error`] if the image cannot be converted to the specified format
+    ///
+    /// # Panics
+    /// If a mipmap generation thread panics
     #[cfg(feature = "generate")]
     pub fn from_dynamic(
         image: &image::DynamicImage,
         format: PaXType,
     ) -> Result<Self, std::io::Error> {
         let rgba_image = image.to_rgba8();
-        let mipmap = MipMap::from_rgba_image(&rgba_image, format)?;
+
+        // Collect the dimensions of every mip level (level 0 is the full size image)
+        let mut sizes = vec![(rgba_image.width(), rgba_image.height())];
+        if format.is_dxt() {
+            let mut width = rgba_image.width();
+            let mut height = rgba_image.height();
+            while width > 4 && height > 4 {
+                width = (width / 2).max(1);
+                height = (height / 2).max(1);
+                sizes.push((width, height));
+            }
+        }
+
+        // Each level resizes from the original image independently, so they can be
+        // generated concurrently - DXT compression dominates the cost of this function
+        let maps = std::thread::scope(|s| {
+            // collect first so every thread is spawned before any is joined
+            #[allow(clippy::needless_collect)]
+            let handles: Vec<_> = sizes
+                .iter()
+                .map(|&(width, height)| {
+                    let rgba_image = &rgba_image;
+                    s.spawn(move || {
+                        if (width, height) == (rgba_image.width(), rgba_image.height()) {
+                            MipMap::from_rgba_image(rgba_image, format)
+                        } else {
+                            let resized = image::imageops::resize(
+                                rgba_image,
+                                width,
+                                height,
+                                image::imageops::FilterType::Lanczos3,
+                            );
+                            MipMap::from_rgba_image(&resized, format)
+                        }
+                    })
+                })
+                .collect();
+            handles
+                .into_iter()
+                .map(|h| h.join().expect("mipmap generation thread panicked"))
+                .collect::<Result<Vec<_>, _>>()
+        })?;
+
         let mut paa = Self::new(format);
-        paa.maps.push((mipmap, 0));
+        for mipmap in maps {
+            paa.maps.push((mipmap, 0));
+        }
+
         // Generate tags
         // - Average
         let mut has_transparency = false;
@@ -204,25 +252,6 @@ impl Paa {
         if has_transparency {
             // - Alpha flag
             paa.taggs.insert("GALF".to_string(), vec![1, 0, 0, 0]);
-        }
-        // Generate mipmaps for DXT formats
-        if format.is_dxt() {
-            let mut width = rgba_image.width();
-            let mut height = rgba_image.height();
-            while width > 4 && height > 4 {
-                width = (width / 2).max(1);
-                height = (height / 2).max(1);
-                let mipmap = MipMap::from_rgba_image(
-                    &image::imageops::resize(
-                        &rgba_image,
-                        width,
-                        height,
-                        image::imageops::FilterType::Lanczos3,
-                    ),
-                    format,
-                )?;
-                paa.maps.push((mipmap, 0));
-            }
         }
         Ok(paa)
     }

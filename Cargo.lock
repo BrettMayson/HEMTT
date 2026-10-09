@@ -1697,6 +1697,7 @@ dependencies = [
 name = "hemtt-lzo"
 version = "1.22.1"
 dependencies = [
+ "criterion",
  "rand 0.9.5",
  "thiserror 2.0.21",
 ]
@@ -1720,6 +1721,7 @@ version = "1.22.1"
 dependencies = [
  "base64 0.23.1",
  "byteorder",
+ "criterion",
  "fs-err",
  "hemtt-lzo",
  "image",
@@ -1736,9 +1738,11 @@ name = "hemtt-pbo"
 version = "1.22.1"
 dependencies = [
  "byteorder",
+ "criterion",
  "fs-err",
  "hemtt-common",
  "hemtt-lzo",
+ "hemtt-workspace",
  "indexmap",
  "insta",
  "sha-1",
