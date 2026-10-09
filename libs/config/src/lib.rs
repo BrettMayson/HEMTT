@@ -24,7 +24,6 @@ use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{
     addons::{Addon, DefinedFunctions, Localizations, MagazineWellInfo},
     lint::LintManager,
-    position::Position,
     reporting::{Code, Codes, Processed, Severity},
 };
 
