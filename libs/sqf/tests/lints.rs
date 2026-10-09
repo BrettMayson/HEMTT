@@ -60,6 +60,7 @@ lint!(s27_macro, false);
 lint!(s28_banned_macros, true);
 lint!(s30_configof, true);
 lint!(s30_macro, false);
+lint!(s32_missing_file, false);
 lint!(s33_abs, true);
 // lint!(s33_atan2, true);
 lint!(s33_ceil, true);

@@ -30,6 +30,14 @@ impl Code for MissingTextures {
         )
     }
 
+    fn help(&self) -> Option<String> {
+        if self.textures.iter().any(|t| t.contains('/')) {
+            Some("Forward slashes are not valid in paths".to_string())
+        } else {
+            None
+        }
+    }
+
     fn diagnostic(&self) -> Option<Diagnostic> {
         Some(Diagnostic::from_code(self))
     }

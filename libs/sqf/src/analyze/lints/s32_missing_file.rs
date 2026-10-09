@@ -95,6 +95,13 @@ impl Code for CodeS32MissingFile {
     fn note(&self) -> Option<String> {
         Some(format!("file '{}' was not found in project", self.path))
     }
+    fn help(&self) -> Option<String> {
+        if self.path.contains('/') {
+            Some("Forward slashes are not valid in paths".to_string())
+        } else {
+            None
+        }
+    }
     fn diagnostic(&self) -> Option<Diagnostic> {
         self.diagnostic.clone()
     }
