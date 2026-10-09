@@ -52,3 +52,7 @@ enabled = true
 
 [lints.sqf.string_concat_format]
 enabled = true
+
+[lints.sqf.not_short_circuiting]
+enabled = true
+options.threshold = 3
