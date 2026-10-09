@@ -16,7 +16,6 @@ use hemtt_workspace::{
     addons::{Addon, DefinedFunctions, Localizations, UsedFunctions},
     lint::LintManager,
     lint_manager,
-    position::Position,
     reporting::{Code, Codes, Processed, TomlLintCode},
 };
 use lints::s02_event_handlers::{

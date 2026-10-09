@@ -8,7 +8,6 @@ use hemtt_workspace::{
     addons::{Addon, DefinedFunctions, Localizations, MagazineWellInfo},
     lint::LintManager,
     lint_manager,
-    position::Position,
     reporting::{Codes, Processed, TomlLintCode},
 };
 
