@@ -11,6 +11,7 @@ mod stringtables;
 
 pub mod archive;
 pub mod bom;
+pub mod convert;
 pub mod fnl;
 pub mod git;
 pub mod hook;
