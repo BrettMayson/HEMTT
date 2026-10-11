@@ -319,7 +319,8 @@
         },
         {
           "command": "hemtt.path_copy",
-          "title": "Copy Arma Path"
+          "title": "Copy Arma Path",
+          "when": "resourceExtname =~ /\\.(sqf|p3d|paa|rvmat|wss)$/i"
         }
       ],
       "hemtt.audio": [
