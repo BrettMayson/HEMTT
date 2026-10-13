@@ -1,0 +1,20 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: "lint(stringify! (s56_not_short_circuiting), true).0"
+---
+[0m[1m[38;5;14mhelp[L-S56][0m[1m: Chain of 4 `&&` operations are not efficiently short circuiting[0m
+  [0m[36m┌─[0m s56_not_short_circuiting.sqf:9:48
+  [0m[36m│[0m
+[0m[36m9[0m [0m[36m│[0m a && {(call qq)} && {(call ww)} && {(call ee)} [0m[36m&&[0m {(call ff)}; // bad chain
+  [0m[36m│[0m                                                [0m[36m^^[0m [0m[36mnot short circuiting[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [33mhelp[0m: Consider nesting the conditions to achieve short-circuiting
+
+
+[0m[1m[38;5;14mhelp[L-S56][0m[1m: Chain of 4 `||` operations are not efficiently short circuiting[0m
+   [0m[36m┌─[0m s56_not_short_circuiting.sqf:10:30
+   [0m[36m│[0m
+[0m[36m10[0m [0m[36m│[0m !(!a || {!b} || {!c} || {!d} [0m[36m||[0m {!e}); // bad chain
+   [0m[36m│[0m                              [0m[36m^^[0m [0m[36mnot short circuiting[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [33mhelp[0m: Consider nesting the conditions to achieve short-circuiting
