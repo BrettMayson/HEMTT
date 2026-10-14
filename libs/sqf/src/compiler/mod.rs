@@ -164,33 +164,38 @@ impl Expression {
                     instructions: &mut Vec<Instruction>,
                     ctx: &mut Context,
                 ) -> CompileResult {
-                    if let Constant::Array(items) = constant {
-                        let len = items.len();
-                        for item in items {
-                            push_constant(item, instructions, ctx)?;
+                    match constant {
+                        Constant::Array(items) => {
+                            let len = items.len();
+                            for item in items {
+                                push_constant(item, instructions, ctx)?;
+                            }
+                            instructions.push(Instruction::MakeArray(
+                                len.try_into().expect("array too long"),
+                                SourceInfo {
+                                    offset: 0,
+                                    file_index: 0,
+                                    file_line: 0,
+                                },
+                            ));
                         }
-                        instructions.push(Instruction::MakeArray(
-                            len.try_into().expect("array too long"),
-                            SourceInfo {
+                        Constant::HashMapCode(_) => {
+                            instructions.push(Instruction::Push(ctx.add_constant(constant)?));
+                            instructions.push(Instruction::MakeHashMap(SourceInfo {
                                 offset: 0,
                                 file_index: 0,
                                 file_line: 0,
-                            },
-                        ));
-                    } else if let Constant::ConsumableArray(_) = &constant {
-                        // Only safe because we know this array will be consumed on use and won't be modifieable
-                        instructions.push(Instruction::Push(ctx.add_constant(constant)?));
-                    } else {
-                        instructions.push(Instruction::Push(ctx.add_constant(constant)?));
+                            }));
+                        }
+                        _ => {
+                            instructions.push(Instruction::Push(ctx.add_constant(constant)?));
+                        }
                     }
                     Ok(())
                 }
                 push_constant(constant, instructions, ctx)?;
             }
             None => match *self {
-                Self::ConsumableArray(..) => {
-                    unreachable!("couldn't make ConsumableArray a const");
-                }
                 Self::Array(ref array, ref location) => {
                     let array_len = array
                         .len()
@@ -239,7 +244,9 @@ impl Expression {
                 Self::Code(_)
                 | Self::String(_, _, _)
                 | Self::Number(_, _)
-                | Self::Boolean(_, _) => {
+                | Self::Boolean(_, _)
+                | Self::ConsumableArray(_, _)
+                | Self::HashMap(_, _) => {
                     unreachable!("constant should have been handled")
                 }
             },
@@ -270,6 +277,14 @@ impl Expression {
                 .map(|value| value.clone().compile_constant(processed, ctx))
                 .collect::<CompileResult<Option<Vec<Constant>>>>()?
                 .map(Constant::ConsumableArray),
+            Self::HashMap(ref statements, None) => Some(Constant::HashMapCode(
+                statements.compile_to_instructions(processed, ctx, false)?,
+            )),
+            Self::HashMap(_, Some(ref array)) => array
+                .iter()
+                .map(|value| value.clone().compile_constant(processed, ctx))
+                .collect::<CompileResult<Option<Vec<Constant>>>>()?
+                .map(Constant::HashMapConst),
             Self::NularCommand(ref command, ..) if command.is_constant() => {
                 let command = try_normalize_name(&command.name)?;
                 debug_assert_ne!(
