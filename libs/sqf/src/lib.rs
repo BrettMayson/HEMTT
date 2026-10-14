@@ -220,6 +220,7 @@ pub enum Expression {
     Boolean(bool, Range<usize>),
     Array(Vec<Self>, Range<usize>),
     ConsumableArray(Vec<Self>, Range<usize>),
+    HashMap(Statements, Option<Vec<Self>>),
     NularCommand(NularCommand, Range<usize>),
     UnaryCommand(UnaryCommand, Box<Self>, Range<usize>),
     BinaryCommand(BinaryCommand, Box<Self>, Box<Self>, Range<usize>),
@@ -230,8 +231,11 @@ impl Expression {
     #[must_use]
     pub fn source(&self, enclose: bool) -> String {
         match self {
-            Self::Code(code) => {
+            Self::Code(code) | Self::HashMap(code, ..) => {
                 let mut out = String::new();
+                if matches!(self, Self::HashMap(..)) {
+                    out.push('#');
+                }
                 out.push('{');
                 out.push_str(code.source());
                 out.push('}');
@@ -325,7 +329,7 @@ impl Expression {
     #[must_use]
     pub fn span(&self) -> Range<usize> {
         match self {
-            Self::Code(code) => code.span().clone(),
+            Self::Code(code) | Self::HashMap(code, _) => code.span().clone(),
             #[allow(clippy::range_plus_one)]
             Self::ConsumableArray(items, span) | Self::Array(items, span) => {
                 if items.is_empty() {
@@ -347,7 +351,7 @@ impl Expression {
     #[must_use]
     pub fn full_span(&self) -> Range<usize> {
         match self {
-            Self::Code(code) => code.span().clone(),
+            Self::Code(code) | Self::HashMap(code, _) => code.span().clone(),
             Self::ConsumableArray(_, _) | Self::Array(_, _) => self.span(),
             Self::String(_, span, _)
             | Self::Number(_, span)
