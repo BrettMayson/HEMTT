@@ -13,10 +13,9 @@ use hemtt_common::{
     toml_lint::{TomlLintDef, TomlLintSqfTarget},
 };
 use hemtt_workspace::{
-    addons::{Addon, DefinedFunctions, UsedFunctions},
+    addons::{Addon, DefinedFunctions, Localizations, UsedFunctions},
     lint::LintManager,
     lint_manager,
-    position::Position,
     reporting::{Code, Codes, Processed, TomlLintCode},
 };
 use lints::s02_event_handlers::{
@@ -62,34 +61,15 @@ pub fn analyze(
             Err(codes) => return (codes, None),
         }
     };
-    let localizations = Arc::new(Mutex::new(vec![]));
-    let functions_used = Arc::new(Mutex::new(vec![]));
-    let functions_defined = Arc::new(Mutex::new(HashSet::new()));
-    let codes = statements.analyze(
-        &LintData {
-            addon: Some(addon),
-            database,
-            localizations: localizations.clone(),
-            functions_used: functions_used.clone(),
-            functions_defined: functions_defined.clone(),
-        },
-        project,
-        processed,
-        &manager,
-    );
-
-    let localizations = Arc::<Mutex<Localizations>>::try_unwrap(localizations)
-        .expect("not poisoned")
-        .into_inner()
-        .expect("not poisoned");
-    let functions_used = Arc::<Mutex<UsedFunctions>>::try_unwrap(functions_used)
-        .expect("not poisoned")
-        .into_inner()
-        .expect("not poisoned");
-    let functions_defined = Arc::<Mutex<DefinedFunctions>>::try_unwrap(functions_defined)
-        .expect("not poisoned")
-        .into_inner()
-        .expect("not poisoned");
+    let lint_data = LintData {
+        addon: Some(addon),
+        database,
+        localizations: Arc::default(),
+        functions_used: Arc::default(),
+        functions_defined: Arc::default(),
+    };
+    let codes = statements.analyze(&lint_data, project, processed, &manager);
+    let (localizations, functions_used, functions_defined) = lint_data.unpack();
     (
         codes,
         Some(SqfReport {
@@ -124,8 +104,6 @@ pub fn analyze_toml(
     }
     codes
 }
-
-pub type Localizations = Vec<(String, Position)>;
 
 #[must_use]
 /// Try to recover the original source text for a span
@@ -208,6 +186,25 @@ pub struct LintData {
     pub(crate) functions_used: Arc<Mutex<UsedFunctions>>,
     pub(crate) functions_defined: Arc<Mutex<DefinedFunctions>>,
 }
+impl LintData {
+    fn unpack(self) -> (Localizations, UsedFunctions, DefinedFunctions) {
+        debug_assert_eq!(Arc::strong_count(&self.localizations), 1);
+        (
+            Arc::try_unwrap(self.localizations)
+                .expect("not poisoned")
+                .into_inner()
+                .expect("not poisoned"),
+            Arc::try_unwrap(self.functions_used)
+                .expect("not poisoned")
+                .into_inner()
+                .expect("not poisoned"),
+            Arc::try_unwrap(self.functions_defined)
+                .expect("not poisoned")
+                .into_inner()
+                .expect("not poisoned"),
+        )
+    }
+}
 pub struct SqfReport {
     localizations: Localizations,
     functions_used: UsedFunctions,
@@ -216,25 +213,23 @@ pub struct SqfReport {
 
 impl SqfReport {
     /// Pushes the report into an Addon
-    /// # Panics
-    pub fn push_to_addon(&self, addon: &Addon) {
+    pub fn push_to_addon(self, addon: &Addon) {
         let build_data = addon.build_data();
-        build_data
-            .localizations()
-            .lock()
-            .expect("not poisoned")
-            .extend(self.localizations.clone());
-        build_data
-            .functions_used()
-            .lock()
-            .expect("not poisoned")
-            .extend(self.functions_used.clone());
-        addon
-            .build_data()
-            .functions_defined()
-            .lock()
-            .expect("not poisoned")
-            .extend(self.functions_defined.clone());
+        if !self.localizations.is_empty()
+            && let Ok(mut lock) = build_data.localizations().lock()
+        {
+            lock.extend(self.localizations);
+        }
+        if !self.functions_used.is_empty()
+            && let Ok(mut lock) = build_data.functions_used().lock()
+        {
+            lock.extend(self.functions_used);
+        }
+        if !self.functions_defined.is_empty()
+            && let Ok(mut lock) = build_data.functions_defined().lock()
+        {
+            lock.extend(self.functions_defined);
+        }
     }
 
     #[must_use]
