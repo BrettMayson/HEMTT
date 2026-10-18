@@ -110,6 +110,7 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
         &processed,
     ));
     if report.failed() {
+        configreport.push_to_addon(addon);
         return Ok(report);
     }
     let out = if std::path::Path::new(&path.filename())
