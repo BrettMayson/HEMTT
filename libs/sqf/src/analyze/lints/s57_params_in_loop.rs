@@ -107,23 +107,18 @@ impl Code for CodeS57ParamsInLoop {
     fn ident(&self) -> &'static str {
         "L-S57"
     }
-
     fn link(&self) -> Option<&str> {
         Some("/lints/sqf.html#params_in_loop")
     }
-
     fn severity(&self) -> Severity {
         self.severity
     }
-
     fn message(&self) -> String {
         "Use binary `params` on `_x` inside `forEach` or `apply` loops".to_string()
     }
-
     fn label_message(&self) -> String {
         "unary `params` reads `_this`, not the current loop element".to_string()
     }
-
     fn diagnostic(&self) -> Option<Diagnostic> {
         self.diagnostic.clone()
     }
