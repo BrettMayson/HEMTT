@@ -1,0 +1,16 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: "lint(stringify! (s57_params_in_loop), true).0"
+---
+[0m[1m[38;5;14mhelp[L-S57][0m[1m: Use binary `params` on `_x` inside `forEach` or `apply` loops[0m
+  [0m[36m┌─[0m s57_params_in_loop.sqf:4:5
+  [0m[36m│[0m
+[0m[36m4[0m [0m[36m│[0m     [0m[36mparams[0m ["_badForEach"];
+  [0m[36m│[0m     [0m[36m^^^^^^[0m [0m[36munary `params` reads `_this`, not the current loop element[0m
+
+
+[0m[1m[38;5;14mhelp[L-S57][0m[1m: Use binary `params` on `_x` inside `forEach` or `apply` loops[0m
+  [0m[36m┌─[0m s57_params_in_loop.sqf:9:5
+  [0m[36m│[0m
+[0m[36m9[0m [0m[36m│[0m     [0m[36mparams[0m ["_badApply"];
+  [0m[36m│[0m     [0m[36m^^^^^^[0m [0m[36munary `params` reads `_this`, not the current loop element[0m
