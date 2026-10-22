@@ -144,3 +144,31 @@ fn test_collect_localizations() {
     localizations.sort();
     insta::assert_compact_debug_snapshot!(localizations);
 }
+
+#[test]
+fn test_collect_quoted_code() {
+    let (_, report) = lint(stringify!(collect_quoted_code), None);
+    let quoted_code: Vec<(String, Option<String>)> = report
+        .quoted_code()
+        .iter()
+        .map(|p| {
+            let inspector_pragma = p.source(1).map(|s| s.1.clone());
+            (p.as_str().to_string(), inspector_pragma)
+        })
+        .collect();
+    insta::assert_compact_debug_snapshot!(quoted_code);
+}
+
+#[test]
+fn test_collect_quoted_code_complex() {
+    let (_, report) = lint(stringify!(collect_quoted_code_complex), None);
+    let quoted_code: Vec<(String, Option<String>)> = report
+        .quoted_code()
+        .iter()
+        .map(|p| {
+            let inspector_pragma = p.source(1).map(|s| s.1.clone());
+            (p.as_str().to_string(), inspector_pragma)
+        })
+        .collect();
+    insta::assert_compact_debug_snapshot!(quoted_code);
+}
