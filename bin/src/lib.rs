@@ -122,7 +122,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         logging::init(cli.global.verbosity, !is_simple_command)?;
     }
 
-    let update_thread = if debug {
+    let update_thread = if debug || std::env::var("HEMTT_FROM_LAUNCHER").is_ok() {
         std::thread::spawn(|| None)
     } else {
         std::thread::spawn(check_for_update)
@@ -261,32 +261,6 @@ fn check_for_update() -> Option<Vec<String>> {
             return None;
         }
         _ => return None,
-    }
-    let Ok(path) = std::env::current_exe() else {
-        return Some(out);
-    };
-    trace!("HEMTT is installed at: {}", path.display());
-    let os = std::env::consts::OS;
-    let (message, filter) = match os {
-        "windows" => (
-            "HEMTT is installed via winget, run `winget upgrade hemtt` to update",
-            "\\Winget\\".to_string(),
-        ),
-        "linux" | "macos" => (
-            "HEMTT is installed in home directory, run `curl -sSf https://hemtt.dev/install.sh | sh` to update",
-            {
-                let mut home = dirs::home_dir().expect("home directory exists");
-                if os == "linux" {
-                    home = home.join(".local");
-                }
-                home.join("bin").display().to_string()
-            },
-        ),
-        _ => return Some(out),
-    };
-
-    if path.display().to_string().contains(&filter) {
-        out.push(message.to_string());
     }
     Some(out)
 }
