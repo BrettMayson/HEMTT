@@ -39,7 +39,15 @@ It is always best to the include the log and a link to your project when reporti
     let cli = match hemtt::Cli::try_parse() {
         Ok(cli) => cli,
         Err(e) => {
-            eprintln!("{e}");
+            eprint!("{e}");
+            if [
+                clap::error::ErrorKind::DisplayVersion,
+                clap::error::ErrorKind::DisplayHelp,
+            ]
+            .contains(&e.kind())
+            {
+                std::process::exit(0);
+            }
             std::process::exit(1);
         }
     };
