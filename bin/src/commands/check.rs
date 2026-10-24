@@ -3,7 +3,7 @@ use crate::{
     context::Context,
     error::Error,
     executor::Executor,
-    modules::{Binarize, Rapifier, convert::Convert, pbo::Collapse},
+    modules::{Binarize, Rapifier, pbo::Collapse},
     report::Report,
 };
 
@@ -76,7 +76,6 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
 
     executor.add_module(Box::<Rapifier>::default());
     executor.add_module(Box::<Binarize>::new(Binarize::new(true)));
-    executor.add_module(Box::<Convert>::default());
 
     info!("Running checks");
 

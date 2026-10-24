@@ -1,7 +1,5 @@
 use std::path::PathBuf;
 
-use image::GenericImageView;
-
 use crate::Error;
 
 #[derive(clap::Args)]
@@ -48,34 +46,30 @@ pub fn execute(args: &PaaConvertArgs) -> Result<(), Error> {
         info!("PAA converted");
     } else {
         let image = image::open(from)?;
-        let (width, height) = image.dimensions();
-        let format = if !height.is_power_of_two() || !width.is_power_of_two() {
-            warn!(
-                "Image dimensions are not powers of two ({}x{})",
-                width, height
-            );
-            warn!("This is likely unintended and will not work as a standard texture.");
-            if !dialoguer::Confirm::new()
-                .with_prompt("Continue?")
-                .default(false)
-                .interact()?
-            {
-                info!("Aborting conversion");
-                return Ok(());
-            }
-            hemtt_paa::PaXType::ARGB8
-        } else {
-            let has_transparency = image.pixels().any(|p| p.2[3] < 255);
-            if has_transparency {
-                hemtt_paa::PaXType::DXT5
-            } else {
-                hemtt_paa::PaXType::DXT1
-            }
-        };
+        let format = hemtt_paa::PaXType::for_dynamic(&image);
+        let continue_conversion = confirm_format(format, &args.src)?;
+        if !continue_conversion {
+            return Ok(());
+        }
         let paa = hemtt_paa::Paa::from_dynamic(&image, format)?;
         let mut file = fs_err::File::create(output)?;
         paa.write(&mut file)?;
         info!("Image converted to {} PAA", format.to_string());
     }
     Ok(())
+}
+
+pub fn confirm_format(format: hemtt_paa::PaXType, path: &str) -> Result<bool, Error> {
+    if format == hemtt_paa::PaXType::ARGB8 {
+        warn!("Using ARGB8 format for non-power-of-two image: {}", path);
+        warn!("This is likely unintended and will not work as a standard texture.");
+        if !dialoguer::Confirm::new()
+            .with_prompt("Continue?")
+            .default(false)
+            .interact()?
+        {
+            return Ok(false);
+        }
+    }
+    Ok(true)
 }

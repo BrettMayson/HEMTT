@@ -170,6 +170,9 @@ impl P3D {
                 }
             }
         }
-        (textures.into_iter().collect(), materials.into_iter().collect())
+        (
+            textures.into_iter().collect(),
+            materials.into_iter().collect(),
+        )
     }
 }

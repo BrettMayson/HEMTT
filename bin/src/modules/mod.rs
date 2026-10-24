@@ -11,11 +11,11 @@ mod stringtables;
 
 pub mod archive;
 pub mod bom;
-pub mod convert;
 pub mod fnl;
 pub mod git;
 pub mod hook;
 pub mod meta;
+pub mod paa;
 pub mod pbo;
 pub(crate) mod sign;
 pub mod summary;
