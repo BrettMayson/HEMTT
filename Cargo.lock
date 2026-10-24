@@ -1559,6 +1559,7 @@ dependencies = [
  "insta",
  "libc",
  "lzma-rust2 0.15.8",
+ "markdown",
  "markdown-bbcode",
  "parse-changelog",
  "paste",
