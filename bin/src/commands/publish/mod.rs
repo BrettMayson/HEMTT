@@ -79,12 +79,31 @@ const APP_ID: steamworks::AppId = steamworks::AppId(107_410);
 /// `hemtt publish` uses the same build configuration as [`hemtt release`](./release.md).
 /// All signing and archiving options apply to the released build before upload.
 ///
+/// ## Dry Run
+///
+/// Use `--dry-run` to preview what would be submitted to the Steam Workshop
+/// without connecting to Steam or uploading anything. This builds the release
+/// and prints the title, tags, description, changelog and content that would
+/// be sent.
+///
+/// ```bash
+/// hemtt publish --dry-run
+/// ```
+///
 pub struct Command {
     #[clap(flatten)]
     pub build: BuildArgs,
 
     #[clap(flatten)]
     pub release: ReleaseArgs,
+
+    #[arg(long = "dry-run")]
+    /// Preview the update that would be submitted to Steam without uploading
+    ///
+    /// Builds the release and prints the title, tags, description, changelog
+    /// and content that would be sent to the Steam Workshop, without
+    /// connecting to Steam or modifying the Workshop item.
+    pub dry_run: bool,
 
     #[clap(flatten)]
     pub global: crate::GlobalArgs,
@@ -98,6 +117,10 @@ pub struct Command {
 /// # Panics
 /// Panics if the Steam client cannot be initialized, or if the callback thread cannot be joined.
 pub fn execute(cmd: &Command) -> Result<Report, Error> {
+    if cmd.dry_run {
+        return update::dry_run(cmd, get_id().ok());
+    }
+
     if let Err(e) = steamworks_sys::load_steam_library() {
         error!("Warning: Failed to preload Steam API library: {e}");
         std::process::exit(1);
