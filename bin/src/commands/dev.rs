@@ -6,7 +6,7 @@ use crate::{
     error::Error,
     executor::Executor,
     modules::{
-        Binarize, FilePatching, Files, Rapifier, pbo::Collapse, summary::Summary,
+        Binarize, FilePatching, Files, Rapifier, paa::Paa, pbo::Collapse, summary::Summary,
         tex_headers::TexHeaders,
     },
     report::Report,
@@ -187,6 +187,7 @@ pub fn context(
     if force_binarize || binarize.binarize {
         executor.add_module(Box::<Binarize>::default());
     }
+    executor.add_module(Box::<Paa>::default());
     executor.add_module(Box::<Summary>::default());
 
     info!("Creating `dev` version");

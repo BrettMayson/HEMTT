@@ -3,7 +3,7 @@ use crate::{
     error::Error,
     executor::Executor,
     modules::{
-        Binarize, Files, Rapifier, meta::Meta, pbo::Collapse, summary::Summary,
+        Binarize, Files, Rapifier, meta::Meta, paa::Paa, pbo::Collapse, summary::Summary,
         tex_headers::TexHeaders,
     },
     report::Report,
@@ -37,6 +37,30 @@ use super::global_modules;
 /// ### `optional_mod_folders`
 ///
 /// By default, `hemtt build` will create separate mods for each optional mod folder.
+///
+/// ### PAA Conversion
+///
+/// `hemtt build` will convert supported image files to the PAA format.
+///
+/// The conversion can be configured in the project configuration under `[hemtt.paa]`.
+///
+/// ```toml,fp=.hemtt/project.toml
+/// [hemtt.paa]
+/// extensions = [] # Always uses ["png", "tga"], additional extensions can be added here
+/// allow_argb8 = "ask" # Default: "ask", can also be "allow" or "deny"
+/// ```
+///
+/// #### `extensions`
+///
+/// Specifies the image file extensions that should be converted to PAA format.
+///
+/// #### `allow_argb8`
+///
+/// Determines if ARGB8 images are allowed during PAA conversion. This format is only used for non-standard images that aren't using powers of two textures.
+///
+/// - `"ask"`: Prompt the user for each ARGB8 image.
+/// - `"allow"`: Allow all ARGB8 images.
+/// - `"deny"`: Deny all ARGB8 images.
 pub struct Command {
     #[clap(flatten)]
     build: BuildArgs,
@@ -123,6 +147,7 @@ pub fn executor(ctx: Context, args: &BuildArgs) -> Executor {
     executor.add_module(Box::<Files>::default());
     executor.add_module(Box::<Summary>::default());
     executor.add_module(Box::<Meta>::default());
+    executor.add_module(Box::<Paa>::default());
 
     executor.init();
     executor.check();

@@ -50,20 +50,8 @@ pub fn convert(url: &Url, to: &str, out: Option<String>) -> Result<PathBuf, Stri
         }
     } else {
         let image = image::open(path).map_err(|e| format!("{e:?}"))?;
-        let paa = hemtt_paa::Paa::from_dynamic(&image, {
-            let (width, height) = image.dimensions();
-            if !height.is_power_of_two() || !width.is_power_of_two() {
-                hemtt_paa::PaXType::ARGB8
-            } else {
-                let has_transparency = image.pixels().any(|p| p.2[3] < 255);
-                if has_transparency {
-                    hemtt_paa::PaXType::DXT5
-                } else {
-                    hemtt_paa::PaXType::DXT1
-                }
-            }
-        })
-        .map_err(|e| format!("{e:?}"))?;
+        let paa = hemtt_paa::Paa::from_dynamic(&image, hemtt_paa::PaXType::for_dynamic(&image))
+            .map_err(|e| format!("{e:?}"))?;
         let mut file = fs_err::File::create(&output)
             .map_err(|e| format!("Failed to create output file: {e}"))?;
         paa.write(&mut file).map_err(|e| format!("{e:?}"))?;

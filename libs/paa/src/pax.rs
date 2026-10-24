@@ -1,5 +1,6 @@
 use std::{fmt::Display, io::Read};
 
+use image::{DynamicImage, GenericImageView as _};
 use texpresso::{COLOUR_WEIGHTS_PERCEPTUAL, Format, Params};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -86,6 +87,22 @@ impl PaXType {
             9 => Some(Self::DXT4),
             10 => Some(Self::DXT5),
             _ => None,
+        }
+    }
+
+    #[must_use]
+    /// Determines the appropriate `PaXType` for a given `DynamicImage`.
+    pub fn for_dynamic(image: &DynamicImage) -> Self {
+        let (width, height) = image.dimensions();
+        if !height.is_power_of_two() || !width.is_power_of_two() {
+            Self::ARGB8
+        } else {
+            let has_transparency = image.pixels().any(|p| p.2[3] < 255);
+            if has_transparency {
+                Self::DXT5
+            } else {
+                Self::DXT1
+            }
         }
     }
 
