@@ -402,6 +402,7 @@ impl GameValue {
         }
         result.unwrap_or(Self::Anything)
     }
+    #[must_use]
     /// Converts a vector of `GameValues` to a string representation
     /// if it only contains a single element which is an array, it will format the array contents
     pub fn vec_to_string(vec: &[Self], depth: usize) -> String {
@@ -432,6 +433,24 @@ impl GameValue {
                 .map(Self::to_string)
                 .collect::<Vec<_>>()
                 .join(", ")
+        }
+    }
+    #[must_use]
+    /// ref <https://community.bistudio.com/wiki/HashMapKey>
+    pub fn is_hashmap_key(&self) -> bool {
+        match self {
+            Self::Anything
+            | Self::Boolean(_)
+            | Self::Number(_)
+            | Self::String(_)
+            | Self::Code(_)
+            | Self::Side
+            | Self::Config
+            | Self::Namespace => true,
+            Self::Array(o_arr, _) => o_arr
+                .as_ref()
+                .is_none_or(|arr| arr.iter().all(|i| i.iter().any(|gv| gv.0.is_hashmap_key()))),
+            _ => false,
         }
     }
 }

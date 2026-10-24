@@ -43,6 +43,12 @@ impl Processor {
         if let Some(token) = stream.peek()
             && token.symbol().is_directive()
         {
+            if let Some(next) = stream.peek_next()
+                && next.symbol().to_string() == "{"
+            {
+                // hashmap opener (needed only if `#{}` is start of line)
+                return Ok(false);
+            }
             stream.next();
             if let Some(command) = stream.peek()
                 && command.symbol().is_word()
