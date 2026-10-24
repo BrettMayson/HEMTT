@@ -59,6 +59,10 @@ pub fn execute(args: &PaaConvertArgs) -> Result<(), Error> {
     Ok(())
 }
 
+/// Confirm whether to use the selected format.
+///
+/// # Errors
+/// Returns an error if the confirmation prompt fails.
 pub fn confirm_format(format: hemtt_paa::PaXType, path: &str) -> Result<bool, Error> {
     if format == hemtt_paa::PaXType::ARGB8 {
         warn!("Using ARGB8 format for non-power-of-two image: {}", path);
