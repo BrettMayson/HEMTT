@@ -1,4 +1,6 @@
 use std::ffi::OsString;
+use std::path::Path;
+use std::time::{Duration, SystemTime};
 
 use crate::github::EXECUTABLE;
 
@@ -6,10 +8,16 @@ pub mod github;
 pub mod pr;
 pub mod versions;
 
+const UPDATE_CHECK_INTERVAL: Duration = Duration::from_secs(12 * 60 * 60);
+/// Marker file in the install directory, its modified time is the last successful check
+const UPDATE_CHECK_FILE: &str = "last-update-check";
+
 fn main() -> anyhow::Result<()> {
     let mut args: Vec<OsString> = std::env::args_os().skip(1).collect();
 
-    if args.first() == Some(&OsString::from("versions")) || args.first() == Some(&OsString::from("v")) {
+    if args.first() == Some(&OsString::from("versions"))
+        || args.first() == Some(&OsString::from("v"))
+    {
         args = args[1..].to_vec();
         vers(args)?;
     } else {
@@ -18,7 +26,49 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Install the latest release if it is newer than the highest installed version.
+/// Failures are reported but never prevent HEMTT from running.
+fn auto_update() {
+    // Matches the update check in the HEMTT binary, which is skipped in CI
+    if std::env::var_os("CI").is_some() {
+        return;
+    }
+    if let Err(err) = try_auto_update() {
+        eprintln!("Failed to update HEMTT: {err:#}");
+    }
+}
+
+fn try_auto_update() -> anyhow::Result<()> {
+    // Nothing installed yet, the bootstrap in `wrap` handles the first install
+    let Some(installed) = versions::installed().into_iter().max() else {
+        return Ok(());
+    };
+    let marker = versions::install_dir().join(UPDATE_CHECK_FILE);
+    if !update_check_due(&marker) {
+        return Ok(());
+    }
+    let latest = github::latest_release()?;
+    fs_err::create_dir_all(versions::install_dir())?;
+    fs_err::write(&marker, latest.version.to_string())?;
+    if latest.version > installed {
+        eprintln!("Updating HEMTT {installed} to {}...", latest.version);
+        github::download_and_install(&latest)?;
+    }
+    Ok(())
+}
+
+fn update_check_due(marker: &Path) -> bool {
+    let Ok(modified) = fs_err::metadata(marker).and_then(|m| m.modified()) else {
+        return true;
+    };
+    SystemTime::now()
+        .duration_since(modified)
+        .unwrap_or_default()
+        >= UPDATE_CHECK_INTERVAL
+}
+
 fn wrap(mut args: Vec<OsString>) -> anyhow::Result<()> {
+    auto_update();
     // Check for a version specified by the user
     let first = args.first().cloned();
     let version = if let Some(first) = first
@@ -28,8 +78,10 @@ fn wrap(mut args: Vec<OsString>) -> anyhow::Result<()> {
         args = args[1..].to_vec();
         version.to_string()
     } else {
-        // get the highest installed version
-        let mut version = versions::installed().first().map(|v| v.to_string());
+        let mut version = versions::installed()
+            .into_iter()
+            .max()
+            .map(|v| v.to_string());
         if version.is_none() {
             // No hemtt is installed, download the latest version
             let latest = github::latest_release()?;
