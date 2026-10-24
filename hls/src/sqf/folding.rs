@@ -39,7 +39,8 @@ fn collect_brace_folds(text: &str) -> Vec<FoldingRange> {
                 '{' | '[' => stack.push((c, line_idx)),
                 '}' | ']' => {
                     if let Some((open_char, open_line)) = stack.pop() {
-                        let matches = (open_char == '{' && c == '}') || (open_char == '[' && c == ']');
+                        let matches =
+                            (open_char == '{' && c == '}') || (open_char == '[' && c == ']');
                         if matches && line_idx > open_line {
                             ranges.push(FoldingRange {
                                 start_line: open_line,

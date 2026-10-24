@@ -159,11 +159,11 @@ mod tests {
 
     #[test]
     fn skips_numbers_and_strings_while_scanning_back() {
-        assert_eq!(nearest_command_word("_unit setDamage 0.5"), Some("setDamage"));
         assert_eq!(
-            nearest_command_word("hint \"hello world\""),
-            Some("hint")
+            nearest_command_word("_unit setDamage 0.5"),
+            Some("setDamage")
         );
+        assert_eq!(nearest_command_word("hint \"hello world\""), Some("hint"));
     }
 
     #[test]

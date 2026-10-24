@@ -283,12 +283,18 @@ fn current_word(text_at_cursor: &str) -> String {
 /// Commands with a dedicated snippet in `languages/sqf.snippets.json`, so they
 /// aren't suggested twice (once as the snippet, once as a plain keyword).
 const SNIPPET_COMMANDS: &[&str] = &[
-    "if", "while", "for", "foreach", "switch", "try", "waituntil", "params", "private",
+    "if",
+    "while",
+    "for",
+    "foreach",
+    "switch",
+    "try",
+    "waituntil",
+    "params",
+    "private",
 ];
 
-const NO_SUGGEST_COMMANDS: &[&str] = &[
-    "setDammage"
-];
+const NO_SUGGEST_COMMANDS: &[&str] = &["setDammage"];
 
 /// Arma 3 commands (including any project-defined custom commands) matching `prefix`
 fn command_completions(database: &Database, prefix: &str) -> Vec<CompletionItem> {
@@ -424,8 +430,8 @@ mod tests {
     use tower_lsp::lsp_types::CompletionItem;
 
     use super::{
-        command_completions, current_word, path, private_variable_completions,
-        strip_closed_blocks, text_before_cursor,
+        command_completions, current_word, path, private_variable_completions, strip_closed_blocks,
+        text_before_cursor,
     };
     use crate::sqf::SqfAnalyzer;
     use crate::workspace::tests::fixture;
@@ -519,7 +525,8 @@ mod tests {
     #[test]
     fn strip_closed_blocks_keeps_open_ancestor_scope() {
         // the outer block never closes in this prefix, so it's still in scope
-        let text = "{\n  private _outer = 1;\n  if (true) then {\n    private _inner = 2;\n  };\n  hin";
+        let text =
+            "{\n  private _outer = 1;\n  if (true) then {\n    private _inner = 2;\n  };\n  hin";
         let visible = strip_closed_blocks(text);
         assert!(visible.contains("_outer"));
         assert!(!visible.contains("_inner"));
