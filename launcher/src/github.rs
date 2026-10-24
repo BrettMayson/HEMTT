@@ -9,8 +9,8 @@ use zip::ZipArchive;
 
 use crate::versions::{install_dir, version_dir};
 
-const REPO: &str = "BrettMayson/hemtt";
-const API: &str = "https://api.github.com";
+pub const REPO: &str = "BrettMayson/hemtt";
+pub const API: &str = "https://api.github.com";
 
 #[cfg(target_os = "windows")]
 const ASSET: &str = "windows-x64.zip";
@@ -51,7 +51,7 @@ pub struct ReleaseVersion {
     pub url: String,
 }
 
-fn client() -> Result<Client> {
+pub fn client() -> Result<Client> {
     Ok(Client::builder()
         .user_agent(concat!("hemtt-launcher/", env!("CARGO_PKG_VERSION")))
         .connect_timeout(Duration::from_secs(15))

@@ -3,6 +3,7 @@ use std::ffi::OsString;
 use crate::github::EXECUTABLE;
 
 pub mod github;
+pub mod pr;
 pub mod versions;
 
 fn main() -> anyhow::Result<()> {
@@ -37,17 +38,27 @@ fn wrap(mut args: Vec<OsString>) -> anyhow::Result<()> {
         }
         version.unwrap()
     };
-    let semver_version = semver::Version::parse(&version)?;
-    // check if the version is installed, if not download and install it
-    if !versions::installed()
-        .iter()
-        .any(|v| v.to_string() == version)
-    {
-        let release = github::get_release(&semver_version)?;
-        github::download_and_install(&release)?;
-    }
+    let hemtt_path = if let Ok(semver_version) = semver::Version::parse(&version) {
+        // check if the version is installed, if not download and install it
+        if !versions::installed()
+            .iter()
+            .any(|v| v.to_string() == version)
+        {
+            let release = github::get_release(&semver_version)?;
+            github::download_and_install(&release)?;
+        }
+        versions::version_dir(&semver_version).join(EXECUTABLE)
+    } else if let Some(stripped) = version.strip_prefix("pr/") {
+        if !pr::can_download()? {
+            anyhow::bail!("GitHub CLI (gh) is not installed or authenticated");
+        }
+        let pr_number: u64 = stripped.parse()?;
+        pr::download_pr_build(pr_number)?;
+        versions::pr_dir(pr_number).join(EXECUTABLE)
+    } else {
+        anyhow::bail!("Unknown version format: {}", version);
+    };
     // execute the hemtt binary with the specified version
-    let hemtt_path = versions::version_dir(&semver_version).join(EXECUTABLE);
     let status = std::process::Command::new(hemtt_path)
         .args(&args)
         .status()?;

@@ -17,6 +17,13 @@ pub fn version_dir(version: &Version) -> PathBuf {
     dir
 }
 
+pub fn pr_dir(pr_number: u64) -> PathBuf {
+    let mut dir = install_dir();
+    dir.push("pr");
+    dir.push(pr_number.to_string());
+    dir
+}
+
 pub fn installed() -> Vec<Version> {
     let mut versions = Vec::new();
     if let Ok(entries) = fs_err::read_dir(install_dir()) {
