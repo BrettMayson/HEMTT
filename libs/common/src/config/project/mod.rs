@@ -6,7 +6,7 @@ use hemtt::RuntimeArguments;
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
-use crate::error::Error;
+use crate::{error::Error, toml_lint::TomlLint};
 
 use super::deprecated;
 
@@ -54,8 +54,11 @@ pub struct ProjectConfig {
     /// Runtime specific arguments
     runtime: hemtt::RuntimeArguments,
 
-    /// Expected combined-path prefix for the project
-    expected_path: String,
+    /// Expected combined-path prefix variations for the project
+    expected_paths: Vec<String>,
+
+    /// toml lints, loaded from .hemtt/lints/*.toml
+    toml_lints: Vec<TomlLint>,
 }
 
 impl ProjectConfig {
@@ -132,9 +135,17 @@ impl ProjectConfig {
     }
 
     #[must_use]
-    /// Expected combined-path prefix for the project (in lowercase, without leading backslash, with trailing backslash)
-    pub fn expected_path(&self) -> &str {
-        &self.expected_path
+    /// Expected combined-path prefix variations for the project
+    /// Index 0 is always the non-leading backslash variation
+    /// e.g. `["z\ace\", "\z\ace\", "z/ace/", "/z/ace/"]`
+    pub fn expected_paths(&self) -> &[String] {
+        &self.expected_paths
+    }
+
+    #[must_use]
+    /// toml lints, loaded from .hemtt/lints/*.toml
+    pub const fn toml_lints(&self) -> &Vec<TomlLint> {
+        &self.toml_lints
     }
 
     /// Read a project file from disk
@@ -153,13 +164,19 @@ impl ProjectConfig {
     }
 
     #[must_use]
-    fn gen_expected_path(prefix: &String, mainprefix: Option<&String>) -> String {
-        mainprefix
+    fn gen_expected_paths(prefix: &String, mainprefix: Option<&String>) -> Vec<String> {
+        let path = mainprefix
             .map_or_else(
                 || format!("{prefix}\\"),
                 |mainprefix| format!("{mainprefix}\\{prefix}\\"),
             )
-            .to_ascii_lowercase()
+            .to_ascii_lowercase();
+        vec![
+            path.clone(),
+            format!(r"\{path}"),
+            path.replace('\\', "/"),
+            format!(r"\{path}").replace('\\', "/"),
+        ]
     }
 }
 
@@ -245,7 +262,7 @@ impl TryFrom<ProjectFile> for ProjectConfig {
             return Err(Error::Prefix(crate::prefix::Error::Empty));
         }
 
-        let expected_path = Self::gen_expected_path(&file.prefix, file.mainprefix.as_ref());
+        let expected_paths = Self::gen_expected_paths(&file.prefix, file.mainprefix.as_ref());
         let ret = Self {
             hemtt: file.hemtt.into_config(&file.meta_path, &file.prefix)?,
             name: file.name,
@@ -259,7 +276,8 @@ impl TryFrom<ProjectFile> for ProjectConfig {
             preprocessor: file.preprocessor.into(),
             signing: file.signing.into(),
             runtime: RuntimeArguments::default(),
-            expected_path,
+            expected_paths,
+            toml_lints: crate::toml_lint::load_toml_lints(&file.meta_path)?,
         };
 
         let mut lints_path = file.meta_path;

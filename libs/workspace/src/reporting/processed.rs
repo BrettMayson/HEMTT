@@ -258,12 +258,7 @@ pub fn clean_output(processed: &mut Processed) {
 
         let pending_line = comitted_line + pending_empty;
         let linenum = map.original().start().line();
-        let file = map
-            .original()
-            .path()
-            .as_virtual_str()
-            .clone()
-            .replace('/', "\\");
+        let file = map.original().path().as_virtual_str().replace('/', "\\");
         if file != comitted_file || pending_line != linenum {
             comitted_file = file;
             comitted_line = linenum;

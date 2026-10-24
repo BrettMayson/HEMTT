@@ -66,11 +66,11 @@ impl LintRunner<LintData> for Runner {
         let Some(processed) = processed else {
             return Vec::new();
         };
-        let Expression::BinaryCommand(BinaryCommand::Named(cmd), lhs, rhs, _) = target else {
+        let Expression::BinaryCommand(bin_cmd, lhs, rhs, _) = target else {
             return Vec::new();
         };
         
-        if !cmd.eq_ignore_ascii_case("select") {
+        if !(matches!(bin_cmd, BinaryCommand::Select) || matches!(bin_cmd, BinaryCommand::Named(cmd) if cmd.eq_ignore_ascii_case("select"))) {
             return Vec::new();
         }
 

@@ -57,5 +57,7 @@ pub fn lint_all(
     ) {
         return e;
     }
-    manager.run(&LintData { addons }, project_config, None, projects)
+    let mut codes = manager.check_config_usage("stringtable", "l");
+    codes.extend(manager.run(&LintData { addons }, project_config, None, projects));
+    codes
 }

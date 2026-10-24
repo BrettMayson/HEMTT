@@ -95,7 +95,7 @@ impl LintRunner<LintData> for Runner {
         }
         // an array literal is the only right hand side that is certainly an array,
         // a variable could just as easily be a number or a string
-        let (Expression::Array(elements, _) | Expression::ConsumeableArray(elements, _)) = &**rhs
+        let (Expression::Array(elements, _) | Expression::ConsumableArray(elements, _)) = &**rhs
         else {
             return Vec::new();
         };

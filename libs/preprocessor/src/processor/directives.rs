@@ -21,7 +21,7 @@ use crate::{
         pe20_pragma_invalid_scope::PragmaInvalidScope, pe23_if_has_include::IfHasInclude,
         pe27_unexpected_endif::UnexpectedEndif, pe28_unexpected_else::UnexpectedElse,
         pw1_redefine::RedefineMacro, pw4_include_case::IncludeCase,
-        pw5_undef_not_defined::UndefNotDefined,
+        pw5_undef_not_defined::UndefNotDefined, pw6_include_forward_slash::IncludeForwardSlash,
     },
     defines::{DefineSource, Defines},
     ifstate::IfState,
@@ -221,22 +221,16 @@ impl Processor {
             .last()
             .expect("root file should always be present");
         let path = {
+            let path = path_tokens
+                .iter()
+                .map(std::string::ToString::to_string)
+                .collect::<String>();
             let Ok(Some(LocateResult {
                 path: found_path,
                 case_mismatch,
-            })) = current.locate_with_pdrive(
-                &path_tokens
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<String>(),
-            )
+            })) = current.locate_with_pdrive(&path)
             else {
-                if let Ok(possible) = current.parent().join(
-                    path_tokens
-                        .iter()
-                        .map(std::string::ToString::to_string)
-                        .collect::<String>(),
-                ) {
+                if let Ok(possible) = current.parent().join(&path) {
                     self.add_include(possible, path_tokens.clone())?;
                 }
                 return Err(IncludeNotFound::code(path_tokens));
@@ -246,6 +240,14 @@ impl Processor {
                     path_tokens.iter().map(|t| t.as_ref().clone()).collect(),
                     case_mismatch,
                 )));
+            }
+            if path.contains('/')
+                && let Some(slash) = path_tokens.iter().find(|t| t.to_source() == "/")
+            {
+                self.warnings
+                    .push(Arc::new(IncludeForwardSlash::new(Box::new(
+                        slash.as_ref().clone(),
+                    ))));
             }
             found_path
         };

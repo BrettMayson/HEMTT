@@ -2,7 +2,7 @@
   "name": "hemtt",
   "description": "HEMTT Language Server & Utils",
   "license": "MIT",
-  "version": "1.22.0",
+  "version": "1.22.1",
   "publisher": "brettmayson",
   "icon": "icon.png",
   "categories": [],
@@ -22,6 +22,28 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "configurationDefaults": {
+      "[sqf]": {
+        "editor.quickSuggestions": {
+          "other": true,
+          "comments": false,
+          "strings": false
+        }
+      },
+      "[arma-config]": {
+        "editor.quickSuggestions": {
+          "other": true,
+          "comments": false,
+          "strings": false
+        }
+      }
+    },
+    "snippets": [
+      {
+        "language": "sqf",
+        "path": "./languages/sqf.snippets.json"
+      }
+    ],
     "grammars": [
       {
         "language": "sqf",
@@ -207,6 +229,11 @@
         "enablement": "resourceLangId == 'sqf'"
       },
       {
+        "command": "hemtt.path_copy",
+        "title": "Copy Arma Path",
+        "category": "HEMTT"
+      },
+      {
         "command": "hemtt.convertAudioWav",
         "title": "Convert to wav",
         "category": "HEMTT Audio",
@@ -311,6 +338,11 @@
         {
           "when": "resourceExtname =~ /\\.(png|jpg|jpeg|bmp|tga|paa)$/i",
           "submenu": "hemtt.images"
+        },
+        {
+          "command": "hemtt.path_copy",
+          "title": "Copy Arma Path",
+          "when": "resourceExtname =~ /\\.(sqf|p3d|paa|rvmat|wss)$/i"
         }
       ],
       "hemtt.audio": [

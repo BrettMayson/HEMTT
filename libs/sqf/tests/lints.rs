@@ -60,6 +60,7 @@ lint!(s27_macro, false);
 lint!(s28_banned_macros, true);
 lint!(s30_configof, true);
 lint!(s30_macro, false);
+lint!(s32_missing_file, false);
 lint!(s33_abs, true);
 // lint!(s33_atan2, true);
 lint!(s33_ceil, true);
@@ -89,6 +90,7 @@ lint!(s50_count_side, true);
 lint!(s51_push_back_unique, true);
 lint!(s52_duplicate_case, true);
 lint!(s53_select_substring_len, true);
+lint!(s57_params_in_loop, true);
 
 #[test]
 fn test_s29_function_undefined() {
@@ -134,6 +136,7 @@ fn lint(file: &str, ignore_inspector: bool) -> (String, SqfReport) {
                 &processed,
                 Arc::new(Addon::test_addon()),
                 database.clone(),
+                None,
             );
 
             (

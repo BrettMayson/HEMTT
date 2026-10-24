@@ -10,12 +10,13 @@ use std::sync::Arc;
 use hemtt_common::config::ProjectConfig;
 use hemtt_workspace::{
     addons::Addon,
+    lint::LintManager,
     reporting::{Codes, Processed},
 };
 
 use crate::{
     Statements,
-    analyze::{SqfReport, analyze},
+    analyze::{LintData, SqfReport, analyze, analyze_toml},
     parser::{ParserError, database::Database},
 };
 
@@ -36,18 +37,38 @@ pub struct Checked {
 /// Callers are left with what genuinely differs between them - the CLI
 /// compiles the statements and pushes the report to the addon, the language
 /// server turns the codes into LSP diagnostics.
+///
+/// # Panics
+///
+/// Panics if reading the SQF file fails.
 pub fn check(
     processed: &Processed,
     project: Option<&ProjectConfig>,
     addon: &Arc<Addon>,
+    path: &hemtt_workspace::WorkspacePath,
     database: Arc<Database>,
+    manager: Option<Arc<LintManager<LintData>>>,
 ) -> Checked {
     // Preprocessor warnings belong to the file as much as lint codes do
     let mut codes: Codes = processed.warnings().to_vec();
     match crate::parser::run(&database, processed) {
         Ok(statements) => {
-            let (lints, report) = analyze(&statements, project, processed, addon.clone(), database);
+            let (lints, report) = analyze(
+                &statements,
+                project,
+                processed,
+                addon.clone(),
+                database,
+                manager,
+            );
             codes.extend(lints);
+            codes.extend(analyze_toml(
+                &statements,
+                &path.read_to_string().expect("Failed to read SQF file"),
+                path,
+                project,
+                processed,
+            ));
             Checked {
                 codes,
                 statements: Some(statements),
@@ -112,7 +133,18 @@ mod tests {
             &processed(contents),
             None,
             &Arc::new(Addon::test_addon()),
+            &{
+                let file = Workspace::builder()
+                    .memory()
+                    .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
+                    .expect("workspace")
+                    .join("test.sqf")
+                    .expect("join");
+                file.create_file().expect("create");
+                file
+            },
             Arc::new(Database::a3(false)),
+            None,
         )
     }
 

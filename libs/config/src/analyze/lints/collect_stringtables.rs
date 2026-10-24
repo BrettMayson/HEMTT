@@ -53,12 +53,7 @@ impl LintRunner<LintData> for Runner {
         target: &Value,
         data: &LintData,
     ) -> Codes {
-        fn check_string(
-            hstr: &crate::Str,
-            span: &Range<usize>,
-            processed: &Processed,
-            data: &LintData,
-        ) {
+        fn check_string(hstr: &crate::Str, span: &Range<usize>, processed: &Processed, data: &LintData) {
             let hstr_value = hstr.value();
             if hstr_value.starts_with("$STR") {
                 // 4 char prefix is case-sensitive
@@ -71,8 +66,19 @@ impl LintRunner<LintData> for Runner {
                 };
                 locations.push((hstr_value.trim_start_matches('$').to_lowercase(), pos));
             }
-
-            
+        }
+        fn check_item(item: &Item, processed: &Processed, data: &LintData) {
+            match item {
+                Item::Str(item_data) => {
+                    check_string(item_data, item_data.span(), processed, data);
+                }
+                Item::Array(array) => {
+                    for item in array {
+                        check_item(item, processed, data);
+                    }
+                }
+                _ => {}
+            }
         }
         let Some(processed) = processed else {
             return vec![];
@@ -80,10 +86,7 @@ impl LintRunner<LintData> for Runner {
         match target {
             Value::Array(array_data) => {
                 for item in &array_data.items {
-                    let Item::Str(item_data) = item else {
-                        continue;
-                    };
-                    check_string(item_data, item_data.span(), processed, data);
+                    check_item(item, processed, data);
                 }
             }
             Value::Str(cstring_data) => {
@@ -91,7 +94,6 @@ impl LintRunner<LintData> for Runner {
             }
             _ => {}
         }
-
         vec![]
     }
 }

@@ -239,6 +239,7 @@ impl Display for Location {
 }
 
 type RequiredVersion = (Version, WorkspacePath, Range<usize>);
+pub type Localizations = Vec<(String, Position)>;
 pub type UsedFunctions = Vec<(String, Position, Mapping, Mapping, WorkspacePath)>;
 pub type DefinedFunctions = HashSet<(String, Arc<str>)>;
 pub type MagazineWellInfo = (Vec<String>, Vec<(String, Arc<dyn Code>)>);
@@ -246,7 +247,7 @@ pub type MagazineWellInfo = (Vec<String>, Vec<(String, Arc<dyn Code>)>);
 #[derive(Debug, Clone, Default)]
 pub struct BuildData {
     required_version: Arc<RwLock<Option<RequiredVersion>>>,
-    localizations: Arc<Mutex<Vec<(String, Position)>>>,
+    localizations: Arc<Mutex<Localizations>>,
     functions_defined: Arc<Mutex<DefinedFunctions>>,
     functions_used: Arc<Mutex<UsedFunctions>>,
     magazine_well_info: Arc<Mutex<MagazineWellInfo>>,
@@ -292,7 +293,7 @@ impl BuildData {
 
     #[must_use]
     /// Fetches the localizations
-    pub fn localizations(&self) -> Arc<Mutex<Vec<(String, Position)>>> {
+    pub fn localizations(&self) -> Arc<Mutex<Localizations>> {
         self.localizations.clone()
     }
     #[must_use]

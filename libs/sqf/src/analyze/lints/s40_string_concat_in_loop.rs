@@ -141,7 +141,7 @@ fn extract_loop_body(statement: &Statement) -> Option<(i64, &Statements)> {
             let Expression::Code(body) = lhs.as_ref() else { return None };
             #[allow(clippy::cast_possible_wrap)]
             let loop_count = match rhs.as_ref() {
-                Expression::Array(values, _) | Expression::ConsumeableArray(values, _) => values.len() as i64,
+                Expression::Array(values, _) | Expression::ConsumableArray(values, _) => values.len() as i64,
                 _ => i64::MAX,
             };
             Some((loop_count, body))

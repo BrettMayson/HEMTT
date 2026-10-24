@@ -43,10 +43,10 @@ impl Code for CircularInclude {
                                 .collect::<Vec<String>>()
                                 .join("\n ├ ")
                                 .as_str(),
-                            self.stack.last().map(std::string::ToString::to_string).unwrap_or_default()
+                            self.stack.last().map_or_default(std::string::ToString::to_string)
                         )
                     } else {
-                        self.stack.first().map(std::string::ToString::to_string).unwrap_or_default()
+                        self.stack.first().map_or_default(std::string::ToString::to_string)
                     }
                 )
             )

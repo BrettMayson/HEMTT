@@ -9,7 +9,7 @@ Statements {
                 Named(
                     "params",
                 ),
-                ConsumeableArray(
+                ConsumableArray(
                     [
                         String(
                             "_a",
@@ -35,7 +35,7 @@ Statements {
                 ),
                 UnaryCommand(
                     Plus,
-                    ConsumeableArray(
+                    ConsumableArray(
                         [
                             String(
                                 "_a",
@@ -81,7 +81,7 @@ Statements {
                     },
                     56..72,
                 ),
-                ConsumeableArray(
+                ConsumableArray(
                     [
                         String(
                             "a",
@@ -112,7 +112,7 @@ Statements {
                 ),
                 UnaryCommand(
                     Plus,
-                    ConsumeableArray(
+                    ConsumableArray(
                         [
                             String(
                                 "b",
@@ -141,7 +141,7 @@ Statements {
                 Named(
                     "vectorAdd",
                 ),
-                ConsumeableArray(
+                ConsumableArray(
                     [
                         Number(
                             FloatOrd(
@@ -171,7 +171,7 @@ Statements {
                 Named(
                     "positionCameraToWorld",
                 ),
-                ConsumeableArray(
+                ConsumableArray(
                     [
                         Number(
                             FloatOrd(
@@ -256,7 +256,7 @@ Statements {
                     ),
                     225..227,
                 ),
-                ConsumeableArray(
+                ConsumableArray(
                     [
                         Code(
                             Statements {
@@ -342,7 +342,7 @@ Statements {
                 Named(
                     "param",
                 ),
-                ConsumeableArray(
+                ConsumableArray(
                     [
                         String(
                             "_d",
@@ -365,7 +365,7 @@ Statements {
                     [],
                     292..293,
                 ),
-                ConsumeableArray(
+                ConsumableArray(
                     [
                         String(
                             "_e",

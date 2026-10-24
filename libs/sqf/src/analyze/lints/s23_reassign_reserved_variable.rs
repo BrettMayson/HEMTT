@@ -110,7 +110,7 @@ impl LintRunner<LintData> for StatementsRunner {
         }
 
         for (saved, (original, span, saved_span)) in need_to_restore {
-            codes.push(Arc::new(CodeS23ReassignReservedVariable::new(Variant::NeverRestored((saved, span.clone()), (original, saved_span.clone())), processed, config.severity())));
+            codes.push(Arc::new(CodeS23ReassignReservedVariable::new(Variant::NeverRestored((saved, span), (original, saved_span)), processed, config.severity())));
         }
 
         codes
@@ -141,7 +141,7 @@ impl LintRunner<LintData> for ExpressionRunner {
             _ => return Vec::new(),
         };
 
-        if let Expression::Array(values, _) | Expression::ConsumeableArray(values, _) = &**exp {
+        if let Expression::Array(values, _) | Expression::ConsumableArray(values, _) = &**exp {
             for param in values {
                 let (name, span) = match &param {
                     Expression::String(name, span, _) => (name, span),

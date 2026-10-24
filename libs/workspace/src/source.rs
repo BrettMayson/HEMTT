@@ -296,8 +296,7 @@ impl SourceDatabase {
             .expect("SourceDatabase lock poisoned")
             .dependencies
             .get(&id)
-            .map(|set| set.iter().copied().collect())
-            .unwrap_or_default()
+            .map_or_default(|set| set.iter().copied().collect())
     }
 
     #[must_use]
@@ -310,8 +309,7 @@ impl SourceDatabase {
             .expect("SourceDatabase lock poisoned")
             .dependents
             .get(&id)
-            .map(|set| set.iter().copied().collect())
-            .unwrap_or_default()
+            .map_or_default(|set| set.iter().copied().collect())
     }
 
     /// Clear the recorded forward dependency edges for `id` (e.g. before
@@ -338,6 +336,7 @@ impl SourceDatabase {
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
+    use crate::source;
     use std::io::Write;
 
     fn memory_workspace() -> WorkspacePath {
@@ -491,8 +490,8 @@ mod tests {
 
         assert_eq!(db.dependencies_of(root_id), vec![included_id]);
         assert_eq!(db.dependents_of(included_id), vec![root_id]);
-        assert!(db.dependencies_of(included_id).is_empty());
-        assert!(db.dependents_of(root_id).is_empty());
+        assert_eq!(db.dependencies_of(included_id), [] as [source::FileId; 0]);
+        assert_eq!(db.dependents_of(root_id), [] as [source::FileId; 0]);
     }
 
     #[test]
@@ -536,7 +535,10 @@ mod tests {
         db.record_dependency(root_id, included_id);
         db.clear_dependencies_of(root_id);
 
-        assert!(db.dependencies_of(root_id).is_empty());
-        assert!(db.dependents_of(included_id).is_empty());
+        assert_eq!(db.dependencies_of(root_id), [] as [source::FileId; 0]);
+        assert_eq!(
+            db.dependents_of(included_id),
+            [] as [crate::source::FileId; 0]
+        );
     }
 }

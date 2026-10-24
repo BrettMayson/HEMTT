@@ -2,13 +2,12 @@ use std::{collections::HashMap, sync::RwLock};
 
 use hemtt_config::{
     Config,
-    analyze::{lint_all, lint_check},
+    analyze::{analyze_toml, lint_all, lint_check},
     rapify::Rapify,
 };
 use hemtt_workspace::{
     WorkspacePath,
     addons::{Addon, Location},
-    reporting::CodesExt,
 };
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
@@ -101,15 +100,21 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
         }
     };
     let checked = hemtt_config::check::check(&processed, Some(ctx.config()));
-    let had_errors = checked.codes.failed();
     for code in checked.codes {
         report.push(code);
     }
     let Some(configreport) = checked.config else {
         return Ok(report);
     };
-    configreport.push_to_addon(addon);
-    if had_errors {
+    report.extend(analyze_toml(
+        configreport.config(),
+        &path.read_to_string()?,
+        path,
+        Some(ctx.config()),
+        &processed,
+    ));
+    if report.failed() {
+        configreport.push_to_addon(addon);
         return Ok(report);
     }
     let out = if std::path::Path::new(&path.filename())
@@ -146,6 +151,7 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
             "skipping rapify for {}, as instructed by preprocessor",
             out.as_str()
         );
+        configreport.push_to_addon(addon);
         return Ok(report);
     }
     let mut output = match out.create_file() {
@@ -157,5 +163,6 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
     if let Err(e) = configreport.config().rapify(&mut output, 0) {
         return Err(e.into());
     }
+    configreport.push_to_addon(addon);
     Ok(report)
 }

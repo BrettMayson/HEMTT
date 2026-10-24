@@ -1,6 +1,10 @@
 mod compiled;
+mod folding;
+mod goto;
 mod hover;
 mod lints;
+mod signature;
+mod symbols;
 
 use std::{
     collections::HashMap,
@@ -88,7 +92,10 @@ impl SqfAnalyzer {
     /// commands, and the parser treats an unknown identifier as a variable, so
     /// every use of one would produce a false diagnostic. Reporting nothing is
     /// better than reporting wrong.
-    fn get_database(&self, workspace: &EditorWorkspace) -> Result<Arc<Database>, hemtt_sqf::Error> {
+    pub(crate) fn get_database(
+        &self,
+        workspace: &EditorWorkspace,
+    ) -> Result<Arc<Database>, hemtt_sqf::Error> {
         if let Some(database) = self.databases.get(workspace) {
             return Ok(database.clone());
         }

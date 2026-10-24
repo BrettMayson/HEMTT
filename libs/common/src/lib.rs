@@ -10,6 +10,7 @@ pub mod math;
 pub mod prefix;
 pub mod steam;
 pub mod strip;
+pub mod toml_lint;
 pub mod version;
 
 pub use error::Error;

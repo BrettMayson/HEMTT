@@ -45,6 +45,7 @@ class CfgPatches {
         };
     };
 };
+```
 
 ### Explanation
 This lint checks for duplicate entries in the `units[]` and `weapons[]` arrays of `CfgPatches` classes. Duplicate entries won't cause errors in the game, but they are unnecessary and can be confusing."

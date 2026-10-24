@@ -177,7 +177,7 @@ impl Expression {
                                 file_line: 0,
                             },
                         ));
-                    } else if let Constant::ConsumeableArray(_) = &constant {
+                    } else if let Constant::ConsumableArray(_) = &constant {
                         // Only safe because we know this array will be consumed on use and won't be modifieable
                         instructions.push(Instruction::Push(ctx.add_constant(constant)?));
                     } else {
@@ -188,8 +188,8 @@ impl Expression {
                 push_constant(constant, instructions, ctx)?;
             }
             None => match *self {
-                Self::ConsumeableArray(..) => {
-                    unreachable!("couldn't make ConsumeableArray a const");
+                Self::ConsumableArray(..) => {
+                    unreachable!("couldn't make ConsumableArray a const");
                 }
                 Self::Array(ref array, ref location) => {
                     let array_len = array
@@ -265,11 +265,11 @@ impl Expression {
                 .map(|value| value.clone().compile_constant(processed, ctx))
                 .collect::<CompileResult<Option<Vec<Constant>>>>()?
                 .map(Constant::Array),
-            Self::ConsumeableArray(ref array, ..) => array
+            Self::ConsumableArray(ref array, ..) => array
                 .iter()
                 .map(|value| value.clone().compile_constant(processed, ctx))
                 .collect::<CompileResult<Option<Vec<Constant>>>>()?
-                .map(Constant::ConsumeableArray),
+                .map(Constant::ConsumableArray),
             Self::NularCommand(ref command, ..) if command.is_constant() => {
                 let command = try_normalize_name(&command.name)?;
                 debug_assert_ne!(

@@ -13,7 +13,6 @@ bench = false
 
 [dependencies]
 hemtt-common = { path = "../common" }
-hemtt-preprocessor = { path = "../preprocessor" }
 hemtt-workspace = { path = "../workspace" }
 
 automod = { workspace = true }
@@ -23,7 +22,7 @@ fs-err = { workspace = true }
 glob = { workspace = true }
 indexmap = { workspace = true }
 linkme = { workspace = true }
-lsp-types = { workspace = true }
+lsp-types = { workspace = true } #cargo::unused_dependencies false positive
 thiserror = { workspace = true }
 toml = { workspace = true }
 tracing = { workspace = true }

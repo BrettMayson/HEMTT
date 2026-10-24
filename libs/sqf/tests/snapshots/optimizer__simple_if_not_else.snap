@@ -1,0 +1,71 @@
+---
+source: libs/sqf/tests/optimizer.rs
+expression: optimize(stringify! (if_not_else))
+---
+Statements {
+    content: [
+        Expression(
+            BinaryCommand(
+                Named(
+                    "then",
+                ),
+                UnaryCommand(
+                    Named(
+                        "if",
+                    ),
+                    Variable(
+                        "cond",
+                        5..9,
+                    ),
+                    0..2,
+                ),
+                ConsumableArray(
+                    [
+                        Code(
+                            Statements {
+                                content: [
+                                    Expression(
+                                        NularCommand(
+                                            NularCommand {
+                                                name: "player",
+                                            },
+                                            31..37,
+                                        ),
+                                        31..37,
+                                    ),
+                                ],
+                                source: "player",
+                                span: 31..37,
+                                issues: [],
+                            },
+                        ),
+                        Code(
+                            Statements {
+                                content: [
+                                    Expression(
+                                        Number(
+                                            FloatOrd(
+                                                2.0,
+                                            ),
+                                            19..20,
+                                        ),
+                                        18..21,
+                                    ),
+                                ],
+                                source: "1+1",
+                                span: 18..21,
+                                issues: [],
+                            },
+                        ),
+                    ],
+                    24..28,
+                ),
+                11..15,
+            ),
+            0..39,
+        ),
+    ],
+    source: "if (!cond) then { 1+1 } else { player }\n",
+    span: 0..39,
+    issues: [],
+}
