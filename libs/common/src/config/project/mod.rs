@@ -12,6 +12,7 @@ use super::deprecated;
 
 pub mod files;
 pub mod hemtt;
+pub mod inspector;
 pub mod lint;
 pub mod preprocessor;
 pub mod signing;
@@ -47,6 +48,9 @@ pub struct ProjectConfig {
 
     // Preprocessor options
     preprocessor: preprocessor::PreprocessorOptions,
+
+    /// Inspector specific configuration
+    inspector: inspector::InspectorOptions,
 
     /// Signing specific configuration
     signing: signing::SigningConfig,
@@ -120,6 +124,12 @@ impl ProjectConfig {
     /// Preprocessor specific configuration
     pub const fn preprocessor(&self) -> &preprocessor::PreprocessorOptions {
         &self.preprocessor
+    }
+
+    #[must_use]
+    /// Inspector specific configuration
+    pub const fn inspector(&self) -> &inspector::InspectorOptions {
+        &self.inspector
     }
 
     #[must_use]
@@ -217,6 +227,9 @@ pub struct ProjectFile {
     preprocessor: preprocessor::PreprocessorOptionsFile,
 
     #[serde(default)]
+    inspector: inspector::InspectorOptionsFile,
+
+    #[serde(default)]
     signing: signing::SigningSectionFile,
 
     #[serde(skip)]
@@ -274,6 +287,7 @@ impl TryFrom<ProjectFile> for ProjectConfig {
             files: file.files.into(),
             lints: file.lints.into(),
             preprocessor: file.preprocessor.into(),
+            inspector: file.inspector.into(),
             signing: file.signing.into(),
             runtime: RuntimeArguments::default(),
             expected_paths,
@@ -308,7 +322,7 @@ impl TryFrom<ProjectFile> for ProjectConfig {
 mod test_helper {
     use std::collections::HashMap;
 
-    use super::{files, hemtt, lint, preprocessor, signing, version};
+    use super::{files, hemtt, inspector, lint, preprocessor, signing, version};
 
     impl super::ProjectConfig {
         #[must_use]
@@ -328,6 +342,7 @@ mod test_helper {
                 lints: lint::LintSectionFile::default(),
                 hemtt: hemtt::HemttSectionFile::default(),
                 preprocessor: preprocessor::PreprocessorOptionsFile::default(),
+                inspector: inspector::InspectorOptionsFile::default(),
                 signing: signing::SigningSectionFile::default(),
                 meta_path: std::path::PathBuf::default(),
             }

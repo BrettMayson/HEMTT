@@ -15,6 +15,7 @@ pub use pdrive::PDriveOption;
 pub use project::{
     ProjectConfig,
     hemtt::{RuntimeArguments, launch::LaunchOptions},
+    inspector::InspectorOptions,
     lint::{LintConfig, LintConfigOverride, LintEnabled},
     preprocessor::PreprocessorOptions,
 };

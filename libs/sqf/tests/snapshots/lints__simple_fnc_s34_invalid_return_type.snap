@@ -1,0 +1,11 @@
+---
+source: libs/sqf/tests/lints.rs
+expression: "lint(stringify! (fnc_s34_invalid_return_type), false).0"
+---
+[0m[1m[38;5;11mwarning[L-S34][0m[1m: Invalid function return type (from Header)[0m
+  [0m[36m┌─[0m fnc_s34_invalid_return_type.sqf:9:1
+  [0m[36m│[0m
+[0m[36m9[0m [0m[36m│[0m [0m[33m1234[0m
+  [0m[36m│[0m [0m[33m^^^^[0m [0m[33mexpected Bool[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: found type was Number

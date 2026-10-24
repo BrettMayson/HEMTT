@@ -47,8 +47,15 @@ options.always = [
 [lints.sqf.count_skipable]
 enabled = true
 
+[lints.sqf.calling_user_code]
+enabled = true
+options.ignore = ["my_cf_code"]
+
 [lints.sqf.foreach_apply]
 enabled = true
 
 [lints.sqf.string_concat_format]
+enabled = true
+
+[lints.sqf.branch_types_mismatch]
 enabled = true

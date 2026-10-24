@@ -90,7 +90,7 @@ private _varI = 55;
 filter = [orig, {_x + 1}] call CBA_fnc_filter;
 
 private _varJ = 123;
-[player, {x = _varJ}] call ace_common_fnc_cachedcall;
+[player, {x = _varJ}, SOME_NAMESPACE, "UID", 5] call ace_common_fnc_cachedcall;
 
 for "_test10" from 1 to 1 step 0.1 do {};
 [5] params ["_test11"];
