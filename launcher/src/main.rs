@@ -9,7 +9,7 @@ pub mod versions;
 fn main() -> anyhow::Result<()> {
     let mut args: Vec<OsString> = std::env::args_os().skip(1).collect();
 
-    if args.first() == Some(&OsString::from("vers")) {
+    if args.first() == Some(&OsString::from("versions")) || args.first() == Some(&OsString::from("v")) {
         args = args[1..].to_vec();
         vers(args)?;
     } else {
