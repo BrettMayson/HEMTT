@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 
-use image::GenericImageView;
 use tracing::error;
 use url::Url;
 
