@@ -15,24 +15,24 @@ pub fn check_is_missing_file(target: &str, project: &ProjectConfig, processed: &
     if target.chars().any(|c| ILLEGAL_CHARACTERS.contains(&c)) {
         return false;
     }
+    let expected_paths = project.expected_paths();
+    let target_lower = target.to_ascii_lowercase();
+    if !(expected_paths.iter().any(|p| target_lower.starts_with(p))) {
+        return false;
+    }
+    if target.contains('/') {
+        // always block targets containing '/' in path
+        return true;
+    }
     let workspace = processed
         .sources()
         .first()
         .map(|s| s.0.clone())
         .expect("no sources");
-    let expected_path = project.expected_path();
-    let target_lower = target.to_ascii_lowercase();
-    if !(target_lower.starts_with(expected_path)
-        || target_lower.starts_with(&format!(r"\{expected_path}")))
-    {
-        return false;
-    }
-
     if matches!(workspace.locate(target), Ok(Some(_))) {
         return false;
     }
-    if !(target.starts_with('/') || target.starts_with('\\'))
-        && matches!(workspace.locate(&format!("/{target}")), Ok(Some(_)))
+    if !target.starts_with('\\') && matches!(workspace.locate(&format!(r"\{target}")), Ok(Some(_)))
     {
         return false;
     }

@@ -33,7 +33,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     };
 
     let file_patching = FilePatching::default();
-    let ctx = Context::new(None, crate::context::PreservePrevious::Keep, true)?;
+    let ctx = Context::new(Some("dev"), crate::context::PreservePrevious::Keep, true)?;
 
     match subcommand {
         Subcommand::Create => file_patching.create(&ctx),

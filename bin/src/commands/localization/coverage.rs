@@ -149,6 +149,10 @@ pub fn coverage(cmd: &Command) -> Result<Report, Error> {
                 missing!(totals, missing, greek, addon.folder());
                 missing!(totals, missing, finnish, addon.folder());
                 missing!(totals, missing, dutch, addon.folder());
+                missing!(totals, missing, ukrainian, addon.folder());
+                missing!(totals, missing, danish, addon.folder());
+                missing!(totals, missing, bulgarian, addon.folder());
+                missing!(totals, missing, latin, addon.folder());
                 global.merge(&totals);
             });
         }
@@ -178,6 +182,10 @@ pub fn coverage(cmd: &Command) -> Result<Report, Error> {
     row!(table, global, missing, greek);
     row!(table, global, missing, finnish);
     row!(table, global, missing, dutch);
+    row!(table, global, missing, ukrainian);
+    row!(table, global, missing, danish);
+    row!(table, global, missing, bulgarian);
+    row!(table, global, missing, latin);
 
     match cmd.format {
         TableFormat::Ascii => {

@@ -73,10 +73,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         "project.version.build" => {
             println!(
                 "{}",
-                version(&ctx)
-                    .build()
-                    .map(|b| b.to_string())
-                    .unwrap_or_default()
+                version(&ctx).build().map_or_default(|b| b.to_string())
             );
         }
         "project.version.path" => {

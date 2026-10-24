@@ -13,7 +13,9 @@ impl Module for PboPrefix {
     }
     fn check(&self, ctx: &crate::context::Context) -> Result<crate::report::Report, crate::Error> {
         let addons = ctx.addons().iter().collect::<Vec<_>>();
-        let project_expected = ctx.config().expected_path(); // e.g. "z\ace\"
+        let Some(project_expected) = ctx.config().expected_paths().first() else {
+            unreachable!("index 0 exists and is non-leading backslash variation"); // e.g. "z\ace\"
+        };
         trace!(
             "Checking prefixes against expected project path: {}",
             project_expected
