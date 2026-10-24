@@ -1,6 +1,10 @@
 mod compiled;
+mod folding;
+mod goto;
 mod hover;
 mod lints;
+mod signature;
+mod symbols;
 
 use std::{
     collections::HashMap,
