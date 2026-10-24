@@ -25,6 +25,6 @@ fn deprecated(file: &str, key: &str, replacement: &str, info: Option<&str>) {
         key,
         file,
         replacement,
-        info.map(|i| format!("\n  {i}")).unwrap_or_default()
+        info.map_or_default(|i| format!("\n  {i}"))
     );
 }

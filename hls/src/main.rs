@@ -26,6 +26,7 @@ mod diag_manager;
 mod files;
 mod p3d;
 mod paa;
+mod path;
 mod positions;
 mod preprocessor;
 mod rpt;
@@ -76,8 +77,14 @@ impl LanguageServer for Backend {
                     }),
                 }),
                 signature_help_provider: Some(SignatureHelpOptions {
-                    trigger_characters: Some(vec!["(".to_string()]),
-                    retrigger_characters: Some(vec![",".to_string(), ")".to_string()]),
+                    // SQF commands are space-separated (`unit setDamage 1`), not
+                    // parenthesized calls, so a space must also trigger help
+                    trigger_characters: Some(vec!["(".to_string(), " ".to_string()]),
+                    retrigger_characters: Some(vec![
+                        ",".to_string(),
+                        ")".to_string(),
+                        " ".to_string(),
+                    ]),
                     work_done_progress_options: WorkDoneProgressOptions {
                         work_done_progress: None,
                     },
@@ -96,6 +103,8 @@ impl LanguageServer for Backend {
                     completion_item: None,
                 }),
                 definition_provider: Some(OneOf::Left(true)),
+                document_symbol_provider: Some(OneOf::Left(true)),
+                folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
                 color_provider: Some(ColorProviderCapability::Options(
                     StaticTextDocumentColorProviderOptions {
                         document_selector: Some(vec![
@@ -242,14 +251,33 @@ impl LanguageServer for Backend {
     }
 
     async fn signature_help(&self, params: SignatureHelpParams) -> Result<Option<SignatureHelp>> {
-        Ok(PreprocessorAnalyzer::get().signature_help(&params).await)
+        if let Some(help) = PreprocessorAnalyzer::get().signature_help(&params).await {
+            return Ok(Some(help));
+        }
+        Ok(SqfAnalyzer::get().signature_help(&params).await)
     }
 
     async fn goto_definition(
         &self,
         params: GotoDefinitionParams,
     ) -> Result<Option<GotoDefinitionResponse>> {
+        if let Some(def) = SqfAnalyzer::get().goto_definition(&params).await {
+            return Ok(Some(def));
+        }
         Ok(PreprocessorAnalyzer::get().goto_definition(&params).await)
+    }
+
+    async fn document_symbol(
+        &self,
+        params: DocumentSymbolParams,
+    ) -> Result<Option<DocumentSymbolResponse>> {
+        Ok(SqfAnalyzer::get()
+            .document_symbols(&params.text_document.uri)
+            .map(DocumentSymbolResponse::Nested))
+    }
+
+    async fn folding_range(&self, params: FoldingRangeParams) -> Result<Option<Vec<FoldingRange>>> {
+        Ok(SqfAnalyzer::get().folding_ranges(&params.text_document.uri))
     }
 
     async fn document_color(&self, params: DocumentColorParams) -> Result<Vec<ColorInformation>> {
@@ -358,6 +386,7 @@ async fn server() {
         .custom_method("hemtt/paa/p3d", Backend::paa_p3d)
         .custom_method("hemtt/paa/convert", Backend::paa_convert)
         .custom_method("hemtt/processed", Backend::processed)
+        .custom_method("hemtt/path_copy", Backend::path_copy)
         .custom_method("hemtt/sqf/compiled", Backend::sqf_compiled)
         .custom_method("hemtt/rpt/locate", Backend::locate_rpt)
         .finish();
