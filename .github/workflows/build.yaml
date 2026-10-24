@@ -163,17 +163,3 @@ jobs:
           draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  winget:
-    needs:
-      - release
-    runs-on: windows-latest
-    steps:
-      # Requires forked winget-pkgs: https://github.com/microsoft/winget-pkgs to the same account as this project
-      - name: Submit to WinGet
-        uses: vedantmgoyal9/winget-releaser@v2
-        with:
-          identifier: BrettMayson.HEMTT
-          installers-regex: 'windows-x64.zip'
-          release-repository: BrettMayson/HEMTT
-          token: ${{ secrets.WINGET_TOKEN }} # Classic Personal Access Token with [public_repo, workflow] scopes
