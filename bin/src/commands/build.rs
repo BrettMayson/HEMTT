@@ -54,7 +54,7 @@ use super::global_modules;
 /// ### `enabled`
 ///
 /// Determines if PAA conversion is enabled.
-/// 
+///
 /// #### `extensions`
 ///
 /// Specifies the image file extensions that should be converted to PAA format.
