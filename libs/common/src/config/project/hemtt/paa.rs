@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Eq)]
 /// Configuration for `hemtt release`
 pub struct PaaOptions {
+    enabled: bool,
     extensions: Vec<String>,
     allow_argb8: Argb8Option,
 }
@@ -33,6 +34,9 @@ impl PaaOptions {
 #[derive(PartialEq, Eq, Debug, Default, Clone, Serialize, Deserialize)]
 /// Release specific configuration
 pub struct PaaOptionsFile {
+    #[serde(default)]
+    enabled: Option<bool>,
+
     #[serde(default)]
     extensions: Vec<String>,
 
@@ -75,6 +79,7 @@ impl PaaOptionsFile {
                 exts
             },
             allow_argb8,
+            enabled: self.enabled.unwrap_or(false),
         }
     }
 }
