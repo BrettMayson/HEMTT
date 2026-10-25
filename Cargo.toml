@@ -27,7 +27,7 @@ resolver = "2"
 
 [workspace.package]
 repository = "https://github.com/BrettMayson/HEMTT"
-version = "1.23.1"
+version = "1.23.2"
 edition = "2024"
 
 [workspace.lints.clippy]
