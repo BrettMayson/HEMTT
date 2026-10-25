@@ -171,29 +171,46 @@ impl Paa {
             }
         }
 
+        let build_level = |(width, height): (u32, u32)| {
+            if (width, height) == (rgba_image.width(), rgba_image.height()) {
+                MipMap::from_rgba_image(&rgba_image, format)
+            } else {
+                let resized = image::imageops::resize(
+                    &rgba_image,
+                    width,
+                    height,
+                    image::imageops::FilterType::Lanczos3,
+                );
+                MipMap::from_rgba_image(&resized, format)
+            }
+        };
+
         // Each level resizes from the original image independently, so they can be
-        // generated concurrently - DXT compression dominates the cost of this function
+        // generated concurrently - DXT compression dominates the cost of this function.
+        // wasm32-unknown-unknown has no std thread support, so with `wasm-threads` the
+        // levels are run on a rayon pool (backed by Web Workers) and otherwise sequentially.
+        #[cfg(all(target_family = "wasm", feature = "wasm-threads"))]
+        let maps = {
+            use rayon::prelude::*;
+            sizes
+                .into_par_iter()
+                .map(build_level)
+                .collect::<Result<Vec<_>, _>>()?
+        };
+
+        #[cfg(all(target_family = "wasm", not(feature = "wasm-threads")))]
+        let maps = sizes
+            .into_iter()
+            .map(build_level)
+            .collect::<Result<Vec<_>, _>>()?;
+
+        #[cfg(not(target_family = "wasm"))]
         let maps = std::thread::scope(|s| {
             // collect first so every thread is spawned before any is joined
             #[allow(clippy::needless_collect)]
             let handles: Vec<_> = sizes
                 .iter()
-                .map(|&(width, height)| {
-                    let rgba_image = &rgba_image;
-                    s.spawn(move || {
-                        if (width, height) == (rgba_image.width(), rgba_image.height()) {
-                            MipMap::from_rgba_image(rgba_image, format)
-                        } else {
-                            let resized = image::imageops::resize(
-                                rgba_image,
-                                width,
-                                height,
-                                image::imageops::FilterType::Lanczos3,
-                            );
-                            MipMap::from_rgba_image(&resized, format)
-                        }
-                    })
-                })
+                .map(|&size| s.spawn(move || build_level(size)))
                 .collect();
             handles
                 .into_iter()

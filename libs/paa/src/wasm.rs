@@ -3,6 +3,10 @@ use std::io::Cursor;
 use js_sys::Uint8Array;
 use wasm_bindgen::prelude::*;
 
+#[cfg(feature = "wasm-threads")]
+#[allow(unused_imports)]
+pub use wasm_bindgen_rayon::init_thread_pool;
+
 #[wasm_bindgen]
 pub struct FromPaaResult {
     data: std::rc::Rc<std::cell::RefCell<Vec<u8>>>,
