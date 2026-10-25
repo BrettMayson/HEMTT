@@ -19,6 +19,10 @@ pub enum Argb8Option {
 }
 
 impl PaaOptions {
+    pub const fn enabled(&self) -> bool {
+        self.enabled
+    }
+
     /// Get the list of image file extensions that should be converted to PAA format
     pub const fn extensions(&self) -> &Vec<String> {
         &self.extensions

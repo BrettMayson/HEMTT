@@ -55,6 +55,9 @@ impl Module for Paa {
                         })
                     })
                     .map(|p| {
+                        if p.with_extension("paa")?.exists()? {
+                            return Ok(None);
+                        }
                         let reader = BufReader::new(p.open_file()?);
                         let image = image::ImageReader::new(reader)
                             .with_guessed_format()?
