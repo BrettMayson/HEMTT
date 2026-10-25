@@ -25,6 +25,22 @@ enum Subcommands {
     /// Inspect a WSS file
     Inspect(inspect::InspectArgs),
     /// Converts between WSS (Arma's format), WAV, OGG, and MP3, or generates a LIP file from them.
+    ///
+    /// The input can be `wss`, `wav`, `ogg`, or `mp3`.
+    ///
+    /// The output can be a file extension, which writes the new file next to the input, or a path:
+    ///
+    /// ```bash
+    /// hemtt utils audio convert sound.wav wss # writes sound.wss
+    /// hemtt utils audio convert sound.wav out/sound.ogg # writes out/sound.ogg
+    /// ```
+    ///
+    /// The output can be `wss`, `wav`, `ogg`, or `lip`. The `lip` output generates an Arma lip sync file from the audio:
+    ///
+    /// ```bash
+    /// hemtt utils audio convert welcome.ogg lip # writes welcome.lip
+    /// ```
+    #[command(verbatim_doc_comment)]
     Convert(convert::ConvertArgs),
     /// Checks for WSS files that can be compressed
     Compress(compress::CompressArgs),

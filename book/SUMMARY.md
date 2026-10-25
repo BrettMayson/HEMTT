@@ -20,6 +20,7 @@
   - [book](commands/book.md)
   - [build](commands/build.md)
   - [check](commands/check.md)
+  - [clean](commands/clean.md)
   - [dev](commands/dev.md)
   - [keys]()
     - [generate](commands/keys/generate.md)

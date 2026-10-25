@@ -60,6 +60,7 @@ enum Commands {
     License(commands::license::Command),
     Link(commands::link::Command),
     Build(commands::build::Command),
+    Clean(commands::clean::Command),
     Keys(commands::keys::Command),
     Release(commands::release::Command),
     Publish(commands::publish::Command),
@@ -107,6 +108,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
                 | Commands::Wiki(_)
                 | Commands::New(_)
                 | Commands::Book(_)
+                | Commands::Clean(_)
                 | Commands::License(_)
                 | Commands::Manage(_)
                 | Commands::Value(_)
@@ -154,6 +156,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         Commands::License(cmd) => commands::license::execute(cmd),
         Commands::Link(cmd) => commands::link::execute(cmd),
         Commands::Build(cmd) => commands::build::execute(cmd),
+        Commands::Clean(cmd) => commands::clean::execute(cmd),
         Commands::Keys(cmd) => commands::keys::execute(cmd),
         Commands::Release(cmd) => commands::release::execute(cmd),
         Commands::Publish(cmd) => commands::publish::execute(cmd),
