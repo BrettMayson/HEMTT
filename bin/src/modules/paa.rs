@@ -30,6 +30,10 @@ impl Module for Paa {
     fn check(&self, ctx: &Context) -> Result<Report, Error> {
         let mut report = Report::new();
 
+        if !ctx.config().hemtt().paa().enabled() {
+            return Ok(report);
+        }
+
         let extensions = ctx.config().hemtt().paa().extensions();
         let allow_argb8 = ctx.config().hemtt().paa().allow_argb8();
 

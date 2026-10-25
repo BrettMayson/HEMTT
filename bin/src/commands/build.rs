@@ -46,10 +46,15 @@ use super::global_modules;
 ///
 /// ```toml,fp=.hemtt/project.toml
 /// [hemtt.paa]
+/// enabled = false # Default: true
 /// extensions = [] # Always uses ["png", "tga"], additional extensions can be added here
 /// allow_argb8 = "ask" # Default: "ask", can also be "allow" or "deny"
 /// ```
 ///
+/// ### `enabled`
+///
+/// Determines if PAA conversion is enabled.
+/// 
 /// #### `extensions`
 ///
 /// Specifies the image file extensions that should be converted to PAA format.
