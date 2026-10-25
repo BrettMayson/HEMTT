@@ -57,6 +57,7 @@ pub fn convert(file: &PathBuf, output: &str, compression: Option<u8>) -> Result<
         }
         "wav" => wss.to_wav()?,
         "ogg" => wss.to_ogg()?,
+        "lip" => wss.to_lip()?.into_bytes(),
         _ => {
             println!("Unsupported file type to convert to: {extension}");
             return Ok(());

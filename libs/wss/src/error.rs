@@ -21,4 +21,7 @@ pub enum Error {
     #[error("MP3 Error: {0}")]
     /// Error while reading an MP3 file
     Mp3(#[from] puremp3::Error),
+    #[error("LIP Error: {0}")]
+    /// Error while generating a LIP file
+    Lip(String),
 }

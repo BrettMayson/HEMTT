@@ -2,16 +2,20 @@ use std::f32::consts::PI;
 
 use rustfft::{FftPlanner, num_complex::Complex};
 
-use crate::Wss;
+use crate::{Error, Wss};
 
 impl Wss {
     /// Generates an Arma `.lip` file from the decoded audio.
-    pub fn to_lip(&self) -> Result<String, String> {
+    ///
+    /// # Errors
+    /// [`Error::Lip`] if the audio cannot be processed into lip sync data
+    pub fn to_lip(&self) -> Result<String, Error> {
         crate::lip::generate(
             &self.channel_data,
             self.sample_rate,
             include_bytes!("model-en-mixed.bin"),
         )
+        .map_err(Error::Lip)
     }
 }
 
