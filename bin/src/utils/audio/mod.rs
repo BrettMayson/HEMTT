@@ -24,8 +24,7 @@ pub struct Command {
 enum Subcommands {
     /// Inspect a WSS file
     Inspect(inspect::InspectArgs),
-    /// Converts between WSS (Arma's format), WAV, OGG, and MP3.
-    /// Automatically detects the input format.
+    /// Converts between WSS (Arma's format), WAV, OGG, and MP3, or generates a LIP file from them.
     Convert(convert::ConvertArgs),
     /// Checks for WSS files that can be compressed
     Compress(compress::CompressArgs),
