@@ -12,9 +12,9 @@ use super::{SupportedFile, guess_file_type};
 pub struct ConvertArgs {
     /// File to convert (wss, wav, ogg, or mp3)
     pub(crate) file: String,
-    /// Output file path or new extension (e.g., "wss" or "output.wss")
+    /// Output file path or new extension: wss, wav, ogg, or lip (e.g., "wss" or "output.wss")
     pub(crate) output: String,
-    /// Compression level for WSS output (0, 4, 8), 8 is recommended
+    /// Compression level for WSS output: 0 (none, default), 4 (nibble), or 8 (byte, recommended)
     #[arg(long, short)]
     pub(crate) compression: Option<u8>,
 }

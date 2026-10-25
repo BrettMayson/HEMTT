@@ -10,6 +10,7 @@
 - [hemtt dev](/commands/dev.md) - Build the project for local development
 - [hemtt launch](/commands/launch.md) - Launch Arma 3 with your mod and dependencies
 - [hemtt build](/commands/build.md) - Build the project for local testing
+- [hemtt clean](/commands/clean.md) - Remove `.hemttout` and temporary build files
 
 ## Release
 

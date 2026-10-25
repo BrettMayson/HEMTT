@@ -1,6 +1,7 @@
 pub mod book;
 pub mod build;
 pub mod check;
+pub mod clean;
 pub mod dev;
 pub mod keys;
 pub mod launch;
