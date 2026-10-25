@@ -1,4 +1,11 @@
+#![allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss
+)]
+
 use std::f32::consts::PI;
+use std::fmt::Write;
 
 use rustfft::{FftPlanner, num_complex::Complex};
 
@@ -181,12 +188,12 @@ fn build_filters() -> Vec<[f32; FRAME_SIZE / 2]> {
             let center = points[i + 1].max(left + 1).min(FRAME_SIZE / 2 - 1);
             let right = points[i + 2].max(center + 1).min(FRAME_SIZE / 2);
 
-            for k in left..center {
-                filter[k] = (k - left) as f32 / (center - left) as f32;
+            for (k, item) in filter.iter_mut().enumerate().take(center).skip(left) {
+                *item = (k - left) as f32 / (center - left) as f32;
             }
 
-            for k in center..right {
-                filter[k] = (right - k) as f32 / (right - center) as f32;
+            for (k, item) in filter.iter_mut().enumerate().take(right).skip(center) {
+                *item = (right - k) as f32 / (right - center) as f32;
             }
 
             filter
@@ -221,7 +228,7 @@ const fn to_arma(viseme: u8) -> u8 {
 ///
 /// `channels` contains one i16 vector per channel.
 /// `sample_rate` is the source sample rate.
-/// `model_bytes` is the HeadAudio model-en-mixed.bin contents.
+/// `model_bytes` is the `HeadAudio` model-en-mixed.bin contents.
 pub fn generate(
     channels: &[Vec<i16>],
     sample_rate: u32,
@@ -243,7 +250,7 @@ pub fn generate(
         .map(|i| {
             channels
                 .iter()
-                .map(|channel| channel[i] as f32 / 32768.0)
+                .map(|channel| f32::from(channel[i]) / 32768.0)
                 .sum::<f32>()
                 / channels.len() as f32
         })
@@ -251,7 +258,7 @@ pub fn generate(
 
     // Simple linear resampling to 16 kHz.
     // Replace with HeadAudio's polyphase filter for exact compatibility.
-    let ratio = sample_rate as f64 / SAMPLE_RATE as f64;
+    let ratio = f64::from(sample_rate) / SAMPLE_RATE as f64;
     let output_len = (mono.len() as f64 / ratio).ceil() as usize;
     let audio: Vec<f32> = (0..output_len)
         .map(|i| {
@@ -294,7 +301,7 @@ pub fn generate(
         predictions.push(viseme);
     }
 
-    let duration = frames as f64 / sample_rate as f64;
+    let duration = frames as f64 / f64::from(sample_rate);
     let output_frames = (duration / 0.040).ceil() as usize + 1;
 
     let mut output = String::from("frame = 0.040\n");
@@ -311,9 +318,9 @@ pub fn generate(
             to_arma(predictions[prediction_index])
         };
 
-        output.push_str(&format!("{timestamp:.3}, {shape}\n"));
+        let _ = writeln!(output, "{timestamp:.3}, {shape}");
     }
 
-    output.push_str(&format!("{duration:.3}, -1\n"));
+    let _ = writeln!(output, "{duration:.3}, -1");
     Ok(output)
 }
