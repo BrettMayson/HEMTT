@@ -110,16 +110,6 @@ fn walk(
                 walk(item, false, processed, config, codes);
             }
         }
-        Expression::Code(statements) => {
-            for statement in statements.content() {
-                let inner = match statement {
-                    crate::Statement::AssignGlobal(_, inner, _)
-                    | crate::Statement::AssignLocal(_, inner, _)
-                    | crate::Statement::Expression(inner, _) => inner,
-                };
-                walk(inner, false, processed, config, codes);
-            }
-        }
         _ => {}
     }
 }
