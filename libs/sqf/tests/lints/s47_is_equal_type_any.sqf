@@ -16,3 +16,12 @@ if (_x isEqualType 0) then { };
 // not isEqualType, ignore
 if (_x isEqualTo 0 || _x isEqualTo "") then { };
 if (_x isEqualType 0 && _x isEqualType "") then { };
+
+// only single report for an inner code block
+switch something1 do {
+    case "showInContextMenu": {
+        private _entity = something2 param [0, objNull];
+        if (_entity isEqualType objNull || {_entity isEqualType ""}) then { };
+    };
+};
+
