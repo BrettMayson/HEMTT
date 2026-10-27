@@ -426,6 +426,9 @@ impl<'a> Inspector<'a> {
                     .collect();
                 IndexSet::from([(GameValue::Array(Some(gv_array), None), source.clone())])
             }
+            Expression::HashMap(statements, _) => {
+                IndexSet::from([(GameValue::HashMap, statements.span().clone())])
+            }
             Expression::NularCommand(cmd, source) => {
                 debug_type = format!("[N:{}]", cmd.as_str());
                 let mut cmd_set = GameValue::from_cmd(expression, None, None, self.database).0;

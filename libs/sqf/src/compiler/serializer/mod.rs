@@ -117,7 +117,10 @@ pub enum Instruction {
     GetVariable(u16, SourceInfo),
     /// This instruction seems to take a numeric length, which determines how many values
     /// from the stack it should consume to create an array, which it places back on the stack.
-    MakeArray(u16, SourceInfo),
+    /// SQFC V1 used `u16`, V2 uses `u32`.
+    MakeArray(u32, SourceInfo),
+    /// The instruction takes a codeblock from stack, has no arguments.
+    MakeHashMap(SourceInfo),
 }
 
 impl Instruction {
@@ -133,6 +136,7 @@ impl Instruction {
             Self::AssignToLocal(..) => "AssignToLocal",
             Self::GetVariable(..) => "GetVariable",
             Self::MakeArray(..) => "MakeArray",
+            Self::MakeHashMap(..) => "MakeHashMap",
         }
     }
 
@@ -147,6 +151,7 @@ impl Instruction {
             Self::AssignToLocal(..) => 6,
             Self::GetVariable(..) => 7,
             Self::MakeArray(..) => 8,
+            Self::MakeHashMap(..) => 9,
         }
     }
 
@@ -176,7 +181,16 @@ impl Instruction {
             }
             Self::MakeArray(array_len, source_info) => {
                 source_info.serialize(writer)?;
-                writer.write_u16::<LE>(array_len)?;
+                if VERSION < 2 {
+                    let array_len = u16::try_from(array_len)
+                        .map_err(|_| SerializeError::ArrayTooLong(array_len as usize))?;
+                    writer.write_u16::<LE>(array_len)?;
+                } else {
+                    writer.write_u32::<LE>(array_len)?;
+                }
+            }
+            Self::MakeHashMap(source_info) => {
+                source_info.serialize(writer)?;
             }
         }
 
@@ -202,7 +216,15 @@ impl Instruction {
             5 => Ok(Self::AssignTo(reader.read_u16::<LE>()?, source_info)),
             6 => Ok(Self::AssignToLocal(reader.read_u16::<LE>()?, source_info)),
             7 => Ok(Self::GetVariable(reader.read_u16::<LE>()?, source_info)),
-            8 => Ok(Self::MakeArray(reader.read_u16::<LE>()?, source_info)),
+            8 => {
+                let array_len = if VERSION == 1 {
+                    u32::from(reader.read_u16::<LE>()?)
+                } else {
+                    reader.read_u32::<LE>()?
+                };
+                Ok(Self::MakeArray(array_len, source_info))
+            }
+            9 => Ok(Self::MakeHashMap(source_info)),
             tag => Err(DeserializeError::InvalidTagInstruction(tag)),
         }
     }
@@ -264,6 +286,8 @@ pub enum Constant {
     Boolean(bool),
     Array(Vec<Self>),
     ConsumableArray(Vec<Self>),
+    HashMapCode(Instructions),
+    HashMapConst(Vec<Self>),
     NularCommand(Arc<str>),
 }
 
@@ -279,12 +303,13 @@ impl Constant {
 
     const fn to_byte(&self) -> u8 {
         match *self {
-            Self::Code(..) => 0,
+            Self::Code(..) | Self::HashMapCode(..) => 0,
             Self::String(..) => 1,
             Self::Scalar(..) => 2,
             Self::Boolean(..) => 3,
             Self::Array(..) | Self::ConsumableArray(..) => 4,
             Self::NularCommand(..) => 5,
+            Self::HashMapConst(..) => 6,
         }
     }
 
@@ -297,7 +322,7 @@ impl Constant {
         writer.write_u8(self.to_byte())?;
 
         match *self {
-            Self::Code(ref instructions) => {
+            Self::Code(ref instructions) | Self::HashMapCode(ref instructions) => {
                 instructions.serialize(compiled, writer)?;
             }
             Self::String(ref string) => {
@@ -309,7 +334,9 @@ impl Constant {
             Self::Boolean(value) => {
                 writer.write_u8(u8::from(value))?;
             }
-            Self::Array(ref array) | Self::ConsumableArray(ref array) => {
+            Self::Array(ref array)
+            | Self::ConsumableArray(ref array)
+            | Self::HashMapConst(ref array) => {
                 let array_len = try_truncate_or(array.len(), SerializeError::ArrayTooLong)?;
                 writer.write_u32::<LE>(array_len)?;
                 for constant in array {
@@ -544,6 +571,7 @@ impl Compiled {
     ) -> DeserializeResult<Self> {
         let version = reader.read_u32::<LE>()?;
         if version != VERSION {
+            // ToDo: (dead_code) support multiple versions
             return Err(DeserializeError::IncorrectVersion(version));
         }
 
