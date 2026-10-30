@@ -11,7 +11,7 @@ impl Statements {
     #[must_use]
     pub fn optimize(mut self) -> Self {
         self.content = self.content.into_iter().map(Statement::optimize).collect();
-        self.reduce_vars()
+        self.simplify_end_var()
     }
 }
 

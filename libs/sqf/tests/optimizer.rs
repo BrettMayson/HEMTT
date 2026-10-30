@@ -21,14 +21,12 @@ optimize!(static_math);
 optimize!(scalar);
 optimize!(select);
 optimize!(string_case);
-optimize!(chain);
+optimize!(chain); 
 optimize!(to_string);
 optimize!(array_all_positives);
 optimize!(array_all_negatives);
 optimize!(if_not_else);
-
-optimize!(statement_1);
-optimize!(statement_2);
+optimize!(statement_end_var);
 
 const ROOT: &str = "tests/optimizer/";
 /// Optimize a given SQF file and return the optimized statements.
