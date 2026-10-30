@@ -26,6 +26,7 @@ optimize!(to_string);
 optimize!(array_all_positives);
 optimize!(array_all_negatives);
 optimize!(if_not_else);
+optimize!(statement_end_var);
 
 const ROOT: &str = "tests/optimizer/";
 /// Optimize a given SQF file and return the optimized statements.

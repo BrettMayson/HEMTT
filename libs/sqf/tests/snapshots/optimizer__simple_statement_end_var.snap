@@ -1,0 +1,75 @@
+---
+source: libs/sqf/tests/optimizer.rs
+expression: optimize(stringify! (statement_end_var))
+---
+Statements {
+    content: [
+        AssignLocal(
+            "_test1",
+            UnaryCommand(
+                Named(
+                    "call",
+                ),
+                Code(
+                    Statements {
+                        content: [
+                            Expression(
+                                Number(
+                                    FloatOrd(
+                                        5.0,
+                                    ),
+                                    45..46,
+                                ),
+                                28..46,
+                            ),
+                        ],
+                        source: "private _temp1 = 5;\n    \n    _temp1;",
+                        span: 28..64,
+                        issues: [],
+                    },
+                ),
+                17..21,
+            ),
+            0..67,
+        ),
+        AssignLocal(
+            "_test2",
+            UnaryCommand(
+                Named(
+                    "call",
+                ),
+                Code(
+                    Statements {
+                        content: [
+                            AssignGlobal(
+                                "_temp2",
+                                Number(
+                                    FloatOrd(
+                                        10.0,
+                                    ),
+                                    107..109,
+                                ),
+                                98..109,
+                            ),
+                            Expression(
+                                Variable(
+                                    "_temp2",
+                                    115..121,
+                                ),
+                                115..121,
+                            ),
+                        ],
+                        source: "_temp2 = 10;\n    _temp2;",
+                        span: 98..122,
+                        issues: [],
+                    },
+                ),
+                87..91,
+            ),
+            70..125,
+        ),
+    ],
+    source: "private _test1 = call {\n    private _temp1 = 5;\n    \n    _temp1; \n};\n\nprivate _test2 = call {\n    _temp2 = 10;\n    _temp2; \n};\n",
+    span: 0..126,
+    issues: [],
+}
