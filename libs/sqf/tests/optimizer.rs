@@ -21,7 +21,7 @@ optimize!(static_math);
 optimize!(scalar);
 optimize!(select);
 optimize!(string_case);
-optimize!(chain); 
+optimize!(chain);
 optimize!(to_string);
 optimize!(array_all_positives);
 optimize!(array_all_negatives);
