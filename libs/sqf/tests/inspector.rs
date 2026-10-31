@@ -85,12 +85,11 @@ mod tests {
                 "isnull",             // example - creatediaryrecord null
                 "buttonaction",       // example
                 "privateall",         // example
-                "setturretlimits",    // syntax2 (fixed)
                 "breakwith",          // example
-                "try",                // examples calls empty func (nil) 
-                "throw",             
+                "try",                // examples calls empty func (nil)
+                "throw",
                 "catch",
-                "settargetsize",      // need to add alt syntax for emtpy array input
+                "settargetsize", // need to add alt syntax for emtpy array input
             ]
             .contains(&cmd.name().to_ascii_lowercase().as_str())
             {

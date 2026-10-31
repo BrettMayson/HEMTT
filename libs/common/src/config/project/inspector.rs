@@ -128,7 +128,7 @@ mod tests {
         let file: InspectorOptionsFile = toml::from_str(toml).expect("Failed to parse TOML");
         let options: InspectorOptions = file.into();
         assert!(options.vars_to_ignore().is_none());
-        assert!(options.check_function_calls().is_empty());
+        assert_eq!(options.check_function_calls(), &[] as &[String]);
         assert_eq!(options.export_functions(), &vec!["*".to_string()]);
         assert_eq!(options.header_regex, "");
         assert_eq!(options.header_line_regex, "");
@@ -143,7 +143,7 @@ mod tests {
     	"#;
         let file: InspectorOptionsFile = toml::from_str(toml).expect("Failed to parse TOML");
         let options: InspectorOptions = file.into();
-        assert!(options.vars_to_ignore().expect("some").is_empty());
+        assert_eq!(options.vars_to_ignore().expect("some"), &[] as &[String]);
         assert_eq!(options.check_function_calls(), &vec!["*".to_string()]);
         assert_eq!(options.export_functions(), &vec!["abe_berry".to_string()]);
         assert_eq!(options.header_regex, "ace");

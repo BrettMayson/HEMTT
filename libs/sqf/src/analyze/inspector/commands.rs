@@ -231,15 +231,10 @@ impl Inspector<'_> {
                             // element[2] could be missing if expected are from header
                             default: if element.len() > 2 && !element[2].is_empty() {
                                 Some(
-                                    (element[2]
-                                        .first()
-                                        .map(|(_, s)| s.clone())
-                                        .unwrap_or_default()
-                                        .start)
+                                    (element[2].first().map_or_default(|(_, s)| s.clone()).start)
                                         ..(element[2]
                                             .last()
-                                            .map(|(_, s)| s.clone())
-                                            .unwrap_or_default()
+                                            .map_or_default(|(_, s)| s.clone())
                                             .end),
                                 )
                             } else {

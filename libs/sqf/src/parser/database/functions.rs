@@ -1,11 +1,11 @@
 //! Handles database of external functions
-use std::{io::Write, path::Path, sync::Arc};
+use super::Database;
+use crate::analyze::LintData;
 use arma3_wiki::{Wiki, functions::Functions, model::Function};
 use hemtt_common::config::ProjectConfig;
 use indexmap::IndexMap;
+use std::{io::Write, path::Path, sync::Arc};
 use tracing::{error, trace};
-use crate::analyze::LintData;
-use super::Database;
 
 const FUNCTION_DIR: &str = ".hemttout/functions";
 
