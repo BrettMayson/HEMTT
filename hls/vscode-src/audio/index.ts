@@ -25,6 +25,10 @@ export function init(client: LanguageClient, channel: vscode.OutputChannel, cont
     orActive(uri, multiselection, async (uri) => await conversion(uri.toString(), "wss", client, channel, Compression.Byte));
   }));
 
+  context.subscriptions.push(vscode.commands.registerCommand('hemtt.convertAudioLip', async (uri: vscode.Uri | undefined, multiselection: Array<vscode.Uri> | undefined) => {
+    orActive(uri, multiselection, async (uri) => await conversion(uri.toString(), "lip", client, channel));
+  }));
+
   const wssViewerProvider = new WssViewerProvider(context.extensionUri, client);
   context.subscriptions.push(
     vscode.window.registerCustomEditorProvider(

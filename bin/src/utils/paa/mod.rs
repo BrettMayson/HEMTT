@@ -7,6 +7,7 @@ mod convert;
 mod cxam_fix;
 mod inspect;
 
+pub use convert::confirm_format;
 pub use inspect::inspect;
 
 #[derive(clap::Parser)]

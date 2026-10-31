@@ -60,6 +60,7 @@ enum Commands {
     License(commands::license::Command),
     Link(commands::link::Command),
     Build(commands::build::Command),
+    Clean(commands::clean::Command),
     Keys(commands::keys::Command),
     Release(commands::release::Command),
     Publish(commands::publish::Command),
@@ -107,6 +108,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
                 | Commands::Wiki(_)
                 | Commands::New(_)
                 | Commands::Book(_)
+                | Commands::Clean(_)
                 | Commands::License(_)
                 | Commands::Manage(_)
                 | Commands::Value(_)
@@ -122,7 +124,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         logging::init(cli.global.verbosity, !is_simple_command)?;
     }
 
-    let update_thread = if debug {
+    let update_thread = if debug || std::env::var("HEMTT_FROM_LAUNCHER").is_ok() {
         std::thread::spawn(|| None)
     } else {
         std::thread::spawn(check_for_update)
@@ -154,6 +156,7 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         Commands::License(cmd) => commands::license::execute(cmd),
         Commands::Link(cmd) => commands::link::execute(cmd),
         Commands::Build(cmd) => commands::build::execute(cmd),
+        Commands::Clean(cmd) => commands::clean::execute(cmd),
         Commands::Keys(cmd) => commands::keys::execute(cmd),
         Commands::Release(cmd) => commands::release::execute(cmd),
         Commands::Publish(cmd) => commands::publish::execute(cmd),
@@ -261,32 +264,6 @@ fn check_for_update() -> Option<Vec<String>> {
             return None;
         }
         _ => return None,
-    }
-    let Ok(path) = std::env::current_exe() else {
-        return Some(out);
-    };
-    trace!("HEMTT is installed at: {}", path.display());
-    let os = std::env::consts::OS;
-    let (message, filter) = match os {
-        "windows" => (
-            "HEMTT is installed via winget, run `winget upgrade hemtt` to update",
-            "\\Winget\\".to_string(),
-        ),
-        "linux" | "macos" => (
-            "HEMTT is installed in home directory, run `curl -sSf https://hemtt.dev/install.sh | sh` to update",
-            {
-                let mut home = dirs::home_dir().expect("home directory exists");
-                if os == "linux" {
-                    home = home.join(".local");
-                }
-                home.join("bin").display().to_string()
-            },
-        ),
-        _ => return Some(out),
-    };
-
-    if path.display().to_string().contains(&filter) {
-        out.push(message.to_string());
     }
     Some(out)
 }

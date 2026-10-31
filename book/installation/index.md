@@ -22,7 +22,9 @@ HEMTT can be installed using an installer script.
 curl -sSf https://hemtt.dev/install.sh | sh
 ```
 
-The script can be ran again to update HEMTT.
+The script installs the HEMTT launcher as `hemtt` in `~/.local/bin`. It requires `curl` and `unzip`, and on macOS it also requires [Homebrew](https://brew.sh).
+
+On first run the launcher downloads the latest HEMTT release. It checks for new releases every 12 hours and updates HEMTT automatically. Running the script again installs the latest launcher.
 
 ## Manual Download
 

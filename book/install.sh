@@ -2,7 +2,7 @@
 
 set -e
 
-GITHUB_API="https://api.github.com/repos/brettmayson/HEMTT/releases/latest"
+GITHUB_API="https://api.github.com/repos/hemtt/launcher/releases/latest"
 RELEASE_INFO=$(curl -s "$GITHUB_API")
 DOWNLOAD_URL=""
 
@@ -52,9 +52,15 @@ if [ -z "$DOWNLOAD_URL" ]; then
     exit 1
 fi
 
+if ! command -v unzip >/dev/null 2>&1; then
+    echo "unzip is required but was not found."
+    exit 1
+fi
+
 echo "Downloading from $DOWNLOAD_URL..."
 TMP_DIR=$(mktemp -d)
-curl -L -o "$TMP_DIR/hemtt" "$DOWNLOAD_URL"
+curl -fL -o "$TMP_DIR/launcher.zip" "$DOWNLOAD_URL"
+unzip -q "$TMP_DIR/launcher.zip" -d "$TMP_DIR"
 chmod +x "$TMP_DIR/hemtt"
 
 # --- Install location ---
@@ -129,3 +135,4 @@ rm -rf "$TMP_DIR"
 echo "Installation complete."
 echo "Please restart your terminal or source the relevant shell config."
 echo "You can run HEMTT using: hemtt"
+echo "The launcher installs the latest HEMTT release on first run and keeps it up to date."

@@ -58,6 +58,10 @@ impl Module for Rapifier {
             }
         }
 
+        if entries.is_empty() {
+            return Ok(report);
+        }
+
         let progress = progress_bar(entries.len() as u64).with_message("Rapifying Configs");
         let reports = entries
             .par_iter()

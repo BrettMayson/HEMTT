@@ -11,6 +11,15 @@ expression: "lint(stringify! (s47_is_equal_type_any), true).0"
   [0m[36m=[0m [36mnote[0m: remove the { } and use the comparison directly, it is cheaper than the short circuit
 
 
+[0m[1m[38;5;14mhelp[L-S26][0m[1m: Inefficent short circuit evaulation[0m
+   [0m[36m┌─[0m s47_is_equal_type_any.sqf:24:45
+   [0m[36m│[0m
+[0m[36m24[0m [0m[36m│[0m         if (_entity isEqualType objNull || {[0m[36m_entity isEqualType ""[0m}) then { };
+   [0m[36m│[0m                                             [0m[36m^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36munnecessary { }[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [36mnote[0m: remove the { } and use the comparison directly, it is cheaper than the short circuit
+
+
 [0m[1m[38;5;14mhelp[L-S47][0m[1m: code can be replaced with `isEqualTypeAny`[0m
   [0m[36m┌─[0m s47_is_equal_type_any.sqf:4:5
   [0m[36m│[0m
@@ -36,3 +45,12 @@ expression: "lint(stringify! (s47_is_equal_type_any), true).0"
   [0m[36m│[0m     [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `isEqualTypeAny`[0m
   [0m[36m│[0m
   [0m[36m=[0m [32mtry[0m: _x isEqualTypeAny [0, ""]
+
+
+[0m[1m[38;5;14mhelp[L-S47][0m[1m: code can be replaced with `isEqualTypeAny`[0m
+   [0m[36m┌─[0m s47_is_equal_type_any.sqf:24:13
+   [0m[36m│[0m
+[0m[36m24[0m [0m[36m│[0m         if ([0m[36m_entity isEqualType objNull || {_entity isEqualType ""[0m}) then { };
+   [0m[36m│[0m             [0m[36m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m [0m[36muse `isEqualTypeAny`[0m
+   [0m[36m│[0m
+   [0m[36m=[0m [32mtry[0m: _entity isEqualTypeAny [objNull, ""]

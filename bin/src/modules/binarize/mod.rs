@@ -128,7 +128,7 @@ impl Module for Binarize {
             self.command = Some(path.display().to_string());
             let compatibility = CompatibiltyTool::determine();
             if let Some(tool) = compatibility {
-                info!("Using {} for binarization compatibilty", tool.to_string());
+                debug!("Using {} for binarization compatibilty", tool.to_string());
                 self.compatibility = tool;
             } else {
                 debug!("tools found, but not wine64 or proton");
@@ -315,6 +315,9 @@ impl Module for Binarize {
             .read()
             .expect("prechecked should not be poisoned")
             .len();
+        if file_count == 0 {
+            return Ok(report);
+        }
         let progress = progress_bar(file_count as u64).with_message("Binarizing files");
         let cache_hits = AtomicUsize::new(0);
         self.prechecked

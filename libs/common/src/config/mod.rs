@@ -14,8 +14,7 @@ pub use global::GlobalConfig;
 pub use pdrive::PDriveOption;
 pub use project::{
     ProjectConfig,
-    hemtt::{RuntimeArguments, launch::LaunchOptions},
-    inspector::InspectorOptions,
+    hemtt::{RuntimeArguments, launch::LaunchOptions, paa::Argb8Option},
     lint::{LintConfig, LintConfigOverride, LintEnabled},
     preprocessor::PreprocessorOptions,
 };

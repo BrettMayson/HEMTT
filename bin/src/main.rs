@@ -39,8 +39,8 @@ It is always best to the include the log and a link to your project when reporti
     let cli = match hemtt::Cli::try_parse() {
         Ok(cli) => cli,
         Err(e) => {
-            eprintln!("{e}");
-            std::process::exit(1);
+            e.print().ok();
+            std::process::exit(e.exit_code());
         }
     };
 

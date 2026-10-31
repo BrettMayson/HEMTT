@@ -2,7 +2,7 @@
   "name": "hemtt",
   "description": "HEMTT Language Server & Utils",
   "license": "MIT",
-  "version": "1.22.1",
+  "version": "1.23.2",
   "publisher": "brettmayson",
   "icon": "icon.png",
   "categories": [],
@@ -264,6 +264,12 @@
         "enablement": "resourceExtname =~ /\\.(wav|ogg|mp3)$/i"
       },
       {
+        "command": "hemtt.convertAudioLip",
+        "title": "Convert to lip",
+        "category": "HEMTT Audio",
+        "enablement": "resourceExtname =~ /\\.(wav|ogg|mp3|wss)$/i"
+      },
+      {
         "command": "hemtt.convertPaa",
         "title": "Convert to PAA",
         "category": "HEMTT Images",
@@ -370,6 +376,11 @@
           "command": "hemtt.convertAudioWssByte",
           "group": "1_convert@3",
           "when": "resourceExtname =~ /\\.(wav|ogg|mp3)$/i"
+        },
+        {
+          "command": "hemtt.convertAudioLip",
+          "group": "1_convert@4",
+          "when": "resourceExtname =~ /\\.(wav|ogg|mp3|wss)$/i"
         }
       ],
       "hemtt.images": [

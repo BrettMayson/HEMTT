@@ -16,6 +16,34 @@ pub enum PreservePrevious {
 
 pub type State = state::TypeMap![Send + Sync];
 
+/// The HEMTT temporary folder for the current user
+#[must_use]
+pub fn user_tmp() -> PathBuf {
+    let tmp = temp_dir().join("hemtt");
+    // on linux add the user to the path for multiple users
+    if cfg!(target_os = "windows") {
+        tmp
+    } else {
+        tmp.join(whoami::username().unwrap_or_else(|_| String::from("unknownusername")))
+    }
+}
+
+/// The temporary folder used by a build of the project at `root`
+///
+/// # Panics
+/// If the project path is not valid UTF-8
+#[must_use]
+pub fn project_tmp(root: &std::path::Path) -> PathBuf {
+    user_tmp().join(
+        root.components()
+            .skip(2)
+            .collect::<PathBuf>()
+            .to_str()
+            .expect("valid utf-8")
+            .replace(['\\', '/'], "_"),
+    )
+}
+
 #[derive(Debug, Clone)]
 pub struct Context {
     global: GlobalConfig,
@@ -87,24 +115,8 @@ impl Context {
     ) -> Result<Self, Error> {
         let root = std::env::current_dir()?;
         let config = Self::read_project()?;
-        let tmp = {
-            let mut tmp = temp_dir().join("hemtt");
-            // on linux add the user to the path for multiple users
-            if !cfg!(target_os = "windows") {
-                tmp = tmp
-                    .join(whoami::username().unwrap_or_else(|_| String::from("unknownusername")));
-            }
-            tmp
-        };
-        let profile = tmp.join("profile");
-        let tmp = tmp.join(
-            root.components()
-                .skip(2)
-                .collect::<PathBuf>()
-                .to_str()
-                .expect("valid utf-8")
-                .replace(['\\', '/'], "_"),
-        );
+        let profile = user_tmp().join("profile");
+        let tmp = project_tmp(&root);
         if tmp.exists() {
             fs_err::remove_dir_all(&tmp)?;
         }

@@ -4,6 +4,7 @@ use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
 mod compression;
 mod error;
+mod lip;
 mod mp3;
 mod ogg;
 mod wav;

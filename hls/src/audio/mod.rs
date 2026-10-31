@@ -52,6 +52,7 @@ pub fn convert(
         }
         "wav" => wss.to_wav(),
         "ogg" => wss.to_ogg(),
+        "lip" => wss.to_lip().map(String::into_bytes),
         _ => {
             return Err("Unsupported file type to convert to".to_string());
         }
