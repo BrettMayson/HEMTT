@@ -11,11 +11,20 @@ Project {
                 keys: [
                     Key {
                         id: "Comments be gone!",
+                        allow_empty: None,
                         original: Some(
-                            "I leave this for later",
+                            Language {
+                                content: "I leave this for later",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         english: Some(
-                            "I leave this for later",
+                            Language {
+                                content: "I leave this for later",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         czech: None,
                         french: None,
@@ -46,11 +55,20 @@ Project {
                     },
                     Key {
                         id: "I will be empty",
+                        allow_empty: None,
                         original: Some(
-                            "hey",
+                            Language {
+                                content: "hey",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         english: Some(
-                            "hey",
+                            Language {
+                                content: "hey",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         czech: None,
                         french: None,
@@ -59,10 +77,18 @@ Project {
                         polish: None,
                         portuguese: None,
                         russian: Some(
-                            "hey",
+                            Language {
+                                content: "hey",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         german: Some(
-                            "hey",
+                            Language {
+                                content: "hey",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         korean: None,
                         japanese: None,
@@ -85,17 +111,34 @@ Project {
                     },
                     Key {
                         id: "I will change the xml structure a little",
+                        allow_empty: None,
                         original: Some(
-                            "",
+                            Language {
+                                content: "",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         english: Some(
-                            "",
+                            Language {
+                                content: "",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         czech: Some(
-                            "",
+                            Language {
+                                content: "",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         french: Some(
-                            "",
+                            Language {
+                                content: "",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         spanish: None,
                         italian: None,
@@ -124,25 +167,46 @@ Project {
                     },
                     Key {
                         id: "My things get unescaped",
+                        allow_empty: None,
                         original: Some(
-                            "&quot;&apos;",
+                            Language {
+                                content: "&quot;&apos;",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         english: Some(
-                            "&quot;&apos;",
+                            Language {
+                                content: "&quot;&apos;",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         czech: None,
                         french: None,
                         spanish: Some(
-                            "\"Hello World\"",
+                            Language {
+                                content: "\"Hello World\"",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         italian: None,
                         polish: None,
                         portuguese: None,
                         russian: Some(
-                            "&quot;&apos;",
+                            Language {
+                                content: "&quot;&apos;",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         german: Some(
-                            "&quot;&apos;",
+                            Language {
+                                content: "&quot;&apos;",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         korean: None,
                         japanese: None,

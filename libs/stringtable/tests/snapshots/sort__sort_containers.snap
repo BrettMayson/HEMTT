@@ -11,8 +11,13 @@ Project {
                 keys: [
                     Key {
                         id: "A1",
+                        allow_empty: None,
                         original: Some(
-                            "Origin",
+                            Language {
+                                content: "Origin",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         english: None,
                         czech: None,
@@ -49,8 +54,13 @@ Project {
                         keys: [
                             Key {
                                 id: "A3",
+                                allow_empty: None,
                                 original: Some(
-                                    "Origin",
+                                    Language {
+                                        content: "Origin",
+                                        ai_translated: None,
+                                        needs_review: None,
+                                    },
                                 ),
                                 english: None,
                                 czech: None,
@@ -88,9 +98,14 @@ Project {
                         keys: [
                             Key {
                                 id: "A2",
+                                allow_empty: None,
                                 original: None,
                                 english: Some(
-                                    "EN",
+                                    Language {
+                                        content: "EN",
+                                        ai_translated: None,
+                                        needs_review: None,
+                                    },
                                 ),
                                 czech: None,
                                 french: None,
@@ -100,7 +115,11 @@ Project {
                                 portuguese: None,
                                 russian: None,
                                 german: Some(
-                                    "DE",
+                                    Language {
+                                        content: "DE",
+                                        ai_translated: None,
+                                        needs_review: None,
+                                    },
                                 ),
                                 korean: None,
                                 japanese: None,
@@ -123,8 +142,13 @@ Project {
                             },
                             Key {
                                 id: "B1",
+                                allow_empty: None,
                                 original: Some(
-                                    "Origin",
+                                    Language {
+                                        content: "Origin",
+                                        ai_translated: None,
+                                        needs_review: None,
+                                    },
                                 ),
                                 english: None,
                                 czech: None,

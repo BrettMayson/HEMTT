@@ -11,21 +11,34 @@ Project {
                 keys: [
                     Key {
                         id: "HasNoComment",
+                        allow_empty: None,
                         original: None,
                         english: Some(
-                            "This is a string with a comment",
+                            Language {
+                                content: "This is a string with a comment",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         czech: None,
                         french: None,
                         spanish: Some(
-                            "Esto es una cadena sin un comentario",
+                            Language {
+                                content: "Esto es una cadena sin un comentario",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         italian: None,
                         polish: None,
                         portuguese: None,
                         russian: None,
                         german: Some(
-                            "Das ist eine Zeichenkette ohne Kommentar",
+                            Language {
+                                content: "Das ist eine Zeichenkette ohne Kommentar",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         korean: None,
                         japanese: None,
@@ -48,9 +61,14 @@ Project {
                     },
                     Key {
                         id: "HasComment",
+                        allow_empty: None,
                         original: None,
                         english: Some(
-                            "This is a string with a comment",
+                            Language {
+                                content: "This is a string with a comment",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         czech: None,
                         french: None,
@@ -60,7 +78,11 @@ Project {
                         portuguese: None,
                         russian: None,
                         german: Some(
-                            "Das ist eine Zeichenkette ohne Kommentar",
+                            Language {
+                                content: "Das ist eine Zeichenkette ohne Kommentar",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
                         ),
                         korean: None,
                         japanese: None,

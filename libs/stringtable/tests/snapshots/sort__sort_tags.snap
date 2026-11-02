@@ -1,0 +1,217 @@
+---
+source: libs/stringtable/tests/sort.rs
+expression: stringtable
+---
+Project {
+    inner: InnerProject {
+        name: "HEMTT",
+        packages: [
+            Package {
+                name: "Test",
+                keys: [
+                    Key {
+                        id: "test1",
+                        allow_empty: Some(
+                            true,
+                        ),
+                        original: None,
+                        english: Some(
+                            Language {
+                                content: "",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
+                        ),
+                        czech: None,
+                        french: None,
+                        spanish: None,
+                        italian: None,
+                        polish: None,
+                        portuguese: None,
+                        russian: None,
+                        german: Some(
+                            Language {
+                                content: "das",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
+                        ),
+                        korean: None,
+                        japanese: None,
+                        chinese: None,
+                        chinesesimp: None,
+                        turkish: None,
+                        swedish: None,
+                        slovak: None,
+                        serbocroatian: None,
+                        norwegian: None,
+                        icelandic: None,
+                        hungarian: None,
+                        greek: None,
+                        finnish: None,
+                        dutch: None,
+                        ukrainian: None,
+                        danish: None,
+                        bulgarian: None,
+                        latin: None,
+                    },
+                    Key {
+                        id: "test2",
+                        allow_empty: None,
+                        original: None,
+                        english: Some(
+                            Language {
+                                content: "with",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
+                        ),
+                        czech: None,
+                        french: None,
+                        spanish: None,
+                        italian: None,
+                        polish: None,
+                        portuguese: None,
+                        russian: None,
+                        german: Some(
+                            Language {
+                                content: "mitt",
+                                ai_translated: None,
+                                needs_review: Some(
+                                    true,
+                                ),
+                            },
+                        ),
+                        korean: None,
+                        japanese: None,
+                        chinese: None,
+                        chinesesimp: None,
+                        turkish: None,
+                        swedish: None,
+                        slovak: None,
+                        serbocroatian: None,
+                        norwegian: None,
+                        icelandic: None,
+                        hungarian: None,
+                        greek: None,
+                        finnish: None,
+                        dutch: None,
+                        ukrainian: None,
+                        danish: None,
+                        bulgarian: None,
+                        latin: None,
+                    },
+                    Key {
+                        id: "test3",
+                        allow_empty: None,
+                        original: None,
+                        english: Some(
+                            Language {
+                                content: "alliteration",
+                                ai_translated: None,
+                                needs_review: None,
+                            },
+                        ),
+                        czech: None,
+                        french: None,
+                        spanish: None,
+                        italian: None,
+                        polish: None,
+                        portuguese: None,
+                        russian: None,
+                        german: Some(
+                            Language {
+                                content: "alliteration",
+                                ai_translated: Some(
+                                    true,
+                                ),
+                                needs_review: None,
+                            },
+                        ),
+                        korean: None,
+                        japanese: None,
+                        chinese: None,
+                        chinesesimp: None,
+                        turkish: None,
+                        swedish: None,
+                        slovak: None,
+                        serbocroatian: None,
+                        norwegian: None,
+                        icelandic: None,
+                        hungarian: None,
+                        greek: None,
+                        finnish: None,
+                        dutch: None,
+                        ukrainian: None,
+                        danish: None,
+                        bulgarian: None,
+                        latin: None,
+                    },
+                ],
+                containers: [],
+            },
+        ],
+    },
+    path: "/tags.xml",
+    keys: {
+        "test2": [
+            Position {
+                start: LineCol(
+                    105,
+                    (
+                        4,
+                        18,
+                    ),
+                ),
+                end: LineCol(
+                    110,
+                    (
+                        4,
+                        23,
+                    ),
+                ),
+                path: "/tags.xml",
+            },
+        ],
+        "test3": [
+            Position {
+                start: LineCol(
+                    235,
+                    (
+                        8,
+                        18,
+                    ),
+                ),
+                end: LineCol(
+                    240,
+                    (
+                        8,
+                        23,
+                    ),
+                ),
+                path: "/tags.xml",
+            },
+        ],
+        "test1": [
+            Position {
+                start: LineCol(
+                    414,
+                    (
+                        12,
+                        18,
+                    ),
+                ),
+                end: LineCol(
+                    419,
+                    (
+                        12,
+                        23,
+                    ),
+                ),
+                path: "/tags.xml",
+            },
+        ],
+    },
+    source: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<Project name=\"HEMTT\">\n    <Package name=\"Test\">\n        <Key ID=\"test2\">\n            <English>with</English>\n            <German needs-review=\"true\">mitt</German>\n        </Key>\n        <Key ID=\"test3\">\n            <English random-tags-will-be-lost=\"true\">alliteration</English>\n            <German ai-translated=\"true\">alliteration</German>\n        </Key>\n        <Key ID=\"test1\" allow-empty=\"true\">\n            <German>das</German>\n            <English></English>\n        </Key>\n    </Package>\n</Project>\n",
+    comments: [],
+}

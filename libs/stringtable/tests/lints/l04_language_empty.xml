@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project name="test">
+    <Package name="test">
+        <Key ID="MyID1">
+            <English>empty is warn</English>
+            <German></German>
+        </Key>
+        <Key ID="MyID2" allow-empty="true">
+            <English>empty is ok</English>
+            <German></German>
+        </Key>
+    </Package>
+</Project>
