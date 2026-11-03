@@ -16,6 +16,14 @@ pub enum Issue {
     InvalidReturnType {
         variant: InvalidArgs,
     },
+    CallingUserCode {
+        span: Range<usize>,
+        var: String,
+    },
+    MismatchedTypes {
+        command: String,
+        span: Range<usize>,
+    },
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
