@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use quick_xml::escape::minimal_escape;
 use serde::{Deserialize, Serialize, Serializer};
 
@@ -11,12 +13,10 @@ where
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 struct Language {
     // inner text element of the language tag, default allows the string to be empty
-    #[serde(default, rename = "$value", serialize_with = "min_escape")]
+    #[serde(default, rename = "$text", serialize_with = "min_escape")]
     content: String,
-    #[serde(rename = "@ai-translated", skip_serializing_if = "Option::is_none")]
-    ai_translated: Option<bool>,
-    #[serde(rename = "@needs-review", skip_serializing_if = "Option::is_none")]
-    needs_review: Option<bool>,
+    #[serde(flatten)]
+    attributes: BTreeMap<String, String>,
 }
 
 macro_rules! define_key {

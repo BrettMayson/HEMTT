@@ -14,7 +14,7 @@ expression: out
             <German needs-review="true">mitt</German>
         </Key>
         <Key ID="test3">
-            <English>alliteration</English>
+            <English abc="1">alliteration</English>
             <German ai-translated="true">alliteration</German>
         </Key>
     </Package>

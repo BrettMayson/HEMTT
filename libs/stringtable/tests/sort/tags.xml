@@ -6,7 +6,7 @@
             <German needs-review="true">mitt</German>
         </Key>
         <Key ID="test3">
-            <English random-tags-will-be-lost="true">alliteration</English>
+            <English abc="1">alliteration</English>
             <German ai-translated="true">alliteration</German>
         </Key>
         <Key ID="test1" allow-empty="true">

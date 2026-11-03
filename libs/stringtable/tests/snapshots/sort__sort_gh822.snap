@@ -15,15 +15,13 @@ Project {
                         original: Some(
                             Language {
                                 content: "I leave this for later",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         english: Some(
                             Language {
                                 content: "I leave this for later",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         czech: None,
@@ -59,15 +57,13 @@ Project {
                         original: Some(
                             Language {
                                 content: "hey",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         english: Some(
                             Language {
                                 content: "hey",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         czech: None,
@@ -79,15 +75,13 @@ Project {
                         russian: Some(
                             Language {
                                 content: "hey",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         german: Some(
                             Language {
                                 content: "hey",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         korean: None,
@@ -115,29 +109,25 @@ Project {
                         original: Some(
                             Language {
                                 content: "",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         english: Some(
                             Language {
                                 content: "",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         czech: Some(
                             Language {
                                 content: "",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         french: Some(
                             Language {
                                 content: "",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         spanish: None,
@@ -171,15 +161,13 @@ Project {
                         original: Some(
                             Language {
                                 content: "&quot;&apos;",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         english: Some(
                             Language {
                                 content: "&quot;&apos;",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         czech: None,
@@ -187,8 +175,7 @@ Project {
                         spanish: Some(
                             Language {
                                 content: "\"Hello World\"",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         italian: None,
@@ -197,15 +184,13 @@ Project {
                         russian: Some(
                             Language {
                                 content: "&quot;&apos;",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         german: Some(
                             Language {
                                 content: "&quot;&apos;",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         korean: None,

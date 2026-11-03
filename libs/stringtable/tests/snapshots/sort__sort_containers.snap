@@ -15,8 +15,7 @@ Project {
                         original: Some(
                             Language {
                                 content: "Origin",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         english: None,
@@ -58,8 +57,7 @@ Project {
                                 original: Some(
                                     Language {
                                         content: "Origin",
-                                        ai_translated: None,
-                                        needs_review: None,
+                                        attributes: {},
                                     },
                                 ),
                                 english: None,
@@ -103,8 +101,7 @@ Project {
                                 english: Some(
                                     Language {
                                         content: "EN",
-                                        ai_translated: None,
-                                        needs_review: None,
+                                        attributes: {},
                                     },
                                 ),
                                 czech: None,
@@ -117,8 +114,7 @@ Project {
                                 german: Some(
                                     Language {
                                         content: "DE",
-                                        ai_translated: None,
-                                        needs_review: None,
+                                        attributes: {},
                                     },
                                 ),
                                 korean: None,
@@ -146,8 +142,7 @@ Project {
                                 original: Some(
                                     Language {
                                         content: "Origin",
-                                        ai_translated: None,
-                                        needs_review: None,
+                                        attributes: {},
                                     },
                                 ),
                                 english: None,

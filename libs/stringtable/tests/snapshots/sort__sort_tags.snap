@@ -18,8 +18,7 @@ Project {
                         english: Some(
                             Language {
                                 content: "",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         czech: None,
@@ -32,8 +31,7 @@ Project {
                         german: Some(
                             Language {
                                 content: "das",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         korean: None,
@@ -62,8 +60,7 @@ Project {
                         english: Some(
                             Language {
                                 content: "with",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         czech: None,
@@ -76,10 +73,9 @@ Project {
                         german: Some(
                             Language {
                                 content: "mitt",
-                                ai_translated: None,
-                                needs_review: Some(
-                                    true,
-                                ),
+                                attributes: {
+                                    "@needs-review": "true",
+                                },
                             },
                         ),
                         korean: None,
@@ -108,8 +104,9 @@ Project {
                         english: Some(
                             Language {
                                 content: "alliteration",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {
+                                    "@abc": "1",
+                                },
                             },
                         ),
                         czech: None,
@@ -122,10 +119,9 @@ Project {
                         german: Some(
                             Language {
                                 content: "alliteration",
-                                ai_translated: Some(
-                                    true,
-                                ),
-                                needs_review: None,
+                                attributes: {
+                                    "@ai-translated": "true",
+                                },
                             },
                         ),
                         korean: None,
@@ -195,14 +191,14 @@ Project {
         "test1": [
             Position {
                 start: LineCol(
-                    414,
+                    390,
                     (
                         12,
                         18,
                     ),
                 ),
                 end: LineCol(
-                    419,
+                    395,
                     (
                         12,
                         23,
@@ -212,6 +208,6 @@ Project {
             },
         ],
     },
-    source: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<Project name=\"HEMTT\">\n    <Package name=\"Test\">\n        <Key ID=\"test2\">\n            <English>with</English>\n            <German needs-review=\"true\">mitt</German>\n        </Key>\n        <Key ID=\"test3\">\n            <English random-tags-will-be-lost=\"true\">alliteration</English>\n            <German ai-translated=\"true\">alliteration</German>\n        </Key>\n        <Key ID=\"test1\" allow-empty=\"true\">\n            <German>das</German>\n            <English></English>\n        </Key>\n    </Package>\n</Project>\n",
+    source: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<Project name=\"HEMTT\">\n    <Package name=\"Test\">\n        <Key ID=\"test2\">\n            <English>with</English>\n            <German needs-review=\"true\">mitt</German>\n        </Key>\n        <Key ID=\"test3\">\n            <English abc=\"1\">alliteration</English>\n            <German ai-translated=\"true\">alliteration</German>\n        </Key>\n        <Key ID=\"test1\" allow-empty=\"true\">\n            <German>das</German>\n            <English></English>\n        </Key>\n    </Package>\n</Project>\n",
     comments: [],
 }
