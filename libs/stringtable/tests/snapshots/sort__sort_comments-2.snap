@@ -16,8 +16,7 @@ Project {
                         english: Some(
                             Language {
                                 content: "This is a string with a comment",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         czech: None,
@@ -30,8 +29,7 @@ Project {
                         german: Some(
                             Language {
                                 content: "Das ist eine Zeichenkette ohne Kommentar",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         korean: None,
@@ -60,8 +58,7 @@ Project {
                         english: Some(
                             Language {
                                 content: "This is a string with a comment",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         czech: None,
@@ -69,8 +66,7 @@ Project {
                         spanish: Some(
                             Language {
                                 content: "Esto es una cadena sin un comentario",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         italian: None,
@@ -80,8 +76,7 @@ Project {
                         german: Some(
                             Language {
                                 content: "Das ist eine Zeichenkette ohne Kommentar",
-                                ai_translated: None,
-                                needs_review: None,
+                                attributes: {},
                             },
                         ),
                         korean: None,
