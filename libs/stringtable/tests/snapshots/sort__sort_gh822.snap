@@ -11,11 +11,18 @@ Project {
                 keys: [
                     Key {
                         id: "Comments be gone!",
+                        allow_empty: None,
                         original: Some(
-                            "I leave this for later",
+                            Language {
+                                content: "I leave this for later",
+                                attributes: {},
+                            },
                         ),
                         english: Some(
-                            "I leave this for later",
+                            Language {
+                                content: "I leave this for later",
+                                attributes: {},
+                            },
                         ),
                         czech: None,
                         french: None,
@@ -46,11 +53,18 @@ Project {
                     },
                     Key {
                         id: "I will be empty",
+                        allow_empty: None,
                         original: Some(
-                            "hey",
+                            Language {
+                                content: "hey",
+                                attributes: {},
+                            },
                         ),
                         english: Some(
-                            "hey",
+                            Language {
+                                content: "hey",
+                                attributes: {},
+                            },
                         ),
                         czech: None,
                         french: None,
@@ -59,10 +73,16 @@ Project {
                         polish: None,
                         portuguese: None,
                         russian: Some(
-                            "hey",
+                            Language {
+                                content: "hey",
+                                attributes: {},
+                            },
                         ),
                         german: Some(
-                            "hey",
+                            Language {
+                                content: "hey",
+                                attributes: {},
+                            },
                         ),
                         korean: None,
                         japanese: None,
@@ -85,17 +105,30 @@ Project {
                     },
                     Key {
                         id: "I will change the xml structure a little",
+                        allow_empty: None,
                         original: Some(
-                            "",
+                            Language {
+                                content: "",
+                                attributes: {},
+                            },
                         ),
                         english: Some(
-                            "",
+                            Language {
+                                content: "",
+                                attributes: {},
+                            },
                         ),
                         czech: Some(
-                            "",
+                            Language {
+                                content: "",
+                                attributes: {},
+                            },
                         ),
                         french: Some(
-                            "",
+                            Language {
+                                content: "",
+                                attributes: {},
+                            },
                         ),
                         spanish: None,
                         italian: None,
@@ -124,25 +157,41 @@ Project {
                     },
                     Key {
                         id: "My things get unescaped",
+                        allow_empty: None,
                         original: Some(
-                            "&quot;&apos;",
+                            Language {
+                                content: "&quot;&apos;",
+                                attributes: {},
+                            },
                         ),
                         english: Some(
-                            "&quot;&apos;",
+                            Language {
+                                content: "&quot;&apos;",
+                                attributes: {},
+                            },
                         ),
                         czech: None,
                         french: None,
                         spanish: Some(
-                            "\"Hello World\"",
+                            Language {
+                                content: "\"Hello World\"",
+                                attributes: {},
+                            },
                         ),
                         italian: None,
                         polish: None,
                         portuguese: None,
                         russian: Some(
-                            "&quot;&apos;",
+                            Language {
+                                content: "&quot;&apos;",
+                                attributes: {},
+                            },
                         ),
                         german: Some(
-                            "&quot;&apos;",
+                            Language {
+                                content: "&quot;&apos;",
+                                attributes: {},
+                            },
                         ),
                         korean: None,
                         japanese: None,
