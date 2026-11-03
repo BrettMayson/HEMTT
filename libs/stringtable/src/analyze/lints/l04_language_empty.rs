@@ -61,7 +61,6 @@ fn check_package(package: &Package, project: &Project, severity: Severity, codes
 }
 
 fn check_key(key: &Key, project: &Project, severity: Severity, codes: &mut Codes) {
-    println!("Checking key: {} (allow_empty: {})", key.id(), key.allow_empty());
     if key.allow_empty() {
         return;
     }
