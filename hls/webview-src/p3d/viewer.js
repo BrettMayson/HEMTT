@@ -224,15 +224,25 @@ function loadLODModel(json, options = {}) {
     }
 
     if (faceGroup.texture && options.material === "Texture") {
-      requestTexture(faceGroup.texture).then(texture => {
+      if (faceGroup.texture.startsWith('#')) {
+        const texture = proceduralTexture(faceGroup.texture);
         if (texture) {
-          texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
           material.map = texture;
           material.needsUpdate = true;
+        } else {
+          console.warn(`Unsupported procedural texture: ${faceGroup.texture}`);
         }
-      }).catch(err => {
-        console.error(`Error loading texture for ${mesh.name}:`, err);
-      });
+      } else {
+        requestTexture(faceGroup.texture).then(texture => {
+          if (texture) {
+            texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+            material.map = texture;
+            material.needsUpdate = true;
+          }
+        }).catch(err => {
+          console.error(`Error loading texture for ${mesh.name}:`, err);
+        });
+      }
     }
 
     const mesh = new THREE.Mesh(geometry, material);
@@ -381,6 +391,44 @@ function initViewer() {
 }
 
 window.addEventListener('DOMContentLoaded', initViewer);
+
+const PROCEDURAL_COLOR = /^#\(\s*(argb|rgb|ai|a|i)\s*,[^)]*\)\s*color\(([^)]*)\)\s*$/i;
+const proceduralCache = new Map();
+
+function proceduralTexture(path) {
+  const key = path.toLowerCase();
+  if (proceduralCache.has(key)) return proceduralCache.get(key);
+
+  const match = PROCEDURAL_COLOR.exec(path);
+  if (!match) return null;
+
+  const values = match[2].split(',').slice(0, 4).map(v => parseFloat(v));
+  if (values.length < 4 || values.some(isNaN)) return null;
+
+  let [r, g, b, a] = values.map(v => Math.min(Math.max(v, 0), 1));
+  switch (match[1].toLowerCase()) {
+    case 'rgb':
+      a = 1;
+      break;
+    case 'i':
+      r = g = b = 0.21 * r + 0.72 * g + 0.07 * b;
+      a = 1;
+      break;
+    case 'ai':
+      r = g = b = 0.21 * r + 0.72 * g + 0.07 * b;
+      break;
+    case 'a':
+      r = g = b = 1;
+      break;
+  }
+
+  const data = new Uint8Array([r, g, b, a].map(v => Math.round(v * 255)));
+  const texture = new THREE.DataTexture(data, 1, 1, THREE.RGBAFormat);
+  texture.needsUpdate = true;
+
+  proceduralCache.set(key, texture);
+  return texture;
+}
 
 const textureRequests = new Map();
 async function requestTexture(path) {
