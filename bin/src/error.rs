@@ -64,6 +64,8 @@ pub enum Error {
     Walkdir(#[from] walkdir::Error),
     #[error("Zip Error: {0}")]
     Zip(#[from] zip::result::ZipError),
+    #[error("Stringtable unknown language: {0}")]
+    StringtableUnknownLanguage(String),
 }
 
 impl From<vfs::VfsError> for Error {

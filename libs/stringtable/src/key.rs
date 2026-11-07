@@ -101,6 +101,9 @@ pub struct Key {
     #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
     #[serde(alias = "latin", alias = "LATIN")]
     latin: Option<String>,
+    #[serde(flatten, skip_serializing)]
+    #[allow(clippy::zero_sized_map_values)]
+    unknown_languages: std::collections::HashMap<String, serde::de::IgnoredAny>,
 }
 
 impl Key {
@@ -295,6 +298,10 @@ impl Key {
         }
     }
 
+    #[must_use]
+    pub fn unknown_languages(&self) -> Vec<String> {
+        self.unknown_languages.keys().cloned().collect()
+    }
     #[must_use]
     /// Get all language values as a list of tuples (language, value)
     pub fn as_list(&self) -> Vec<(&str, Option<&str>)> {
