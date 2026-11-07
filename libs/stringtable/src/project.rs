@@ -53,6 +53,35 @@ impl Project {
         }
     }
 
+    /// checks for unknown languages in the project
+    ///
+    /// # Errors
+    /// Returns the project path and an error message if any package contains keys with unknown languages.
+    pub fn check_unknown_languages(&self) -> Result<(), (String, String)> {
+        fn check_package(project: &Project, package: &Package) -> Result<(), (String, String)> {
+            for key in package.keys() {
+                let unknown_languages = key.unknown_languages();
+                if !unknown_languages.is_empty() {
+                    return Err((
+                        project.path().to_string(),
+                        format!(
+                            "Key contains unknown languages: {:?}",
+                            (key.id(), unknown_languages)
+                        ),
+                    ));
+                }
+            }
+            for container in package.containers() {
+                check_package(project, container)?;
+            }
+            Ok(())
+        }
+        for package in self.packages() {
+            check_package(self, package)?;
+        }
+        Ok(())
+    }
+
     /// Read a Project
     ///
     /// # Errors

@@ -61,6 +61,11 @@ pub fn sort(cmd: &Command) -> Result<Report, Error> {
             if path.exists() {
                 match Project::read(WorkspacePath::slim_file(path.clone())?) {
                     Ok(mut project) => {
+                        project
+                            .check_unknown_languages()
+                            .map_err(|(_, unknown_info)| {
+                                Error::StringtableUnknownLanguage(unknown_info)
+                            })?;
                         if !cmd.only_lang {
                             project.sort();
                         }
