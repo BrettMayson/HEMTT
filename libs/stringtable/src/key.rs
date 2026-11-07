@@ -57,7 +57,7 @@ pub struct Key {
     #[serde(alias = "chinese", alias = "CHINESE")]
     chinese: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
-    #[serde(alias = "chinesesimp", alias = "CHINESESIMP")]
+    #[serde(alias = "chinesesimp", alias = "CHINESESIMP", alias = "ChineseSimp")]
     chinesesimp: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
     #[serde(alias = "turkish", alias = "TURKISH")]
