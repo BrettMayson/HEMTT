@@ -57,7 +57,7 @@ pub struct Key {
     #[serde(alias = "chinese", alias = "CHINESE")]
     chinese: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
-    #[serde(alias = "chinesesimp", alias = "CHINESESIMP")]
+    #[serde(alias = "chinesesimp", alias = "CHINESESIMP", alias = "ChineseSimp")]
     chinesesimp: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
     #[serde(alias = "turkish", alias = "TURKISH")]
@@ -69,7 +69,11 @@ pub struct Key {
     #[serde(alias = "slovak", alias = "SLOVAK")]
     slovak: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
-    #[serde(alias = "serbocroatian", alias = "SERBOCROATIAN")]
+    #[serde(
+        alias = "serbocroatian",
+        alias = "SERBOCROATIAN",
+        alias = "SerboCroatian"
+    )]
     serbocroatian: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
     #[serde(alias = "norwegian", alias = "NORWEGIAN")]
@@ -101,6 +105,9 @@ pub struct Key {
     #[serde(skip_serializing_if = "Option::is_none", serialize_with = "min_escape")]
     #[serde(alias = "latin", alias = "LATIN")]
     latin: Option<String>,
+    #[serde(flatten, skip_serializing)]
+    #[allow(clippy::zero_sized_map_values)]
+    unknown_languages: std::collections::HashMap<String, serde::de::IgnoredAny>,
 }
 
 impl Key {
@@ -295,6 +302,10 @@ impl Key {
         }
     }
 
+    #[must_use]
+    pub fn unknown_languages(&self) -> Vec<String> {
+        self.unknown_languages.keys().cloned().collect()
+    }
     #[must_use]
     /// Get all language values as a list of tuples (language, value)
     pub fn as_list(&self) -> Vec<(&str, Option<&str>)> {
