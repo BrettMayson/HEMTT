@@ -1,5 +1,7 @@
 use std::ops::Range;
 
+use crate::Str;
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 /// An identifier
 ///
@@ -57,5 +59,14 @@ impl Ident {
     /// Get the span of the identifier
     pub const fn span(&self) -> &Range<usize> {
         &self.span
+    }
+
+    #[must_use]
+    /// Turn the ident into a [`Str`]
+    pub fn to_str(&self) -> Str {
+        Str {
+            value: self.value.clone(),
+            span: self.span.clone(),
+        }
     }
 }

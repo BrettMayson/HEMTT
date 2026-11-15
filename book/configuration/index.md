@@ -23,6 +23,10 @@ HEMTT uses a custom version format based on standards in the Arma 3 community. Y
 
 You can additionally configure optional settings for your project.
 
+### Rapify
+
+Configure automatic unit and weapon class registration when processing addon configs. See [Rapify Configuration](./rapify.md).
+
 ### Main Prefix
 
 The `mainprefix` option allows you to set the root prefix for your project, used before the `prefix` option. This is currently only used by [`hemtt launch`](../commands/launch.md).

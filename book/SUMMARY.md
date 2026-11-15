@@ -10,6 +10,7 @@
 - [Configuration](configuration/index.md)
   - [Minimum](configuration/minimum.md)
   - [Version](configuration/version.md)
+  - [Rapify](configuration/rapify.md)
   - [Lints](configuration/lints.md)
   - [TOML Lints](configuration/toml-lints.md)
   - [Addon](configuration/addon.md)
