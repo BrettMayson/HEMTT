@@ -37,7 +37,7 @@ const APP_ID: steamworks::AppId = steamworks::AppId(107_410);
 /// The `meta.cpp` file stores your Steam Workshop published item ID.
 /// It must be located in the root of your project (where you run `hemtt publish`).
 ///
-/// ```
+/// ```cpp
 /// protocol = 1;
 /// publishedid = 1234567890;
 /// ```
@@ -211,8 +211,7 @@ pub fn get_id() -> Result<PublishedFileId, Error> {
         return Err(Error::PublishedIdNotFound);
     }
     let content = fs_err::read_to_string(path)?;
-    let regex =
-        regex::Regex::new(r"(?m)^\s*publishedid\s*=\s*(\d+)\s*;").expect("valid meta regex");
+    let regex = regex::Regex::new(r"\bpublishedid\s*=\s*(\d+)\s*;").expect("valid meta regex");
     let id = regex
         .captures(&content)
         .and_then(|capture| capture[1].parse::<u64>().ok())

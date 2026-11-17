@@ -36,6 +36,39 @@ fn command(dry_run: bool) -> Command {
 }
 
 #[sealed_test]
+fn published_id_accepts_inline_and_multiline_declarations() {
+    let _directory = hemtt_test::directory::TemporaryDirectory::new();
+    for meta in [
+        "protocol = 1;\npublishedid = 1234567890;\n",
+        "protocol = 1; publishedid = 1234567890;",
+        "/* Workshop */ publishedid = 1234567890;",
+        "\t publishedid\t=\t1234567890\t;\r\n",
+    ] {
+        fs_err::write("meta.cpp", meta).expect("published ID");
+        assert_eq!(
+            publish::get_id().expect("valid published ID").0,
+            1_234_567_890,
+            "metadata: {meta}"
+        );
+    }
+}
+
+#[sealed_test]
+fn published_id_rejects_invalid_values_and_prefixed_identifiers() {
+    let _directory = hemtt_test::directory::TemporaryDirectory::new();
+    for meta in [
+        "publishedid = 0;",
+        "publishedid = 18446744073709551616;",
+        "publishedid = invalid;",
+        "otherpublishedid = 1234567890;",
+        "_publishedid = 1234567890;",
+    ] {
+        fs_err::write("meta.cpp", meta).expect("invalid published ID");
+        assert!(publish::get_id().is_err(), "metadata: {meta}");
+    }
+}
+
+#[sealed_test]
 fn dry_run_builds_release_with_all_metadata_without_creating_a_workshop_item() {
     let _project = project();
     let image = image::DynamicImage::new_rgb8(2, 3);
@@ -76,14 +109,19 @@ additional_previews = [
         "dry run must not create a Workshop item"
     );
     // An existing item follows the same offline validation and build path.
-    let meta = "protocol = 1;\npublishedid = 1234567890;\n";
-    fs_err::write("meta.cpp", meta).expect("published ID");
-    let report = publish::execute(&command(true)).expect("existing item dry run");
-    assert!(!report.failed());
-    assert_eq!(
-        fs_err::read_to_string("meta.cpp").expect("unchanged ID"),
-        meta
-    );
+    for meta in [
+        "protocol = 1;\npublishedid = 1234567890;\n",
+        "protocol = 1; publishedid = 1234567890;",
+        "/* Workshop */ publishedid = 1234567890;",
+    ] {
+        fs_err::write("meta.cpp", meta).expect("published ID");
+        let report = publish::execute(&command(true)).expect("existing item dry run");
+        assert!(!report.failed());
+        assert_eq!(
+            fs_err::read_to_string("meta.cpp").expect("unchanged ID"),
+            meta
+        );
+    }
 }
 
 #[sealed_test]
