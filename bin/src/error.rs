@@ -38,6 +38,9 @@ pub enum Error {
     #[error("Addon Error: {0}")]
     Addon(#[from] hemtt_workspace::addons::Error),
 
+    #[error("The command reported errors")]
+    ReportFailed,
+
     #[error("Output file `{0}` already exists")]
     OutputExists(String),
 

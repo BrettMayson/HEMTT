@@ -86,8 +86,12 @@ mod tests {
                 env!("CARGO_MANIFEST_DIR")
             )));
         let capture = hemtt_common::capture::OutputCapture::new();
-        let _ = crate::execute(&crate::Cli::parse_from(vec!["hemtt", "dev"]));
+        let result = crate::execute(&crate::Cli::parse_from(vec!["hemtt", "dev"]));
         let output = capture.finish();
+        assert!(
+            matches!(result, Err(crate::Error::ReportFailed)),
+            "expected the failed hook to fail the command, got {result:?}"
+        );
         insta::assert_snapshot!(output);
     }
     #[test]
