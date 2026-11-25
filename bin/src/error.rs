@@ -19,6 +19,8 @@ pub enum Error {
     Common(#[from] hemtt_common::error::Error),
     #[error("Preprocessor error: {0}")]
     Preprocessor(#[from] hemtt_preprocessor::Error),
+    #[error("P3D error: {0}")]
+    P3d(#[from] hemtt_p3d::Error),
     #[error("PBO error: {0}")]
     Pbo(#[from] hemtt_pbo::Error),
     #[error("Prefix error: {0}")]
