@@ -1,6 +1,7 @@
 mod binarize;
 mod files;
 mod rapify;
+mod sqfc;
 
 use std::{collections::HashMap, sync::Once};
 
@@ -24,6 +25,9 @@ pub struct AddonConfig {
 
     /// Files to exclude from the pbo
     files: files::FilesConfig,
+
+    /// SQFC config
+    sqfc: sqfc::SqfcConfig,
 
     /// Ignore pboprefix checks
     ignore_pboprefix: bool,
@@ -52,6 +56,12 @@ impl AddonConfig {
     /// Files to exclude from the pbo
     pub const fn files(&self) -> &files::FilesConfig {
         &self.files
+    }
+
+    #[must_use]
+    /// SQFC config
+    pub const fn sqfc(&self) -> &sqfc::SqfcConfig {
+        &self.sqfc
     }
 
     #[must_use]
@@ -92,6 +102,9 @@ pub struct AddonConfigFile {
 
     #[serde(default)]
     files: files::FilesSectionFile,
+
+    #[serde(default)]
+    sqfc: sqfc::SqfcSectionFile,
 
     #[serde(default)]
     ignore_pboprefix: bool,
@@ -148,6 +161,7 @@ impl From<AddonConfigFile> for AddonConfig {
                 files.exclude_mut().extend(file.exclude);
                 files
             },
+            sqfc: file.sqfc.into(),
             ignore_pboprefix: file.ignore_pboprefix,
         }
     }
@@ -172,6 +186,10 @@ test = "test"
 [files]
 exclude = ["test"]
 
+[sqfc]
+exclude = ["version.sqf"]
+exclude_temporary = ["data.sqf"]
+
 "#;
         let file: AddonConfigFile = toml::from_str(toml).expect("failed to deserialize");
         let config = AddonConfig::from(file);
@@ -179,6 +197,8 @@ exclude = ["test"]
         assert!(config.binarize().enabled());
         assert_eq!(config.properties().get("test"), Some(&"test".to_string()));
         assert_eq!(config.files().exclude(), &["test"]);
+        assert_eq!(config.sqfc().exclude(), &["version.sqf"]);
+        assert_eq!(config.sqfc().exclude_temporary(), &["data.sqf"]);
     }
 
     #[test]
