@@ -31,6 +31,7 @@ simple!(include);
 simple!(number);
 simple!(oneline);
 simple!(semicolons);
+simple!(hashmap);
 
 fn simple(file: &str) -> Vec<Statement> {
     let workspace = hemtt_workspace::Workspace::builder()

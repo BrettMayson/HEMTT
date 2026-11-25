@@ -1,0 +1,37 @@
+---
+source: libs/sqf/tests/simple.rs
+expression: ast
+---
+[
+    Expression(
+        HashMap(
+            Statements {
+                content: [
+                    Expression(
+                        BinaryCommand(
+                            Associate,
+                            String(
+                                "a",
+                                3..6,
+                                DoubleQuote,
+                            ),
+                            Number(
+                                FloatOrd(
+                                    1.0,
+                                ),
+                                8..9,
+                            ),
+                            6..7,
+                        ),
+                        3..9,
+                    ),
+                ],
+                source: "\"a\": 1",
+                span: 3..9,
+                issues: [],
+            },
+            None,
+        ),
+        0..11,
+    ),
+]

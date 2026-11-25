@@ -48,6 +48,9 @@ impl fmt::Display for DisplayInstructions<'_> {
                 Instruction::MakeArray(array_len, source_info) => {
                     write!(f, " {array_len} ({})", source_info.offset)?;
                 }
+                Instruction::MakeHashMap(source_info) => {
+                    write!(f, " ({})", source_info.offset)?;
+                }
             }
 
             writeln!(f)?;
@@ -68,7 +71,10 @@ impl fmt::Display for DisplayConstant<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.constant {
             Constant::NularCommand(command) => write!(f, "Nular {command}")?,
-            Constant::Code(instructions) => {
+            Constant::Code(instructions) | Constant::HashMapCode(instructions) => {
+                if matches!(self.constant, Constant::HashMapCode(..)) {
+                    f.write_str("#")?;
+                }
                 f.write_str("{\n")?;
                 fmt::Display::fmt(
                     &DisplayInstructions {
@@ -84,7 +90,12 @@ impl fmt::Display for DisplayConstant<'_> {
             Constant::String(string) => write!(f, "{string:?}")?,
             Constant::Scalar(scalar) => write!(f, "{scalar:?}")?,
             Constant::Boolean(boolean) => write!(f, "{boolean}")?,
-            Constant::Array(array) | Constant::ConsumableArray(array) => {
+            Constant::Array(array)
+            | Constant::ConsumableArray(array)
+            | Constant::HashMapConst(array) => {
+                if matches!(self.constant, Constant::HashMapConst(..)) {
+                    f.write_str("#")?;
+                }
                 f.write_str("[")?;
                 for (i, constant) in array.iter().enumerate() {
                     if i != 0 {

@@ -110,11 +110,29 @@ fn statements<'a>(
             let paren_close = just(Token::Control(Control::RoundBracketClose));
             let parenthesized = expression.clone().delimited_by(paren_open, paren_close);
 
-            let code_block_open = just(Token::Control(Control::CurlyBracketOpen));
+            let code_block_open = choice((
+                just(Token::Control(Control::CurlyBracketOpen)).to(false),
+                just(Token::Operator(Operator::Select))
+                    .ignore_then(just(Token::Control(Control::CurlyBracketOpen)))
+                    .to(true),
+            ));
             let code_block_close = just(Token::Control(Control::CurlyBracketClose));
-            let code_block = statements
-                .delimited_by(code_block_open, code_block_close)
-                .map(Expression::Code);
+            let code_block = code_block_open
+                .then(statements)
+                .then_ignore(code_block_close)
+                .map(|(is_hash, expr)| {
+                    if is_hash {
+                        tracing::warn!(
+                            "HashMap is only supported on profiling/dev branches until 2.24"
+                        );
+                        let testing_const = None;
+                        // Some(vec![Expression::String(Arc::from("abc"), 0..1, crate::StringWrapper::DoubleQuote), Expression::Array(vec![], 1..2)])
+
+                        Expression::HashMap(expr, testing_const)
+                    } else {
+                        Expression::Code(expr)
+                    }
+                });
 
             let variable = variable(database).map_with_span(Expression::Variable);
             let base = choice((value, array, parenthesized, code_block, variable));
