@@ -134,16 +134,29 @@ fn assignment_lines(compiled: &Compiled) -> Vec<u16> {
 }
 
 #[test]
-fn line_past_u16_saturates() {
+fn line_past_u16_is_an_error() {
     let source = format!("early = 1;\n{}late = 2;\n", "\n".repeat(70_000));
-    let compiled = compile_source("lines", &source).unwrap();
-    let lines = assignment_lines(&compiled);
+    let result = compile_source("lines", &source);
+    assert!(
+        matches!(
+            result,
+            Err(hemtt_sqf::compiler::CompileError::LineTooLarge(line)) if line > 65_535
+        ),
+        "{:?}",
+        result.map(|c| assignment_lines(&c))
+    );
+}
+
+#[test]
+fn line_below_u16_is_kept() {
+    let source = format!("early = 1;\n{}late = 2;\n", "\n".repeat(65_000));
+    let lines = assignment_lines(&compile_source("lines_ok", &source).unwrap());
     assert_eq!(lines.len(), 2);
     assert!(lines[0] < 2, "early line is kept, got {}", lines[0]);
-    assert_eq!(
-        lines[1],
-        u16::MAX,
-        "late line saturates instead of wrapping"
+    assert!(
+        (65_000..=65_002).contains(&lines[1]),
+        "late line is kept exactly, got {}",
+        lines[1]
     );
 }
 

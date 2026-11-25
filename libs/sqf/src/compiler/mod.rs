@@ -83,10 +83,10 @@ impl Statements {
             let length = if self.content.is_empty() {
                 0
             } else {
-                saturate_u32(offset.len())
+                to_offset(offset.len())?
             };
             CodePointer::Source {
-                offset: saturate_u32(offset.start),
+                offset: to_offset(offset.start)?,
                 length,
             }
         };
@@ -99,10 +99,10 @@ impl Statements {
 
 /// Converts a location in the processed file to a [`SourceInfo`].
 ///
-/// Offsets and lines past what SQFC can store are saturated, they are only used for debugging.
-///
 /// # Errors
-/// [`CompileError::TooManyFiles`] if the location is in a file past the 255th source
+/// - [`CompileError::TooManyFiles`] if the location is in a file past the 255th source
+/// - [`CompileError::LineTooLarge`] if the location is past line 65535 of its file
+/// - [`CompileError::OffsetTooLarge`] if the location is past the offset SQFC can store
 ///
 /// # Panics
 /// Panics if the location is not mapped.
@@ -119,22 +119,23 @@ pub fn location_to_source(
         .position(|(p, _)| p == map.path())
         .expect("file not in sources");
     Ok(SourceInfo {
-        offset: saturate_u32(processed.clean_span(location).start),
+        offset: to_offset(processed.clean_span(location).start)?,
         file_index: file_index
             .try_into()
             .map_err(|_| CompileError::TooManyFiles(processed.sources().len()))?,
-        file_line: saturate_u16(map.start().line()),
+        file_line: map
+            .start()
+            .line()
+            .try_into()
+            .map_err(|_| CompileError::LineTooLarge(map.start().line()))?,
     })
 }
 
-/// Convert to a `u32`, clamping to [`u32::MAX`]
-fn saturate_u32(value: usize) -> u32 {
-    u32::try_from(value).unwrap_or(u32::MAX)
-}
-
-/// Convert to a `u16`, clamping to [`u16::MAX`]
-fn saturate_u16(value: usize) -> u16 {
-    u16::try_from(value).unwrap_or(u16::MAX)
+/// Convert an offset or length in the processed output to the `u32` SQFC stores
+fn to_offset(value: usize) -> CompileResult<u32> {
+    value
+        .try_into()
+        .map_err(|_| CompileError::OffsetTooLarge(value))
 }
 
 impl Statement {
@@ -318,6 +319,10 @@ pub enum CompileError {
     TooManyNames,
     #[error("code from {0} files, the limit is 255")]
     TooManyFiles(usize),
+    #[error("code on line {0}, the limit is 65535")]
+    LineTooLarge(usize),
+    #[error("code at offset {0}, the limit is 4294967295")]
+    OffsetTooLarge(usize),
     #[error("invalid name {0}")]
     InvalidName(String),
 }
