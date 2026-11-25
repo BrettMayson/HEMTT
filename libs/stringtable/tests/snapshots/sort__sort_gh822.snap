@@ -50,6 +50,7 @@ Project {
                         danish: None,
                         bulgarian: None,
                         latin: None,
+                        unknown_languages: {},
                     },
                     Key {
                         id: "I will be empty",
@@ -102,6 +103,7 @@ Project {
                         danish: None,
                         bulgarian: None,
                         latin: None,
+                        unknown_languages: {},
                     },
                     Key {
                         id: "I will change the xml structure a little",
@@ -154,6 +156,7 @@ Project {
                         danish: None,
                         bulgarian: None,
                         latin: None,
+                        unknown_languages: {},
                     },
                     Key {
                         id: "My things get unescaped",
@@ -211,6 +214,7 @@ Project {
                         danish: None,
                         bulgarian: None,
                         latin: None,
+                        unknown_languages: {},
                     },
                 ],
                 containers: [],

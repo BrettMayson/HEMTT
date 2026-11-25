@@ -19,6 +19,8 @@ pub enum Error {
     Common(#[from] hemtt_common::error::Error),
     #[error("Preprocessor error: {0}")]
     Preprocessor(#[from] hemtt_preprocessor::Error),
+    #[error("P3D error: {0}")]
+    P3d(#[from] hemtt_p3d::Error),
     #[error("PBO error: {0}")]
     Pbo(#[from] hemtt_pbo::Error),
     #[error("Prefix error: {0}")]
@@ -35,6 +37,12 @@ pub enum Error {
     Sqf(#[from] hemtt_sqf::Error),
     #[error("Addon Error: {0}")]
     Addon(#[from] hemtt_workspace::addons::Error),
+
+    #[error("The command reported errors")]
+    ReportFailed,
+
+    #[error("Output file `{0}` already exists")]
+    OutputExists(String),
 
     #[error("Update error: {0}")]
     Update(String),
@@ -64,6 +72,8 @@ pub enum Error {
     Walkdir(#[from] walkdir::Error),
     #[error("Zip Error: {0}")]
     Zip(#[from] zip::result::ZipError),
+    #[error("Stringtable unknown language: {0}")]
+    StringtableUnknownLanguage(String),
 }
 
 impl From<vfs::VfsError> for Error {

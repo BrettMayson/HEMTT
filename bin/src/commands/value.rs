@@ -168,8 +168,11 @@ mod tests {
                 env!("CARGO_MANIFEST_DIR")
             )));
         let capture = OutputCapture::new();
-        crate::execute(&crate::Cli::parse_from(vec!["hemtt", "value", "invalid"]))
-            .expect("Failed to get invalid value detail");
+        let result = crate::execute(&crate::Cli::parse_from(vec!["hemtt", "value", "invalid"]));
+        assert!(
+            matches!(&result, Err(crate::Error::InvalidValueName(name)) if name == "invalid"),
+            "expected an invalid value error, got {result:?}"
+        );
         let output = capture.finish();
         insta::assert_snapshot!(output);
     }

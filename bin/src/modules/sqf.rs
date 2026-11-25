@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{io::Write, sync::Arc};
 
 use hemtt_common::version::Version;
 use hemtt_sqf::{
@@ -54,12 +54,18 @@ impl Module for SQFCompiler {
         let mut entries = Vec::new();
         for addon in ctx.addons() {
             let addon = Arc::new(addon.clone());
+            let patterns = SqfcPatterns::new(&addon)?;
             for entry in ctx.workspace_path().join(addon.folder())?.walk_dir()? {
                 if entry.is_file()? {
                     if !hemtt_sqf::is_compilation_unit(&entry) {
                         continue;
                     }
-                    entries.push((addon.clone(), entry));
+                    let mode = patterns.mode(
+                        entry
+                            .as_str()
+                            .trim_start_matches(&format!("/{}/", addon.folder())),
+                    );
+                    entries.push((addon.clone(), entry, mode));
                 }
             }
         }
@@ -78,7 +84,7 @@ impl Module for SQFCompiler {
         let progress = progress_bar(entries.len() as u64).with_message("Compiling SQF");
         let reports = entries
             .par_iter()
-            .map(|(addon, entry)| {
+            .map(|(addon, entry, mode)| {
                 trace!("sqf compiling {}", entry);
                 let mut report = Report::new();
                 let processed = match hemtt_preprocessor::Processor::run_with_sources(
@@ -111,8 +117,43 @@ impl Module for SQFCompiler {
                 if let Some(sqf) = checked.statements
                     && !checked.codes.failed()
                 {
-                    let mut out = entry.with_extension("sqfc")?.create_file()?;
-                    sqf.optimize().compile_to_writer(&processed, &mut out)?;
+                    if *mode == SqfcMode::Exclude {
+                        trace!("sqfc excluded for {}", entry);
+                    } else if processed.no_rapify() {
+                        // e.g. `#pragma hemtt flag pe26_ignore_unsupported_builtin`,
+                        // the game has to preprocess the plain SQF itself
+                        trace!(
+                            "sqfc skipped for {}, it must be preprocessed by the game",
+                            entry
+                        );
+                    } else {
+                        let mut buffer = Vec::new();
+                        match (
+                            sqf.optimize().compile_to_writer(&processed, &mut buffer),
+                            mode,
+                        ) {
+                            (Ok(()), SqfcMode::Compile) => {
+                                entry
+                                    .with_extension("sqfc")?
+                                    .create_file()?
+                                    .write_all(&buffer)?;
+                            }
+                            (Ok(()), _) => {
+                                report.push(Arc::new(SqfcExcludeNotNeeded {
+                                    file: entry.as_str().to_string(),
+                                }));
+                            }
+                            (Err(e), SqfcMode::Compile) => {
+                                report.push(Arc::new(SqfcFailed {
+                                    file: entry.as_str().to_string(),
+                                    reason: e.to_string(),
+                                }));
+                            }
+                            (Err(e), _) => {
+                                debug!("sqfc temporarily excluded for {}: {}", entry, e);
+                            }
+                        }
+                    }
                     progress.inc(1);
                 }
                 for code in checked.codes {
@@ -219,5 +260,157 @@ impl RequiresFutureVersion {
             required_by,
             wiki_version,
         }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// How a file should be handled for SQFC, from `addon.toml` `[sqfc]`
+pub enum SqfcMode {
+    /// Compile and include the SQFC
+    Compile,
+    /// `sqfc.exclude`: never compile, the plain SQF is used
+    Exclude,
+    /// `sqfc.exclude_temporary`: compile to check, but don't include the SQFC
+    ExcludeTemporary,
+}
+
+/// Compiled `[sqfc]` glob patterns for an addon
+struct SqfcPatterns {
+    exclude: Vec<glob::Pattern>,
+    exclude_temporary: Vec<glob::Pattern>,
+}
+
+impl SqfcPatterns {
+    fn new(addon: &hemtt_workspace::addons::Addon) -> Result<Self, glob::PatternError> {
+        let compile = |patterns: &[String]| {
+            patterns
+                .iter()
+                .map(|p| glob::Pattern::new(p))
+                .collect::<Result<Vec<_>, _>>()
+        };
+        let Some(config) = addon.config() else {
+            return Ok(Self {
+                exclude: Vec::new(),
+                exclude_temporary: Vec::new(),
+            });
+        };
+        Ok(Self {
+            exclude: compile(config.sqfc().exclude())?,
+            exclude_temporary: compile(config.sqfc().exclude_temporary())?,
+        })
+    }
+
+    /// The mode for a path relative to the addon folder
+    fn mode(&self, path: &str) -> SqfcMode {
+        if self.exclude.iter().any(|p| p.matches(path)) {
+            SqfcMode::Exclude
+        } else if self.exclude_temporary.iter().any(|p| p.matches(path)) {
+            SqfcMode::ExcludeTemporary
+        } else {
+            SqfcMode::Compile
+        }
+    }
+}
+
+/// A file could not be compiled to SQFC
+pub struct SqfcFailed {
+    file: String,
+    reason: String,
+}
+
+impl Code for SqfcFailed {
+    fn ident(&self) -> &'static str {
+        "BSE1"
+    }
+
+    fn severity(&self) -> Severity {
+        Severity::Error
+    }
+
+    fn message(&self) -> String {
+        format!("`{}` could not be compiled to SQFC", self.file)
+    }
+
+    fn note(&self) -> Option<String> {
+        Some(self.reason.clone())
+    }
+
+    fn help(&self) -> Option<String> {
+        Some(
+            "Add the file to `sqfc.exclude_temporary` in the addon's `addon.toml` to use plain SQF until it can be compiled, \
+or to `sqfc.exclude` to never compile it. Splitting large data into multiple files may allow it to be compiled."
+                .to_string(),
+        )
+    }
+
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        Some(Diagnostic::from_code(self))
+    }
+}
+
+/// A file in `sqfc.exclude_temporary` compiles successfully
+pub struct SqfcExcludeNotNeeded {
+    file: String,
+}
+
+impl Code for SqfcExcludeNotNeeded {
+    fn ident(&self) -> &'static str {
+        "BSW2"
+    }
+
+    fn severity(&self) -> Severity {
+        Severity::Warning
+    }
+
+    fn message(&self) -> String {
+        format!(
+            "`{}` is in `sqfc.exclude_temporary` but can be compiled to SQFC",
+            self.file
+        )
+    }
+
+    fn help(&self) -> Option<String> {
+        Some("Remove it from `sqfc.exclude_temporary` in the addon's `addon.toml` to include the SQFC".to_string())
+    }
+
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        Some(Diagnostic::from_code(self))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{SqfcMode, SqfcPatterns};
+
+    fn patterns(exclude: &[&str], exclude_temporary: &[&str]) -> SqfcPatterns {
+        let compile = |p: &[&str]| {
+            p.iter()
+                .map(|p| glob::Pattern::new(p).expect("pattern"))
+                .collect()
+        };
+        SqfcPatterns {
+            exclude: compile(exclude),
+            exclude_temporary: compile(exclude_temporary),
+        }
+    }
+
+    #[test]
+    fn modes() {
+        let patterns = patterns(
+            &["functions/fnc_version.sqf", "data/**/*.sqf"],
+            &["functions/fnc_large.sqf", "data/big.sqf"],
+        );
+        assert_eq!(patterns.mode("functions/fnc_other.sqf"), SqfcMode::Compile);
+        assert_eq!(
+            patterns.mode("functions/fnc_version.sqf"),
+            SqfcMode::Exclude
+        );
+        assert_eq!(patterns.mode("data/nested/a.sqf"), SqfcMode::Exclude);
+        assert_eq!(
+            patterns.mode("functions/fnc_large.sqf"),
+            SqfcMode::ExcludeTemporary
+        );
+        // `exclude` takes priority
+        assert_eq!(patterns.mode("data/big.sqf"), SqfcMode::Exclude);
     }
 }

@@ -3,7 +3,10 @@ mod code_missing_file;
 mod code_unused_file;
 
 use std::io::Write;
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
 
 use code_duplicate_file::CodeStringtableDuplicateFile;
 use code_missing_file::CodeStringtableMissingFile;
@@ -38,14 +41,15 @@ impl Lint<LintData> for LintL02Usage {
         
 Configuration
 
-- **ignore**: Array of stringtable entries to ignore, supports regex or wildcards (`*`)
-- **ignore_missing**: Bool to ignore missing stringtables (still written to .hemttout when disabled)
-- **ignore_unused**: Bool to ignore missing stringtables (still written to .hemttout when disabled)
-- **ignore_duplicate**: Bool to ignore missing stringtables (still written to .hemttout when disabled)
+- **ignore**: Array of stringtable keys to ignore, case insensitive, `*` matches any characters
+- **ignore_missing**: Bool to not report keys that are used but missing from the stringtables (still written to `.hemttout/missing_stringtables.txt`)
+- **ignore_unused**: Bool to not report keys that are in the stringtables but never used (still written to `.hemttout/unused_stringtables.txt`)
+- **ignore_duplicate**: Bool to not report keys that are defined more than once (still written to `.hemttout/duplicate_stringtables.txt`)
 ```toml
 [lints.stringtables.usage]
 options.ignore = [
     "str_myproject_mystring",
+    "str_myproject_debug_*",
 ]
 options.ignore_unused = true
 "#
@@ -91,7 +95,7 @@ impl LintRunner<LintData> for Runner {
                     .extend(positions.clone());
             }
         }
-        let mut unused = all.keys().cloned().collect::<Vec<_>>();
+        let mut unused = all.keys().cloned().collect::<HashSet<_>>();
         let mut usages = Vec::new();
         let mut regex = Vec::new();
         for addon in &data.addons {
@@ -125,16 +129,14 @@ impl LintRunner<LintData> for Runner {
             project.map_or(String::new(), |p| p.prefix().to_lowercase())
         );
         for (key, position) in usages {
-            if all.iter().any(|(k, _)| k == &key) {
-                if let Some(pos) = unused.iter().position(|k| k == &key) {
-                    unused.remove(pos);
-                }
+            if all.contains_key(&key) {
+                unused.remove(&key);
             } else if key.starts_with(&prefix) && !key.contains('%') {
                 missing.push((key, position));
             }
         }
         for (re, key, position) in regex {
-            if all.iter().any(|(k, _)| re.is_match(k)) {
+            if all.keys().any(|k| re.is_match(k)) {
                 unused.retain(|k| !re.is_match(k));
             } else if key.starts_with(&prefix) {
                 missing.push((key, position));
@@ -152,7 +154,7 @@ impl LintRunner<LintData> for Runner {
                         missing.retain(|sp| !re.is_match(&sp.0));
                     }
                 } else {
-                    unused.retain(|s| *s != i_lower);
+                    unused.remove(&i_lower);
                     missing.retain(|sp| *sp.0 != i_lower);
                 }
             }
@@ -176,16 +178,15 @@ impl LintRunner<LintData> for Runner {
 }
 
 fn unused_codes(
-    mut unused: Vec<String>,
+    unused: HashSet<String>,
     all: &HashMap<String, Vec<Position>>,
     ignore: bool,
 ) -> Codes {
     let _ = fs_err::remove_file(".hemttout/unused_stringtables.txt");
     let mut codes: Codes = Vec::new();
-    let _ = fs_err::remove_file(".hemttout/unused_stringtables.txt");
     if !unused.is_empty() {
+        let mut unused = unused.into_iter().collect::<Vec<_>>();
         unused.sort();
-        unused.dedup();
         let mut file = fs_err::File::create(".hemttout/unused_stringtables.txt")
             .expect("Failed to create file");
         for key in &unused {
@@ -273,4 +274,31 @@ fn duplicate_codes(all: &HashMap<String, Vec<Position>>, ignore: bool) -> Codes 
         }
     }
     codes
+}
+
+#[cfg(test)]
+mod tests {
+    use hemtt_workspace::lint::Lint;
+
+    use super::LintL02Usage;
+
+    #[test]
+    fn documents_each_option() {
+        let docs = LintL02Usage.documentation();
+        for (option, describes) in [
+            ("ignore_missing", "missing"),
+            ("ignore_unused", "never used"),
+            ("ignore_duplicate", "more than once"),
+            ("ignore", "keys to ignore"),
+        ] {
+            let line = docs
+                .lines()
+                .find(|l| l.starts_with(&format!("- **{option}**")))
+                .unwrap_or_else(|| panic!("`{option}` is not documented"));
+            assert!(
+                line.contains(describes),
+                "`{option}` documentation does not describe it: {line}"
+            );
+        }
+    }
 }

@@ -33,6 +33,9 @@ macro_rules! define_key {
                 #[serde(alias = $lower, alias = $upper)]
                 $field: Option<Language>,
             )*
+            #[serde(flatten, skip_serializing)]
+            #[allow(clippy::zero_sized_map_values)]
+            unknown_languages: std::collections::HashMap<String, serde::de::IgnoredAny>,
         }
 
         impl Key {
@@ -63,6 +66,11 @@ macro_rules! define_key {
                     $( $lower => self.$setter = Some(Language {content: value, ..Default::default() }), )*
                     _ => panic!("Unknown language: {language}"),
                 }
+            }
+
+            #[must_use]
+            pub fn unknown_languages(&self) -> Vec<String> {
+                self.unknown_languages.keys().filter(|k| !k.starts_with('@')).cloned().collect()
             }
 
             #[must_use]

@@ -27,6 +27,8 @@ lint!(l02_usage_single_quotes);
 lint!(l03_no_newlines_in_tags);
 lint!(l04_language_empty);
 
+lint!(l05_unknown_language);
+
 fn lint(file: &str) -> String {
     let folder = std::path::PathBuf::from(ROOT);
     let workspace = hemtt_workspace::Workspace::builder()

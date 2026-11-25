@@ -22,6 +22,14 @@ exclude = [
     "data/*.psd",
 ]
 
+[sqfc]
+exclude = [
+    "functions/fnc_versionSpecific.sqf",
+]
+exclude_temporary = [
+    "functions/fnc_largeData.sqf",
+]
+
 [properties]
 iso = "14001"
 
@@ -53,6 +61,28 @@ When it is required to disable preprocessing & rapifying of `config.cpp`, it is 
 enabled = false # Default: true
 exclude = [
     "missions/**/description.ext",
+]
+```
+
+## sqfc
+
+HEMTT compiles SQF to SQFC (compiled SQF) for faster loading. Files listed here are still linted, but their SQFC is not included in the PBO, so the game uses the plain SQF.
+
+`sqfc.exclude` is an array of glob patterns for files that should never be compiled to SQFC.
+
+Files that check built-in macros HEMTT does not support, such as `#if __GAME_VER_MIN__`, should instead use `#pragma hemtt flag pe26_ignore_unsupported_builtin` in the file. HEMTT then skips SQFC for that file automatically, so the game evaluates the condition. See [Preprocessor Flags](../lints/preprocessor.md#preprocessor-flags).
+
+`sqfc.exclude_temporary` is an array of glob patterns for files that HEMTT can't compile yet, for example a file with more unique constants than SQFC supports. HEMTT still tries to compile them, and warns once they compile successfully so the entry can be removed.
+
+If a file can't be compiled and is not in either list, the build fails.
+
+```toml,fp=addons/banana/addon.toml
+[sqfc]
+exclude = [
+    "functions/fnc_versionSpecific.sqf",
+]
+exclude_temporary = [
+    "functions/fnc_largeData.sqf",
 ]
 ```
 

@@ -55,6 +55,7 @@ Project {
                         danish: None,
                         bulgarian: None,
                         latin: None,
+                        unknown_languages: {},
                     },
                     Key {
                         id: "HasComment",
@@ -97,6 +98,7 @@ Project {
                         danish: None,
                         bulgarian: None,
                         latin: None,
+                        unknown_languages: {},
                     },
                 ],
                 containers: [],

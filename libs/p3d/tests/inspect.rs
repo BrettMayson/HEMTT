@@ -61,3 +61,23 @@ fn kat_iv() {
     assert_eq!(invalid_textures, [] as [std::string::String; 0]);
     assert_eq!(invalid_materials, [] as [std::string::String; 0]);
 }
+
+#[test]
+fn binarized() {
+    let mut buffer = b"ODOL".to_vec();
+    buffer.extend_from_slice(&[0; 64]);
+    assert!(matches!(
+        P3D::read(&mut std::io::Cursor::new(buffer)),
+        Err(hemtt_p3d::Error::BinarizedP3D)
+    ));
+}
+
+#[test]
+fn unknown_type() {
+    let mut buffer = b"NOPE".to_vec();
+    buffer.extend_from_slice(&[0; 64]);
+    assert!(matches!(
+        P3D::read(&mut std::io::Cursor::new(buffer)),
+        Err(hemtt_p3d::Error::UnsupportedP3DType(t)) if t == "NOPE"
+    ));
+}

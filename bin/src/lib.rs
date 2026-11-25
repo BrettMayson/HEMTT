@@ -21,6 +21,25 @@ pub const TEXT_EXTENSIONS: [&str; 10] = [
     "sqf", "hpp", "cpp", "rvmat", "ext", "sqm", "fsm", "bikb", "bisurf", "xml",
 ];
 
+/// Files that are checked for, and can be fixed of, a UTF-8 BOM
+///
+/// The BOM check and `hemtt utils bom` must use the same list, otherwise the
+/// check reports files that the util will never fix
+pub const BOM_EXTENSIONS: [&str; 13] = [
+    "sqf", "hpp", "cpp", "rvmat", "ext", "sqm", "fsm", "bikb", "bisurf", "xml", "inc", "h", "lip",
+];
+
+/// Project folders that are checked for, and fixed of, a UTF-8 BOM
+pub const BOM_FOLDERS: [&str; 3] = ["addons", "optionals", "include"];
+
+#[must_use]
+/// Should the file at `path` be checked for a UTF-8 BOM
+pub fn should_check_bom(path: &std::path::Path) -> bool {
+    path.extension()
+        .and_then(std::ffi::OsStr::to_str)
+        .is_some_and(|ext| BOM_EXTENSIONS.contains(&ext.to_lowercase().as_str()))
+}
+
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
 #[command(version = env!("HEMTT_VERSION"), about, long_about = None)]
@@ -176,15 +195,20 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
             if !is_simple_command {
                 report.write_ci_annotations()?;
             }
-            if report.failed() && !debug {
+            if report.failed() {
+                if debug {
+                    // Return instead of exiting, so tests can observe the failure
+                    return Err(Error::ReportFailed);
+                }
                 std::process::exit(1);
             }
         }
         Err(e) => {
             error!("Failed to execute command:\n{e}");
-            if !debug {
-                std::process::exit(1);
+            if debug {
+                return Err(e);
             }
+            std::process::exit(1);
         }
     }
 

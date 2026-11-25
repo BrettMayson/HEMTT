@@ -26,6 +26,7 @@ tracing = { workspace = true }
 
 [dev-dependencies]
 criterion = "0.8.2"
+hemtt-test = { path = "../testing" }
 insta = { workspace = true }
 
 [[bench]]

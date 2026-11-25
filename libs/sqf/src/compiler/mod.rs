@@ -15,6 +15,7 @@ pub mod serializer;
 use std::{ops::Range, sync::Arc};
 
 use hemtt_workspace::reporting::Processed;
+use indexmap::IndexSet;
 use serializer::CodePointer;
 
 use self::serializer::{Compiled, Constant, Instruction, Instructions, SourceInfo};
@@ -28,17 +29,23 @@ impl Statements {
     /// [`CompileError`] is returned if the statements list contains an invalid name.
     pub fn compile(&self, processed: &Processed) -> CompileResult<Compiled> {
         let mut ctx = Context {
-            constants_cache: Vec::new(),
-            names_cache: Vec::new(),
+            constants_cache: IndexSet::new(),
+            names_cache: IndexSet::new(),
         };
         let entrypoint_code = self.compile_to_instructions(processed, &mut ctx, true)?;
-        let entrypoint_index = ctx.constants_cache.len() as u16;
-        ctx.constants_cache.push(Constant::Code(entrypoint_code));
+        let entrypoint_index = ctx
+            .constants_cache
+            .len()
+            .try_into()
+            .map_err(|_| CompileError::TooManyConstants)?;
+        // The entry point is always added as a new constant, without deduplication
+        let mut constants_cache = ctx.constants_cache.into_iter().collect::<Vec<_>>();
+        constants_cache.push(Constant::Code(entrypoint_code));
         Ok(Compiled {
             entry_point: entrypoint_index,
             constants_cache_compression: true,
-            constants_cache: ctx.constants_cache,
-            names_cache: ctx.names_cache,
+            constants_cache,
+            names_cache: ctx.names_cache.into_iter().collect(),
             file_names: processed
                 .sources()
                 .iter()
@@ -79,10 +86,10 @@ impl Statements {
             let length = if self.content.is_empty() {
                 0
             } else {
-                offset.len() as u32
+                to_offset(offset.len())?
             };
             CodePointer::Source {
-                offset: offset.start as u32,
+                offset: to_offset(offset.start)?,
                 length,
             }
         };
@@ -93,27 +100,45 @@ impl Statements {
     }
 }
 
-#[must_use]
 /// Converts a location in the processed file to a [`SourceInfo`].
+///
+/// # Errors
+/// - [`CompileError::TooManyFiles`] if the location is in a file past the 255th source
+/// - [`CompileError::LineTooLarge`] if the location is past line 65535 of its file
+/// - [`CompileError::OffsetTooLarge`] if the location is past the offset SQFC can store
 ///
 /// # Panics
 /// Panics if the location is not mapped.
-pub fn location_to_source(processed: &Processed, location: &Range<usize>) -> SourceInfo {
+pub fn location_to_source(
+    processed: &Processed,
+    location: &Range<usize>,
+) -> CompileResult<SourceInfo> {
     let map = processed.mapping(location.start).expect(
         "location not in mapping, this should not happen as the location is from the processed file",
     ).original();
-    let offset = processed.clean_span(location).start as u32;
-    SourceInfo {
-        offset,
-        file_index: processed
-            .sources()
-            .iter()
-            .position(|(p, _)| p == map.path())
-            .expect("file not in sources")
+    let file_index = processed
+        .sources()
+        .iter()
+        .position(|(p, _)| p == map.path())
+        .expect("file not in sources");
+    Ok(SourceInfo {
+        offset: to_offset(processed.clean_span(location).start)?,
+        file_index: file_index
             .try_into()
-            .expect("file index too large"),
-        file_line: map.start().line() as u16,
-    }
+            .map_err(|_| CompileError::TooManyFiles(processed.sources().len()))?,
+        file_line: map
+            .start()
+            .line()
+            .try_into()
+            .map_err(|_| CompileError::LineTooLarge(map.start().line()))?,
+    })
+}
+
+/// Convert an offset or length in the processed output to the `u32` SQFC stores
+fn to_offset(value: usize) -> CompileResult<u32> {
+    value
+        .try_into()
+        .map_err(|_| CompileError::OffsetTooLarge(value))
 }
 
 impl Statement {
@@ -130,7 +155,7 @@ impl Statement {
                 let name_index = ctx.add_name(name)?;
                 instructions.push(Instruction::AssignTo(
                     name_index,
-                    location_to_source(processed, location),
+                    location_to_source(processed, location)?,
                 ));
             }
             Self::AssignLocal(ref name, ref expression, ref location) => {
@@ -138,7 +163,7 @@ impl Statement {
                 let name_index = ctx.add_name(name)?;
                 instructions.push(Instruction::AssignToLocal(
                     name_index,
-                    location_to_source(processed, location),
+                    location_to_source(processed, location)?,
                 ));
             }
             Self::Expression(ref expression, _) => {
@@ -170,7 +195,7 @@ impl Expression {
                             push_constant(item, instructions, ctx)?;
                         }
                         instructions.push(Instruction::MakeArray(
-                            len.try_into().expect("array too long"),
+                            len.try_into().map_err(|_| CompileError::ListTooLong(len))?,
                             SourceInfo {
                                 offset: 0,
                                 file_index: 0,
@@ -195,21 +220,21 @@ impl Expression {
                     let array_len = array
                         .len()
                         .try_into()
-                        .map_err(|_| CompileError::ListTooLong)?;
+                        .map_err(|_| CompileError::ListTooLong(array.len()))?;
                     for array_expr in array {
                         array_expr.compile_instructions(instructions, processed, ctx)?;
                     }
 
                     instructions.push(Instruction::MakeArray(
                         array_len,
-                        location_to_source(processed, location),
+                        location_to_source(processed, location)?,
                     ));
                 }
                 Self::NularCommand(ref command, ref location) => {
                     let name_index = ctx.add_name(command.as_str())?;
                     instructions.push(Instruction::CallNular(
                         name_index,
-                        location_to_source(processed, location),
+                        location_to_source(processed, location)?,
                     ));
                 }
                 Self::UnaryCommand(ref command, ref expr, ref location) => {
@@ -217,7 +242,7 @@ impl Expression {
                     let name_index = ctx.add_name(command.as_str())?;
                     instructions.push(Instruction::CallUnary(
                         name_index,
-                        location_to_source(processed, location),
+                        location_to_source(processed, location)?,
                     ));
                 }
                 Self::BinaryCommand(ref command, ref expr1, ref expr2, ref location) => {
@@ -226,14 +251,14 @@ impl Expression {
                     let name_index = ctx.add_name(command.as_str())?;
                     instructions.push(Instruction::CallBinary(
                         name_index,
-                        location_to_source(processed, location),
+                        location_to_source(processed, location)?,
                     ));
                 }
                 Self::Variable(ref name, ref location) => {
                     let name_index = ctx.add_name(name)?;
                     instructions.push(Instruction::GetVariable(
                         name_index,
-                        location_to_source(processed, location),
+                        location_to_source(processed, location)?,
                     ));
                 }
                 Self::Code(_)
@@ -289,8 +314,18 @@ impl Expression {
 
 #[derive(Debug, thiserror::Error)]
 pub enum CompileError {
-    #[error("cannot convert list longer than 2^16 elements")]
-    ListTooLong,
+    #[error("cannot compile array with {0} elements, the limit is 65535")]
+    ListTooLong(usize),
+    #[error("too many unique constants, the limit is 65535")]
+    TooManyConstants,
+    #[error("too many unique command names, the limit is 65535")]
+    TooManyNames,
+    #[error("code from {0} files, the limit is 255")]
+    TooManyFiles(usize),
+    #[error("code on line {0}, the limit is 65535")]
+    LineTooLarge(usize),
+    #[error("code at offset {0}, the limit is 4294967295")]
+    OffsetTooLarge(usize),
     #[error("invalid name {0}")]
     InvalidName(String),
 }
@@ -299,17 +334,25 @@ type CompileResult<T = ()> = Result<T, CompileError>;
 
 #[derive(Debug)]
 pub(crate) struct Context {
-    constants_cache: Vec<Constant>,
-    names_cache: Vec<Arc<str>>,
+    constants_cache: IndexSet<Constant>,
+    names_cache: IndexSet<Arc<str>>,
 }
 
 impl Context {
     pub(crate) fn add_constant(&mut self, constant: Constant) -> CompileResult<u16> {
-        add_or_get_index(&mut self.constants_cache, constant)
+        add_or_get_index(
+            &mut self.constants_cache,
+            constant,
+            CompileError::TooManyConstants,
+        )
     }
 
     pub(crate) fn add_name(&mut self, name: &str) -> CompileResult<u16> {
-        add_or_get_index(&mut self.names_cache, try_normalize_name(name)?)
+        add_or_get_index(
+            &mut self.names_cache,
+            try_normalize_name(name)?,
+            CompileError::TooManyNames,
+        )
     }
 }
 
@@ -322,15 +365,54 @@ fn try_normalize_name(name: &str) -> CompileResult<Arc<str>> {
     }
 }
 
-fn add_or_get_index<T: PartialEq>(collection: &mut Vec<T>, value: T) -> CompileResult<u16> {
-    collection
-        .iter()
-        .position(|item| item == &value)
-        .unwrap_or_else(|| {
-            let value_index = collection.len();
-            collection.push(value);
-            value_index
-        })
-        .try_into()
-        .map_err(|_| CompileError::ListTooLong)
+fn add_or_get_index<T: std::hash::Hash + Eq>(
+    collection: &mut IndexSet<T>,
+    value: T,
+    error: CompileError,
+) -> CompileResult<u16> {
+    let (index, _) = collection.insert_full(value);
+    index.try_into().map_err(|_| error)
+}
+
+#[cfg(test)]
+mod tests {
+    use indexmap::IndexSet;
+
+    use super::{CompileError, Constant, add_or_get_index};
+
+    fn add(set: &mut IndexSet<Constant>, constant: Constant) -> u16 {
+        add_or_get_index(set, constant, CompileError::TooManyConstants).expect("index")
+    }
+
+    #[test]
+    fn constants_are_deduplicated_like_partial_eq() {
+        let mut set = IndexSet::new();
+        assert_eq!(add(&mut set, Constant::Scalar(1.0)), 0);
+        assert_eq!(add(&mut set, Constant::String("a".into())), 1);
+        assert_eq!(add(&mut set, Constant::Scalar(1.0)), 0);
+        assert_eq!(add(&mut set, Constant::String("a".into())), 1);
+        // `total_cmp` treats these as different
+        assert_eq!(add(&mut set, Constant::Scalar(-0.0)), 2);
+        assert_eq!(add(&mut set, Constant::Scalar(0.0)), 3);
+        // nular commands compare case insensitively
+        assert_eq!(add(&mut set, Constant::NularCommand("objNull".into())), 4);
+        assert_eq!(add(&mut set, Constant::NularCommand("OBJNULL".into())), 4);
+        assert_eq!(
+            add(
+                &mut set,
+                Constant::Array(vec![Constant::Boolean(true), Constant::Scalar(2.0)])
+            ),
+            5
+        );
+        assert_eq!(
+            add(
+                &mut set,
+                Constant::Array(vec![Constant::Boolean(true), Constant::Scalar(2.0)])
+            ),
+            5
+        );
+        // consumable arrays are never equal, so are never shared
+        assert_eq!(add(&mut set, Constant::ConsumableArray(vec![])), 6);
+        assert_eq!(add(&mut set, Constant::ConsumableArray(vec![])), 7);
+    }
 }

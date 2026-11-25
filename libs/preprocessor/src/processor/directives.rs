@@ -19,9 +19,10 @@ use crate::{
         pe15_if_invalid_operator::IfInvalidOperator,
         pe16_if_incompatible_types::IfIncompatibleType, pe19_pragma_unknown::PragmaUnknown,
         pe20_pragma_invalid_scope::PragmaInvalidScope, pe23_if_has_include::IfHasInclude,
-        pe27_unexpected_endif::UnexpectedEndif, pe28_unexpected_else::UnexpectedElse,
-        pw1_redefine::RedefineMacro, pw4_include_case::IncludeCase,
-        pw5_undef_not_defined::UndefNotDefined, pw6_include_forward_slash::IncludeForwardSlash,
+        pe26_unsupported_builtin::BuiltInNotSupported, pe27_unexpected_endif::UnexpectedEndif,
+        pe28_unexpected_else::UnexpectedElse, pw1_redefine::RedefineMacro,
+        pw4_include_case::IncludeCase, pw5_undef_not_defined::UndefNotDefined,
+        pw6_include_forward_slash::IncludeForwardSlash,
     },
     defines::{DefineSource, Defines},
     ifstate::IfState,
@@ -79,8 +80,8 @@ impl Processor {
                 self.directive_if(pragma, command, stream)?;
                 Ok(())
             }
-            ("ifdef", true) => self.directive_ifdef(command, true, stream),
-            ("ifndef", true) => self.directive_ifdef(command, false, stream),
+            ("ifdef", true) => self.directive_ifdef(pragma, command, true, stream),
+            ("ifndef", true) => self.directive_ifdef(pragma, command, false, stream),
             ("if" | "ifdef" | "ifndef", false) => {
                 self.ifstates.push(IfState::PassingChild(command));
                 self.skip_to_after_newline(stream, None);
@@ -416,6 +417,9 @@ impl Processor {
                     .clone(),
             ));
         }
+        if let Some(token) = unsupported_builtin(&left) {
+            return self.if_unsupported_builtin(pragma, command, &token, stream);
+        }
         let (left, left_defined) = if left.len() == 1 {
             resolve_value(
                 &mut self.defines,
@@ -452,6 +456,9 @@ impl Processor {
             operators = read_value(stream);
             self.skip_whitespace(stream, None);
             let right = read_value(stream);
+            if let Some(token) = unsupported_builtin(&right) {
+                return self.if_unsupported_builtin(pragma, command, &token, stream);
+            }
             if right.is_empty() {
                 return Err(UnexpectedEOF::code(
                     operators
@@ -524,6 +531,7 @@ impl Processor {
 
     pub(crate) fn directive_ifdef(
         &mut self,
+        pragma: &Pragma,
         command: Arc<Token>,
         outcome: bool,
         stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
@@ -532,11 +540,48 @@ impl Processor {
         if !ident.symbol().is_word() {
             return Err(ExpectedIdent::code(ident.as_ref().clone()));
         }
+        if let Some(token) = unsupported_builtin(std::slice::from_ref(&ident)) {
+            return self.if_unsupported_builtin(pragma, command, &token, stream);
+        }
         let ident_string = ident.symbol().to_string();
         self.ifstates
             .push_if(command, self.defines.contains_key(&ident_string) == outcome);
         Self::expect_nothing_to_newline(stream)
     }
+
+    /// A built-in macro HEMTT does not support was used in an `#if`, `#ifdef` or `#ifndef`
+    ///
+    /// Without `pe26_ignore_unsupported_builtin` this is an error, as HEMTT would
+    /// otherwise silently pick a branch at build time that the game would evaluate differently.
+    /// With the flag, the condition is treated as false and the file is not rapified,
+    /// so the game evaluates the condition itself.
+    fn if_unsupported_builtin(
+        &mut self,
+        pragma: &Pragma,
+        command: Arc<Token>,
+        token: &Token,
+        stream: &mut PeekMoreIterator<impl Iterator<Item = Arc<Token>>>,
+    ) -> Result<(), Error> {
+        if !pragma.is_flagged(&Flag::Pe26IgnoreUnsupportedBuiltin) {
+            return Err(BuiltInNotSupported::code_in_directive(token.clone()));
+        }
+        debug!(
+            "ignoring unsupported built-in `{}` due to pragma flag, this file will not be rapified",
+            token.symbol()
+        );
+        self.no_rapify = true;
+        self.ifstates.push_if(command, false);
+        self.skip_to_after_newline(stream, None);
+        Ok(())
+    }
+}
+
+/// The first built-in macro HEMTT does not support in `tokens`
+fn unsupported_builtin(tokens: &[Arc<Token>]) -> Option<Arc<Token>> {
+    tokens
+        .iter()
+        .find(|t| matches!(t.symbol(), Symbol::Word(w) if Defines::is_unsupported_builtin(w)))
+        .cloned()
 }
 
 #[cfg(test)]
