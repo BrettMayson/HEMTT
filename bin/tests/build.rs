@@ -135,3 +135,39 @@ fn build_sqfc_exclude_temporary_not_needed() {
         "{output}"
     );
 }
+
+#[sealed_test]
+fn build_sqfc_line_limit() {
+    let _directory = copy_simple();
+    // SQFC stores line numbers as u16, a file this long can't be compiled
+    fs_err::write(
+        "addons/main/long.sqf",
+        format!("early = 1;\n{}late = 2;\n", "\n".repeat(70_000)),
+    )
+    .unwrap();
+    let (pbo, output) = build_with_sqfc(false, "");
+    assert!(pbo.is_none(), "the build fails");
+    assert!(
+        output.contains("long.sqf` could not be compiled to SQFC"),
+        "{output}"
+    );
+    assert!(output.contains("the limit is 65535"), "{output}");
+}
+
+#[sealed_test]
+fn build_sqfc_line_limit_exclude_temporary() {
+    let _directory = copy_simple();
+    fs_err::write(
+        "addons/main/long.sqf",
+        format!("early = 1;\n{}late = 2;\n", "\n".repeat(70_000)),
+    )
+    .unwrap();
+    let (pbo, output) = build_with_sqfc(false, r#"exclude_temporary = ["long.sqf"]"#);
+    let pbo = pbo.expect("pbo was built");
+    assert!(pbo_contains(&pbo, b"long.sqf\0"), "plain sqf is packed");
+    assert!(
+        !pbo_contains(&pbo, b"long.sqfc"),
+        "no sqfc for excluded file"
+    );
+    assert!(!output.contains("SQFC"), "{output}");
+}
