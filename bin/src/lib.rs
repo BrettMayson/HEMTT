@@ -29,6 +29,9 @@ pub const BOM_EXTENSIONS: [&str; 13] = [
     "sqf", "hpp", "cpp", "rvmat", "ext", "sqm", "fsm", "bikb", "bisurf", "xml", "inc", "h", "lip",
 ];
 
+/// Project folders that are checked for, and fixed of, a UTF-8 BOM
+pub const BOM_FOLDERS: [&str; 3] = ["addons", "optionals", "include"];
+
 #[must_use]
 /// Should the file at `path` be checked for a UTF-8 BOM
 pub fn should_check_bom(path: &std::path::Path) -> bool {
