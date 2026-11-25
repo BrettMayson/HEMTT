@@ -48,10 +48,10 @@ fn rapifiable_extensions() {
 #[test]
 fn checks_every_rapifiable_file() {
     let files = names(checkable(&workspace(), &addon()).unwrap());
-    assert!(files.contains(&"config.cpp".to_string()), "{files:?}");
-    assert!(files.contains(&"checked.rvmat".to_string()), "{files:?}");
-    assert!(files.contains(&"mission.ext".to_string()), "{files:?}");
-    assert!(!files.contains(&"notes.txt".to_string()), "{files:?}");
+    assert!(files.iter().any(|i| i == "config.cpp"), "{files:?}");
+    assert!(files.iter().any(|i| i == "checked.rvmat"), "{files:?}");
+    assert!(files.iter().any(|i| i == "mission.ext"), "{files:?}");
+    assert!(!files.iter().any(|i| i == "notes.txt"), "{files:?}");
 }
 
 /// The editor used to ignore `rapify.exclude`, so it reported diagnostics on
@@ -59,5 +59,5 @@ fn checks_every_rapifiable_file() {
 #[test]
 fn honours_exclude() {
     let files = names(checkable(&workspace(), &addon()).unwrap());
-    assert!(!files.contains(&"skipped.rvmat".to_string()), "{files:?}");
+    assert!(!files.iter().any(|i| i == "skipped.rvmat"), "{files:?}");
 }

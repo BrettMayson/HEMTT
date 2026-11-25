@@ -29,6 +29,10 @@ impl Processor {
     /// Expects the stream to be at the left parenthesis
     ///
     /// The stream is left after the closing parenthesis
+    #[allow(
+        clippy::new_instead_of_clear,
+        reason = "`arg = Vec::new()` is correct (lint is trying to clear() a moved var) see https://github.com/rust-lang/rust-clippy/issues/17966"
+    )]
     pub(crate) fn call_read_args(
         &mut self,
         callsite: &Position,
@@ -361,6 +365,11 @@ impl Processor {
                 ));
             }
         }
+
+        #[allow(
+            clippy::unnecessary_lazy_evaluations,
+            reason = "for println debug branch"
+        )]
         #[cfg(feature = "lsp")]
         self.usage.get_mut(source.position()).map_or_else(
             || {

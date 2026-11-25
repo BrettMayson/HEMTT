@@ -122,7 +122,14 @@ impl Version {
 impl TryFrom<&str> for Version {
     type Error = Error;
 
-    fn try_from(version: &str) -> Result<Self, Self::Error> {
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        value.parse()
+    }
+}
+impl core::str::FromStr for Version {
+    type Err = Error;
+
+    fn from_str(version: &str) -> Result<Self, Self::Err> {
         if version.is_empty() {
             return Err(Error::UnknownVersion);
         }

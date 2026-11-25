@@ -100,9 +100,10 @@ impl TryFrom<String> for DLC {
     }
 }
 
-impl TryFrom<&str> for DLC {
-    type Error = String;
-    fn try_from(dlc: &str) -> Result<Self, Self::Error> {
+impl std::str::FromStr for DLC {
+    type Err = String;
+
+    fn from_str(dlc: &str) -> Result<Self, Self::Err> {
         Ok(
             match dlc.to_lowercase().trim_start_matches("creator dlc: ") {
                 "1021790" | "contact" => Self::Contact,
@@ -121,6 +122,14 @@ impl TryFrom<&str> for DLC {
                 _ => return Err(format!("Unknown DLC: {dlc}")),
             },
         )
+    }
+}
+
+impl TryFrom<&str> for DLC {
+    type Error = String;
+
+    fn try_from(dlc: &str) -> Result<Self, Self::Error> {
+        dlc.parse()
     }
 }
 

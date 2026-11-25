@@ -148,7 +148,7 @@ impl Processor {
                 command.position().clone(),
             ))
         });
-        let Ok(scope) = Scope::try_from(scope_token.to_string().as_str()) else {
+        let Ok(scope) = scope_token.to_string().as_str().parse::<Scope>() else {
             return Err(PragmaInvalidScope::code(
                 scope_token.as_ref().clone(),
                 pragma.root,
