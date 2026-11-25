@@ -26,8 +26,7 @@ pub fn execute(args: &PaaConvertArgs) -> Result<(), Error> {
     let from = PathBuf::from(&args.src);
     let output = PathBuf::from(&args.dest);
     if output.exists() {
-        error!("Output file already exists");
-        return Ok(());
+        return Err(Error::OutputExists(args.dest.clone()));
     }
     if ["paa", "pac"].contains(
         &from
@@ -76,4 +75,32 @@ pub fn confirm_format(format: hemtt_paa::PaXType, path: &str) -> Result<bool, Er
         }
     }
     Ok(true)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{PaaConvertArgs, execute};
+    use crate::Error;
+
+    #[test]
+    fn existing_output_is_an_error() {
+        let _directory = hemtt_test::directory::TemporaryDirectory::new();
+        image::RgbaImage::new(4, 4)
+            .save("texture.png")
+            .expect("write png");
+        fs_err::write("texture_co.paa", "keep").expect("write output");
+
+        let result = execute(&PaaConvertArgs {
+            src: "texture.png".to_string(),
+            dest: "texture_co.paa".to_string(),
+        });
+        assert!(
+            matches!(&result, Err(Error::OutputExists(path)) if path == "texture_co.paa"),
+            "expected an output exists error, got {result:?}"
+        );
+        assert_eq!(
+            fs_err::read_to_string("texture_co.paa").expect("read"),
+            "keep"
+        );
+    }
 }
