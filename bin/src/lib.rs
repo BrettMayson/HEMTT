@@ -192,15 +192,20 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
             if !is_simple_command {
                 report.write_ci_annotations()?;
             }
-            if report.failed() && !debug {
+            if report.failed() {
+                if debug {
+                    // Return instead of exiting, so tests can observe the failure
+                    return Err(Error::ReportFailed);
+                }
                 std::process::exit(1);
             }
         }
         Err(e) => {
             error!("Failed to execute command:\n{e}");
-            if !debug {
-                std::process::exit(1);
+            if debug {
+                return Err(e);
             }
+            std::process::exit(1);
         }
     }
 
