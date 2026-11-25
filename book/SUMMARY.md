@@ -22,6 +22,8 @@
   - [check](commands/check.md)
   - [clean](commands/clean.md)
   - [dev](commands/dev.md)
+  - [doctor](commands/doctor.md)
+  - [explain](commands/explain.md)
   - [keys]()
     - [generate](commands/keys/generate.md)
   - [launch](commands/launch.md)

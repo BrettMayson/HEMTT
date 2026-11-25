@@ -21,7 +21,7 @@ pub(crate) mod sign;
 pub mod summary;
 pub mod tex_headers;
 
-pub use binarize::Binarize;
+pub use binarize::{Binarize, CompatibiltyTool, locate as locate_binarize};
 pub use file_patching::FilePatching;
 pub use files::Files;
 pub use hook::Hooks;
