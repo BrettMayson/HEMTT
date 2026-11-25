@@ -85,7 +85,7 @@ fn build_sqfc_failure_is_an_error() {
 #[sealed_test]
 fn build_sqfc_exclude() {
     let _directory = copy_simple();
-    // `init.sqf` can be compiled, but is excluded (e.g. it uses `#if __GAME_VER_MIN__`)
+    // `init.sqf` can be compiled, but is excluded
     let (pbo, output) = build_with_sqfc(true, r#"exclude = ["large.sqf", "init.sqf"]"#);
     let pbo = pbo.expect("pbo was built");
     assert!(pbo_contains(&pbo, b"large.sqf\0"), "plain sqf is packed");
@@ -170,4 +170,70 @@ fn build_sqfc_line_limit_exclude_temporary() {
         "no sqfc for excluded file"
     );
     assert!(!output.contains("SQFC"), "{output}");
+}
+
+const VERSION_CHECK: &str =
+    "#if __GAME_VER_MIN__ == 22\nversion = 22;\n#else\nversion = 0;\n#endif\n";
+
+#[sealed_test]
+fn build_unsupported_builtin_in_if_is_an_error() {
+    let _directory = copy_simple();
+    fs_err::write("addons/main/version.sqf", VERSION_CHECK).unwrap();
+    let capture = hemtt_common::capture::OutputCapture::new();
+    let _ = hemtt::execute(&Cli::parse_from(vec!["hemtt", "build"]));
+    let output = capture.finish();
+    assert!(
+        !std::path::Path::new(".hemttout/build/addons/test_main.pbo").exists(),
+        "the build fails"
+    );
+    assert!(
+        output.contains("built-in macro `__GAME_VER_MIN__` is not supported by HEMTT"),
+        "{output}"
+    );
+}
+
+#[sealed_test]
+fn build_unsupported_builtin_pragma_sqf() {
+    let _directory = copy_simple();
+    fs_err::write(
+        "addons/main/version.sqf",
+        format!("#pragma hemtt flag pe26_ignore_unsupported_builtin\n{VERSION_CHECK}"),
+    )
+    .unwrap();
+    let (pbo, output) = build_with_sqfc(false, "");
+    let pbo = pbo.expect("pbo was built");
+    assert!(pbo_contains(&pbo, b"version.sqf\0"), "plain sqf is packed");
+    assert!(
+        !pbo_contains(&pbo, b"version.sqfc"),
+        "the game must evaluate the condition, so no sqfc"
+    );
+    assert!(
+        pbo_contains(&pbo, b"init.sqfc"),
+        "other files are still compiled"
+    );
+    assert!(!output.contains("PE26"), "{output}");
+}
+
+#[sealed_test]
+fn build_unsupported_builtin_pragma_config() {
+    let _directory = copy_simple();
+    let config = fs_err::read_to_string("addons/main/config.cpp").unwrap();
+    fs_err::write(
+        "addons/main/config.cpp",
+        format!(
+            "#pragma hemtt flag pe26_ignore_unsupported_builtin\n#if __GAME_VER_MIN__ >= 22\n#define NEW_FEATURE 1\n#endif\n{config}"
+        ),
+    )
+    .unwrap();
+    let (pbo, output) = build_with_sqfc(false, "");
+    let pbo = pbo.expect("pbo was built");
+    assert!(
+        pbo_contains(&pbo, b"config.cpp\0"),
+        "config is not rapified"
+    );
+    assert!(
+        !pbo_contains(&pbo, b"config.bin\0"),
+        "config is not rapified"
+    );
+    assert!(!output.contains("PE26"), "{output}");
 }
