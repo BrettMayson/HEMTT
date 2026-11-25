@@ -1,4 +1,7 @@
-use std::sync::Arc;
+mod highlight;
+mod render;
+
+use std::{io::IsTerminal, sync::Arc};
 
 use hemtt_common::config::LintEnabled;
 use hemtt_config::analyze::CONFIG_LINTS;
@@ -15,6 +18,11 @@ use hemtt_workspace::{
 };
 
 use crate::{Error, report::Report};
+
+use self::{
+    highlight::{color, hyperlink},
+    render::Renderer,
+};
 
 const BOOK: &str = "https://hemtt.dev";
 
@@ -101,6 +109,55 @@ impl Explanation {
             url = self.url(),
         )
     }
+
+    /// Colours, highlighted code blocks and, if `renderer.links`, hyperlinks
+    fn render_fancy(&self, renderer: &Renderer) -> String {
+        let badge = match self.severity.as_str() {
+            "Error" => "\x1b[1;97;41m",
+            "Warning" => "\x1b[1;30;43m",
+            "Help" => "\x1b[1;30;46m",
+            _ => "\x1b[1;30;47m",
+        };
+        let severity = match self.severity.as_str() {
+            "Error" => "\x1b[1;31m",
+            "Warning" => "\x1b[1;33m",
+            "Help" => "\x1b[1;36m",
+            _ => color::BOLD,
+        };
+        let state = match self.enabled {
+            LintEnabled::Enabled => String::new(),
+            LintEnabled::Disabled => {
+                format!(" {}(disabled by default){}", color::DIM, color::RESET)
+            }
+            LintEnabled::Pedantic => format!(" {}(pedantic){}", color::DIM, color::RESET),
+        };
+        let url = self.url();
+        let ident = format!("{}{}{}", color::BOLD, self.ident, color::RESET);
+        let ident = if renderer.links {
+            hyperlink(&ident, &url)
+        } else {
+            ident
+        };
+        let read_more = if renderer.links {
+            hyperlink(&format!("\x1b[4;94m{url}{}", color::RESET), &url)
+        } else {
+            format!("\x1b[4;94m{url}{}", color::RESET)
+        };
+        format!(
+            "{badge} {code} {reset} {ident}\n{italic}{description}{reset}\n\n{dim}Severity{reset} {severity}{default}{reset}{state}  {dim}Minimum{reset} {minimum}\n\n{documentation}\n\n{dim}Read more:{reset} {read_more}",
+            code = self.code,
+            reset = color::RESET,
+            italic = color::ITALIC,
+            dim = color::DIM,
+            // inline code resets the style, so italics are turned back on after it
+            description = renderer
+                .inline(self.description)
+                .replace(color::RESET, &format!("{}{}", color::RESET, color::ITALIC)),
+            default = self.severity,
+            minimum = self.minimum_severity,
+            documentation = renderer.markdown(self.documentation.trim()),
+        )
+    }
 }
 
 #[must_use]
@@ -155,7 +212,12 @@ pub fn find(query: &str) -> Option<Explanation> {
 /// Will not return an error
 pub fn execute(cmd: &Command) -> Result<Report, Error> {
     if let Some(explanation) = find(&cmd.code) {
-        println!("{}", explanation.render());
+        let fancy = hemtt_common::ansi::ansi_supported() && std::io::stdout().is_terminal();
+        if fancy {
+            println!("{}", fancy_render(&explanation));
+        } else {
+            println!("{}", explanation.render());
+        }
         return Ok(Report::new());
     }
 
@@ -183,6 +245,24 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         similar,
     }));
     Ok(report)
+}
+
+fn fancy_render(explanation: &Explanation) -> String {
+    let links = supports_hyperlinks::on(supports_hyperlinks::Stream::Stdout);
+    // commands are only coloured in SQF, the wiki is only loaded when needed
+    let wiki = (explanation.code.starts_with("L-S")
+        || explanation.documentation.contains("```sqf"))
+    .then(|| hemtt_sqf::parser::database::Database::empty(false));
+    let commands = |word: &str| -> Option<String> {
+        let wiki = wiki.as_ref()?.wiki();
+        wiki.commands().get(word).map(|c| c.name().to_string())
+    };
+    let lint_url = |code: &str| find(code).filter(|e| e.code == code).map(|e| e.url());
+    explanation.render_fancy(&Renderer {
+        links,
+        commands: &commands,
+        lints: &lint_url,
+    })
 }
 
 struct UnknownLint {
@@ -271,6 +351,32 @@ mod tests {
             "https://hemtt.dev/lints/sqf.html#is_equal_type_any"
         );
         assert!(e.render().contains("isEqualTypeAny"));
+    }
+
+    #[test]
+    fn fancy_keeps_the_text() {
+        let commands = |_: &str| None;
+        let lints = |code: &str| find(code).map(|e| e.url());
+        let renderer = Renderer {
+            links: true,
+            commands: &commands,
+            lints: &lints,
+        };
+        for e in all() {
+            let out = highlight::tests::strip(&e.render_fancy(&renderer));
+            assert!(out.contains(&e.code), "{}", e.code);
+            assert!(out.contains(&e.url()), "{}", e.code);
+            assert!(!out.contains('\x1b'), "{} leaves an escape behind", e.code);
+            // every line of every code block survives highlighting
+            let mut in_code = false;
+            for line in e.documentation.lines() {
+                if line.trim_start().starts_with("```") {
+                    in_code = !in_code;
+                } else if in_code {
+                    assert!(out.contains(line), "{}: lost `{line}`", e.code);
+                }
+            }
+        }
     }
 
     #[test]
