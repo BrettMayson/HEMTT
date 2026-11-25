@@ -115,11 +115,16 @@ impl TryFrom<&str> for Scope {
 pub enum Flag {
     Pw3IgnoreFormat,
     Pe23IgnoreIfHasInclude,
+    Pe26IgnoreUnsupportedBuiltin,
 }
 
 impl Flag {
     pub const fn as_slice() -> &'static [&'static str] {
-        &["pw3_ignore_format", "pe23_ignore_has_include"]
+        &[
+            "pw3_ignore_format",
+            "pe23_ignore_has_include",
+            "pe26_ignore_unsupported_builtin",
+        ]
     }
 }
 
@@ -130,6 +135,7 @@ impl TryFrom<&str> for Flag {
         match value {
             "pw3_ignore_format" => Ok(Self::Pw3IgnoreFormat),
             "pe23_ignore_has_include" => Ok(Self::Pe23IgnoreIfHasInclude),
+            "pe26_ignore_unsupported_builtin" => Ok(Self::Pe26IgnoreUnsupportedBuiltin),
             _ => Err(()),
         }
     }

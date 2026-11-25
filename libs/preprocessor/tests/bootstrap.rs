@@ -49,6 +49,7 @@ fn check(dir: &str) {
 }
 
 bootstrap!(ace_main);
+bootstrap!(ignore_unsupported_builtin);
 bootstrap!(addon_in_ifdef);
 bootstrap!(cba_is_admin);
 bootstrap!(cba_multiline);
@@ -95,3 +96,22 @@ bootstrap!(sqf);
 bootstrap!(strings);
 bootstrap!(triple_backslash);
 bootstrap!(utf);
+
+#[test]
+fn ignore_unsupported_builtin_is_not_rapified() {
+    let run = |dir: &str| {
+        let folder = std::path::PathBuf::from(ROOT).join(dir);
+        let workspace = hemtt_workspace::Workspace::builder()
+            .physical(&folder, LayerType::Source)
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
+            .unwrap();
+        Processor::run(
+            &workspace.join("source.hpp").unwrap(),
+            &hemtt_common::config::PreprocessorOptions::default(),
+        )
+        .unwrap()
+    };
+    // the game must evaluate the condition, so HEMTT can not rapify or compile it
+    assert!(run("ignore_unsupported_builtin").no_rapify());
+    assert!(!run("if_operators").no_rapify());
+}

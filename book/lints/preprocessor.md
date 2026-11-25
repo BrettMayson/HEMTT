@@ -32,6 +32,7 @@ HEMTT provides a few preprocessor flags to control the behavior of the preproces
 | ---- | ----------- |
 | pw3_ignore_format | Ignores padded arguments in `ARR_N`, `WARNING_N`, `TRACE_N`, `FORMAT_N`, etc. macros |
 | pe23_ignore_has_include| Assume any `#if __has_include` is false |
+| pe26_ignore_unsupported_builtin | Assume any `#if`, `#ifdef` or `#ifndef` using a built-in macro HEMTT does not support (e.g. `__GAME_VER_MIN__`) is false. The file is not rapified or compiled to SQFC, so the game evaluates the condition |
 
 The scope of these flags is the same as the warning suppression scope.
 

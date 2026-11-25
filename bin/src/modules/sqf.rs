@@ -119,6 +119,13 @@ impl Module for SQFCompiler {
                 {
                     if *mode == SqfcMode::Exclude {
                         trace!("sqfc excluded for {}", entry);
+                    } else if processed.no_rapify() {
+                        // e.g. `#pragma hemtt flag pe26_ignore_unsupported_builtin`,
+                        // the game has to preprocess the plain SQF itself
+                        trace!(
+                            "sqfc skipped for {}, it must be preprocessed by the game",
+                            entry
+                        );
                     } else {
                         let mut buffer = Vec::new();
                         match (
