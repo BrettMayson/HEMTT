@@ -38,14 +38,15 @@ impl Lint<LintData> for LintL02Usage {
         
 Configuration
 
-- **ignore**: Array of stringtable entries to ignore, supports regex or wildcards (`*`)
-- **ignore_missing**: Bool to ignore missing stringtables (still written to .hemttout when disabled)
-- **ignore_unused**: Bool to ignore missing stringtables (still written to .hemttout when disabled)
-- **ignore_duplicate**: Bool to ignore missing stringtables (still written to .hemttout when disabled)
+- **ignore**: Array of stringtable keys to ignore, case insensitive, `*` matches any characters
+- **ignore_missing**: Bool to not report keys that are used but missing from the stringtables (still written to `.hemttout/missing_stringtables.txt`)
+- **ignore_unused**: Bool to not report keys that are in the stringtables but never used (still written to `.hemttout/unused_stringtables.txt`)
+- **ignore_duplicate**: Bool to not report keys that are defined more than once (still written to `.hemttout/duplicate_stringtables.txt`)
 ```toml
 [lints.stringtables.usage]
 options.ignore = [
     "str_myproject_mystring",
+    "str_myproject_debug_*",
 ]
 options.ignore_unused = true
 "#
@@ -182,7 +183,6 @@ fn unused_codes(
 ) -> Codes {
     let _ = fs_err::remove_file(".hemttout/unused_stringtables.txt");
     let mut codes: Codes = Vec::new();
-    let _ = fs_err::remove_file(".hemttout/unused_stringtables.txt");
     if !unused.is_empty() {
         unused.sort();
         unused.dedup();
@@ -273,4 +273,31 @@ fn duplicate_codes(all: &HashMap<String, Vec<Position>>, ignore: bool) -> Codes 
         }
     }
     codes
+}
+
+#[cfg(test)]
+mod tests {
+    use hemtt_workspace::lint::Lint;
+
+    use super::LintL02Usage;
+
+    #[test]
+    fn documents_each_option() {
+        let docs = LintL02Usage.documentation();
+        for (option, describes) in [
+            ("ignore_missing", "missing"),
+            ("ignore_unused", "never used"),
+            ("ignore_duplicate", "more than once"),
+            ("ignore", "keys to ignore"),
+        ] {
+            let line = docs
+                .lines()
+                .find(|l| l.starts_with(&format!("- **{option}**")))
+                .unwrap_or_else(|| panic!("`{option}` is not documented"));
+            assert!(
+                line.contains(describes),
+                "`{option}` documentation does not describe it: {line}"
+            );
+        }
+    }
 }
