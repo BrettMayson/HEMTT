@@ -52,6 +52,7 @@ Project {
                         danish: None,
                         bulgarian: None,
                         latin: None,
+                        unknown_languages: {},
                     },
                     Key {
                         id: "test2",
@@ -96,6 +97,7 @@ Project {
                         danish: None,
                         bulgarian: None,
                         latin: None,
+                        unknown_languages: {},
                     },
                     Key {
                         id: "test3",
@@ -142,6 +144,7 @@ Project {
                         danish: None,
                         bulgarian: None,
                         latin: None,
+                        unknown_languages: {},
                     },
                 ],
                 containers: [],
