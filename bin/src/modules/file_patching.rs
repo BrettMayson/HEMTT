@@ -3,7 +3,12 @@ use std::sync::Arc;
 use hemtt_workspace::reporting::{Code, Diagnostic};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
-use crate::{context::Context, error::Error, link::create_link, report::Report};
+use crate::{
+    context::Context,
+    error::Error,
+    link::{create_link, link_or_file_exists},
+    report::Report,
+};
 
 use super::Module;
 
@@ -87,7 +92,7 @@ impl FilePatching {
             fs_err::create_dir_all(prefix_folder)?;
         }
 
-        if link.exists() {
+        if link_or_file_exists(&link) {
             trace!("removing existing symlink at {}", link.display());
             #[cfg(windows)]
             fs_err::remove_dir(&link)?;
@@ -109,7 +114,7 @@ impl FilePatching {
             Err(report) => return Ok(report),
         };
 
-        if link.exists() {
+        if link_or_file_exists(&link) {
             trace!("removing symlink at {}", link.display());
             #[cfg(windows)]
             fs_err::remove_dir(&link)?;

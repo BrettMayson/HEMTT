@@ -47,7 +47,7 @@ impl Module for BOMCheck {
 
     fn check(&self, ctx: &Context) -> Result<Report, crate::Error> {
         let mut report = Report::new();
-        for folder in ["addons", "optionals", "include"] {
+        for folder in crate::BOM_FOLDERS {
             let folder = ctx.project_folder().join(folder);
             if !folder.exists() {
                 continue;

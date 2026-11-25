@@ -41,6 +41,9 @@ pub enum Error {
     #[error("The command reported errors")]
     ReportFailed,
 
+    #[error("Output file `{0}` already exists")]
+    OutputExists(String),
+
     #[error("Update error: {0}")]
     Update(String),
 
