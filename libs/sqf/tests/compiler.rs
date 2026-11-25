@@ -1,5 +1,7 @@
 #![allow(clippy::unwrap_used)]
 
+use std::fmt::Write as _;
+
 pub use float_ord::FloatOrd as Scalar;
 use hemtt_preprocessor::Processor;
 use hemtt_sqf::{compiler::serializer::Compiled, parser::database::Database};
@@ -57,4 +59,50 @@ fn optimize(folder: &str, file: &str) -> (Vec<u8>, Compiled) {
         .compile_to_writer(&processed, &mut writer)
         .unwrap();
     (writer, compiled)
+}
+
+fn compile_source(name: &str, source: &str) -> Result<Compiled, hemtt_sqf::compiler::CompileError> {
+    let folder =
+        std::env::temp_dir().join(format!("hemtt_sqf_compile_{name}_{}", std::process::id()));
+    fs_err::create_dir_all(&folder).unwrap();
+    fs_err::write(folder.join("test.sqf"), source).unwrap();
+    let workspace = hemtt_workspace::Workspace::builder()
+        .physical(&folder, LayerType::Source)
+        .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
+        .unwrap();
+    let processed = Processor::run(
+        &workspace.join("test.sqf").unwrap(),
+        &hemtt_common::config::PreprocessorOptions::default(),
+    )
+    .unwrap();
+    let statements = hemtt_sqf::parser::run(&Database::a3(false), &processed).unwrap();
+    let result = statements.compile(&processed);
+    fs_err::remove_dir_all(&folder).unwrap();
+    result
+}
+
+#[test]
+fn too_many_constants() {
+    // 70 arrays of 1000 unique numbers, each array is below the length limit
+    let mut source = String::new();
+    for chunk in 0..70 {
+        let items = (0..1000)
+            .map(|i| (chunk * 1000 + i).to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        writeln!(source, "a{chunk} = [{items}];").unwrap();
+    }
+    assert!(matches!(
+        compile_source("constants", &source),
+        Err(hemtt_sqf::compiler::CompileError::TooManyConstants)
+    ));
+}
+
+#[test]
+fn constant_array_too_long() {
+    let items = vec!["1"; 70_000].join(",");
+    assert!(matches!(
+        compile_source("array", &format!("a = [{items}];")),
+        Err(hemtt_sqf::compiler::CompileError::ListTooLong(70_000))
+    ));
 }

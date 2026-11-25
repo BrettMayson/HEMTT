@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{io::Write, sync::Arc};
 
 use hemtt_common::version::Version;
 use hemtt_sqf::{
@@ -111,8 +111,22 @@ impl Module for SQFCompiler {
                 if let Some(sqf) = checked.statements
                     && !checked.codes.failed()
                 {
-                    let mut out = entry.with_extension("sqfc")?.create_file()?;
-                    sqf.optimize().compile_to_writer(&processed, &mut out)?;
+                    let mut buffer = Vec::new();
+                    match sqf.optimize().compile_to_writer(&processed, &mut buffer) {
+                        Ok(()) => {
+                            entry
+                                .with_extension("sqfc")?
+                                .create_file()?
+                                .write_all(&buffer)?;
+                        }
+                        Err(e) => {
+                            // The game will fall back to the plain sqf file
+                            report.push(Arc::new(SqfcSkipped {
+                                file: entry.as_str().to_string(),
+                                reason: e.to_string(),
+                            }));
+                        }
+                    }
                     progress.inc(1);
                 }
                 for code in checked.codes {
@@ -219,5 +233,37 @@ impl RequiresFutureVersion {
             required_by,
             wiki_version,
         }
+    }
+}
+
+/// A file could not be compiled to SQFC, the plain SQF will be used instead
+pub struct SqfcSkipped {
+    file: String,
+    reason: String,
+}
+
+impl Code for SqfcSkipped {
+    fn ident(&self) -> &'static str {
+        "BSW2"
+    }
+
+    fn severity(&self) -> Severity {
+        Severity::Warning
+    }
+
+    fn message(&self) -> String {
+        format!("`{}` could not be compiled to SQFC", self.file)
+    }
+
+    fn note(&self) -> Option<String> {
+        Some(self.reason.clone())
+    }
+
+    fn help(&self) -> Option<String> {
+        Some("The file will be used as plain SQF. Splitting large data into multiple files will allow them to be compiled.".to_string())
+    }
+
+    fn diagnostic(&self) -> Option<Diagnostic> {
+        Some(Diagnostic::from_code(self))
     }
 }

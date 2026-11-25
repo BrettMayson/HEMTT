@@ -32,7 +32,11 @@ impl Statements {
             names_cache: Vec::new(),
         };
         let entrypoint_code = self.compile_to_instructions(processed, &mut ctx, true)?;
-        let entrypoint_index = ctx.constants_cache.len() as u16;
+        let entrypoint_index = ctx
+            .constants_cache
+            .len()
+            .try_into()
+            .map_err(|_| CompileError::TooManyConstants)?;
         ctx.constants_cache.push(Constant::Code(entrypoint_code));
         Ok(Compiled {
             entry_point: entrypoint_index,
@@ -170,7 +174,7 @@ impl Expression {
                             push_constant(item, instructions, ctx)?;
                         }
                         instructions.push(Instruction::MakeArray(
-                            len.try_into().expect("array too long"),
+                            len.try_into().map_err(|_| CompileError::ListTooLong(len))?,
                             SourceInfo {
                                 offset: 0,
                                 file_index: 0,
@@ -195,7 +199,7 @@ impl Expression {
                     let array_len = array
                         .len()
                         .try_into()
-                        .map_err(|_| CompileError::ListTooLong)?;
+                        .map_err(|_| CompileError::ListTooLong(array.len()))?;
                     for array_expr in array {
                         array_expr.compile_instructions(instructions, processed, ctx)?;
                     }
@@ -289,8 +293,12 @@ impl Expression {
 
 #[derive(Debug, thiserror::Error)]
 pub enum CompileError {
-    #[error("cannot convert list longer than 2^16 elements")]
-    ListTooLong,
+    #[error("cannot compile array with {0} elements, the limit is 65535")]
+    ListTooLong(usize),
+    #[error("too many unique constants, the limit is 65535")]
+    TooManyConstants,
+    #[error("too many unique command names, the limit is 65535")]
+    TooManyNames,
     #[error("invalid name {0}")]
     InvalidName(String),
 }
@@ -305,11 +313,19 @@ pub(crate) struct Context {
 
 impl Context {
     pub(crate) fn add_constant(&mut self, constant: Constant) -> CompileResult<u16> {
-        add_or_get_index(&mut self.constants_cache, constant)
+        add_or_get_index(
+            &mut self.constants_cache,
+            constant,
+            CompileError::TooManyConstants,
+        )
     }
 
     pub(crate) fn add_name(&mut self, name: &str) -> CompileResult<u16> {
-        add_or_get_index(&mut self.names_cache, try_normalize_name(name)?)
+        add_or_get_index(
+            &mut self.names_cache,
+            try_normalize_name(name)?,
+            CompileError::TooManyNames,
+        )
     }
 }
 
@@ -322,7 +338,11 @@ fn try_normalize_name(name: &str) -> CompileResult<Arc<str>> {
     }
 }
 
-fn add_or_get_index<T: PartialEq>(collection: &mut Vec<T>, value: T) -> CompileResult<u16> {
+fn add_or_get_index<T: PartialEq>(
+    collection: &mut Vec<T>,
+    value: T,
+    error: CompileError,
+) -> CompileResult<u16> {
     collection
         .iter()
         .position(|item| item == &value)
@@ -332,5 +352,5 @@ fn add_or_get_index<T: PartialEq>(collection: &mut Vec<T>, value: T) -> CompileR
             value_index
         })
         .try_into()
-        .map_err(|_| CompileError::ListTooLong)
+        .map_err(|_| error)
 }
