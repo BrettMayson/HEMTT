@@ -15,6 +15,7 @@ pub mod serializer;
 use std::{ops::Range, sync::Arc};
 
 use hemtt_workspace::reporting::Processed;
+use indexmap::IndexSet;
 use serializer::CodePointer;
 
 use self::serializer::{Compiled, Constant, Instruction, Instructions, SourceInfo};
@@ -28,8 +29,8 @@ impl Statements {
     /// [`CompileError`] is returned if the statements list contains an invalid name.
     pub fn compile(&self, processed: &Processed) -> CompileResult<Compiled> {
         let mut ctx = Context {
-            constants_cache: Vec::new(),
-            names_cache: Vec::new(),
+            constants_cache: IndexSet::new(),
+            names_cache: IndexSet::new(),
         };
         let entrypoint_code = self.compile_to_instructions(processed, &mut ctx, true)?;
         let entrypoint_index = ctx
@@ -37,12 +38,14 @@ impl Statements {
             .len()
             .try_into()
             .map_err(|_| CompileError::TooManyConstants)?;
-        ctx.constants_cache.push(Constant::Code(entrypoint_code));
+        // The entry point is always added as a new constant, without deduplication
+        let mut constants_cache = ctx.constants_cache.into_iter().collect::<Vec<_>>();
+        constants_cache.push(Constant::Code(entrypoint_code));
         Ok(Compiled {
             entry_point: entrypoint_index,
             constants_cache_compression: true,
-            constants_cache: ctx.constants_cache,
-            names_cache: ctx.names_cache,
+            constants_cache,
+            names_cache: ctx.names_cache.into_iter().collect(),
             file_names: processed
                 .sources()
                 .iter()
@@ -307,8 +310,8 @@ type CompileResult<T = ()> = Result<T, CompileError>;
 
 #[derive(Debug)]
 pub(crate) struct Context {
-    constants_cache: Vec<Constant>,
-    names_cache: Vec<Arc<str>>,
+    constants_cache: IndexSet<Constant>,
+    names_cache: IndexSet<Arc<str>>,
 }
 
 impl Context {
@@ -338,19 +341,54 @@ fn try_normalize_name(name: &str) -> CompileResult<Arc<str>> {
     }
 }
 
-fn add_or_get_index<T: PartialEq>(
-    collection: &mut Vec<T>,
+fn add_or_get_index<T: std::hash::Hash + Eq>(
+    collection: &mut IndexSet<T>,
     value: T,
     error: CompileError,
 ) -> CompileResult<u16> {
-    collection
-        .iter()
-        .position(|item| item == &value)
-        .unwrap_or_else(|| {
-            let value_index = collection.len();
-            collection.push(value);
-            value_index
-        })
-        .try_into()
-        .map_err(|_| error)
+    let (index, _) = collection.insert_full(value);
+    index.try_into().map_err(|_| error)
+}
+
+#[cfg(test)]
+mod tests {
+    use indexmap::IndexSet;
+
+    use super::{CompileError, Constant, add_or_get_index};
+
+    fn add(set: &mut IndexSet<Constant>, constant: Constant) -> u16 {
+        add_or_get_index(set, constant, CompileError::TooManyConstants).expect("index")
+    }
+
+    #[test]
+    fn constants_are_deduplicated_like_partial_eq() {
+        let mut set = IndexSet::new();
+        assert_eq!(add(&mut set, Constant::Scalar(1.0)), 0);
+        assert_eq!(add(&mut set, Constant::String("a".into())), 1);
+        assert_eq!(add(&mut set, Constant::Scalar(1.0)), 0);
+        assert_eq!(add(&mut set, Constant::String("a".into())), 1);
+        // `total_cmp` treats these as different
+        assert_eq!(add(&mut set, Constant::Scalar(-0.0)), 2);
+        assert_eq!(add(&mut set, Constant::Scalar(0.0)), 3);
+        // nular commands compare case insensitively
+        assert_eq!(add(&mut set, Constant::NularCommand("objNull".into())), 4);
+        assert_eq!(add(&mut set, Constant::NularCommand("OBJNULL".into())), 4);
+        assert_eq!(
+            add(
+                &mut set,
+                Constant::Array(vec![Constant::Boolean(true), Constant::Scalar(2.0)])
+            ),
+            5
+        );
+        assert_eq!(
+            add(
+                &mut set,
+                Constant::Array(vec![Constant::Boolean(true), Constant::Scalar(2.0)])
+            ),
+            5
+        );
+        // consumable arrays are never equal, so are never shared
+        assert_eq!(add(&mut set, Constant::ConsumableArray(vec![])), 6);
+        assert_eq!(add(&mut set, Constant::ConsumableArray(vec![])), 7);
+    }
 }

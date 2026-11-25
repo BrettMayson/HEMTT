@@ -16,7 +16,7 @@ use std::sync::Arc;
 
 pub const VERSION: u32 = 1;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct SourceInfo {
     pub offset: u32,
     pub file_index: u8,
@@ -47,7 +47,7 @@ impl SourceInfo {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CodePointer {
     /// Points to a constant containing the source code for these instructions.
     Constant(u64),
@@ -91,7 +91,7 @@ impl CodePointer {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Instruction {
     /// Counter to its name, this instruction seems to be used to *begin* statements.
     EndStatement,
@@ -208,7 +208,7 @@ impl Instruction {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Instructions {
     pub contents: Vec<Instruction>,
     /// Points to a constant containing the source code for these instructions.
@@ -357,6 +357,26 @@ impl PartialEq for Constant {
 }
 
 impl Eq for Constant {}
+
+/// Must agree with [`PartialEq`]: values that are equal must hash the same
+impl std::hash::Hash for Constant {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            Self::Code(code) => code.hash(state),
+            Self::String(string) => string.hash(state),
+            // `total_cmp` is only equal for identical bits
+            Self::Scalar(scalar) => scalar.to_bits().hash(state),
+            Self::Boolean(boolean) => boolean.hash(state),
+            Self::Array(array) | Self::ConsumableArray(array) => array.hash(state),
+            Self::NularCommand(cmd) => {
+                for byte in cmd.bytes() {
+                    byte.to_ascii_lowercase().hash(state);
+                }
+            }
+        }
+    }
+}
 
 #[allow(dead_code)]
 fn deserialize_constant_array(reader: &mut impl Read) -> DeserializeResult<Vec<Constant>> {
