@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project name="test">
+    <Package name="test">
+        <Key ID="STR_test_used">
+            <English>Used</English>
+        </Key>
+        <Key ID="STR_test_Mixed_Case">
+            <English>Used with different casing</English>
+        </Key>
+        <Key ID="STR_test_unused">
+            <English>Unused</English>
+        </Key>
+        <Key ID="STR_test_format_one">
+            <English>Matched by a format usage</English>
+        </Key>
+        <Key ID="STR_test_format_two">
+            <English>Matched by a format usage</English>
+        </Key>
+        <Key ID="STR_test_also_unused">
+            <English>Also unused</English>
+        </Key>
+    </Package>
+</Project>

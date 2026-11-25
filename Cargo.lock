@@ -1836,6 +1836,7 @@ dependencies = [
  "criterion",
  "fs-err",
  "hemtt-common",
+ "hemtt-test",
  "hemtt-workspace",
  "indexmap",
  "insta",
