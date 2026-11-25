@@ -152,10 +152,10 @@ fn too_many_files() {
     let extra = (0..260)
         .map(|i| (format!("inc_{i}.sqf"), format!("a{i} = {i};\n")))
         .collect::<Vec<_>>();
-    let source = extra
-        .iter()
-        .map(|(file, _)| format!("#include \"{file}\"\n"))
-        .collect::<String>();
+    let mut source = String::new();
+    for (file, _) in &extra {
+        writeln!(source, "#include \"{file}\"").unwrap();
+    }
     let result = compile_files("files", &source, &extra);
     assert!(
         matches!(
