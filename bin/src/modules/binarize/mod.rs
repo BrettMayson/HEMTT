@@ -20,7 +20,7 @@ use self::error::{
 };
 use self::error::{
     bbe4_missing_textures::MissingTextures, bbe6_missing_pdrive::MissingPDrive,
-    bbe8_invalid_material_texture_path::InvalidMaterialTexturePath,
+    bbe8_invalid_material_texture_path::InvalidMaterialTexturePath, bbe9_invalid_p3d::InvalidP3D,
 };
 use super::Module;
 use crate::{
@@ -199,12 +199,13 @@ impl Module for Binarize {
                     }
 
                     // skip OLOD & BMTR files as they are already binarized
-                    let mut buf = [0; 4];
-                    entry
-                        .open_file()
-                        .expect("file should exist if it came from walk_dir")
-                        .read_exact(&mut buf)
-                        .expect("p3ds should be at least 4 bytes");
+                    let (buf, mlod) = match read_p3d(&entry) {
+                        Ok(read) => read,
+                        Err(code) => {
+                            report.push(code);
+                            continue;
+                        }
+                    };
                     if check_signature(buf) {
                         debug!(
                             "skipping binarization of already binarized {}",
@@ -216,12 +217,8 @@ impl Module for Binarize {
                     let mut dependencies = Vec::new();
 
                     // check mlod for textures
-                    if buf == [0x4D, 0x4C, 0x4F, 0x44] {
+                    if let Some(p3d) = mlod {
                         trace!("checking textures & materials for {}", entry.as_str());
-                        let p3d = hemtt_p3d::P3D::read(
-                            &mut entry.open_file().expect("file should exist from walk_dir"),
-                        )
-                        .expect("p3d should be able to be read if it is a valid p3d file");
                         dependencies = p3d.dependencies();
                         let (missing_textures, missing_materials) =
                             p3d.missing(ctx.workspace_path(), &self.search_cache)?;
@@ -537,6 +534,28 @@ struct BinarizeTarget {
 }
 
 /// Check if the file signature indicates that it is already binarized
+/// Read the signature of a file to be binarized, and the model if it is an MLOD P3D
+///
+/// Returns a [`InvalidP3D`] code if the file is too short or the MLOD cannot be read
+fn read_p3d(
+    entry: &hemtt_workspace::WorkspacePath,
+) -> Result<([u8; 4], Option<hemtt_p3d::P3D>), std::sync::Arc<dyn hemtt_workspace::reporting::Code>>
+{
+    let invalid = |reason: String| InvalidP3D::code(entry.as_str().to_string(), reason);
+    let mut buf = [0; 4];
+    entry
+        .open_file()
+        .map_err(|e| invalid(e.to_string()))?
+        .read_exact(&mut buf)
+        .map_err(|_| invalid("file is too short to have a signature".to_string()))?;
+    if buf != *b"MLOD" {
+        return Ok((buf, None));
+    }
+    let p3d = hemtt_p3d::P3D::read(&mut entry.open_file().map_err(|e| invalid(e.to_string()))?)
+        .map_err(|e| invalid(e.to_string()))?;
+    Ok((buf, Some(p3d)))
+}
+
 fn check_signature(buf: [u8; 4]) -> bool {
     // OLOD
     buf == [0x4F, 0x44, 0x4F, 0x4C] ||
@@ -756,4 +775,65 @@ fn hash_filename(filename: &str) -> String {
     let mut hasher = Sha1::new();
     hasher.update(filename.as_bytes());
     format!("{:x}", hasher.finalize())
+}
+
+#[cfg(test)]
+mod tests {
+    use hemtt_workspace::{LayerType, Workspace, WorkspacePath};
+
+    use super::read_p3d;
+
+    fn workspace_with(
+        files: &[(&str, Vec<u8>)],
+    ) -> (hemtt_test::directory::TemporaryDirectory, WorkspacePath) {
+        let directory = hemtt_test::directory::TemporaryDirectory::new();
+        let root = std::env::current_dir().expect("current dir");
+        for (name, content) in files {
+            fs_err::write(root.join(name), content).expect("write file");
+        }
+        let workspace = Workspace::builder()
+            .physical(&root, LayerType::Source)
+            .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
+            .expect("workspace");
+        (directory, workspace)
+    }
+
+    #[test]
+    fn unreadable_p3ds_are_reported() {
+        let mut corrupt = b"MLOD".to_vec();
+        corrupt.extend_from_slice(&[1, 0, 0, 0, 1, 0, 0, 0]);
+        let mut odol = b"ODOL".to_vec();
+        odol.extend_from_slice(&[0; 16]);
+        let (_directory, workspace) = workspace_with(&[
+            ("short.p3d", b"ML".to_vec()),
+            ("corrupt.p3d", corrupt),
+            ("binarized.p3d", odol),
+            (
+                "valid.p3d",
+                fs_err::read(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/../libs/p3d/tests/ace_gunbag.p3d"
+                ))
+                .expect("read test p3d"),
+            ),
+        ]);
+
+        for name in ["short.p3d", "corrupt.p3d"] {
+            let Err(code) = read_p3d(&workspace.join(name).expect("join")) else {
+                panic!("{name} should not be readable");
+            };
+            assert_eq!(code.ident(), "BBE9");
+            assert!(code.message().contains(name));
+        }
+
+        let (signature, model) =
+            read_p3d(&workspace.join("binarized.p3d").expect("join")).expect("binarized");
+        assert_eq!(&signature, b"ODOL");
+        assert!(model.is_none());
+
+        let (signature, model) =
+            read_p3d(&workspace.join("valid.p3d").expect("join")).expect("valid");
+        assert_eq!(&signature, b"MLOD");
+        assert!(model.is_some_and(|p3d| !p3d.lods.is_empty()));
+    }
 }
