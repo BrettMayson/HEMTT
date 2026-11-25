@@ -83,10 +83,10 @@ impl Statements {
             let length = if self.content.is_empty() {
                 0
             } else {
-                offset.len() as u32
+                saturate_u32(offset.len())
             };
             CodePointer::Source {
-                offset: offset.start as u32,
+                offset: saturate_u32(offset.start),
                 length,
             }
         };
@@ -97,27 +97,44 @@ impl Statements {
     }
 }
 
-#[must_use]
 /// Converts a location in the processed file to a [`SourceInfo`].
+///
+/// Offsets and lines past what SQFC can store are saturated, they are only used for debugging.
+///
+/// # Errors
+/// [`CompileError::TooManyFiles`] if the location is in a file past the 255th source
 ///
 /// # Panics
 /// Panics if the location is not mapped.
-pub fn location_to_source(processed: &Processed, location: &Range<usize>) -> SourceInfo {
+pub fn location_to_source(
+    processed: &Processed,
+    location: &Range<usize>,
+) -> CompileResult<SourceInfo> {
     let map = processed.mapping(location.start).expect(
         "location not in mapping, this should not happen as the location is from the processed file",
     ).original();
-    let offset = processed.clean_span(location).start as u32;
-    SourceInfo {
-        offset,
-        file_index: processed
-            .sources()
-            .iter()
-            .position(|(p, _)| p == map.path())
-            .expect("file not in sources")
+    let file_index = processed
+        .sources()
+        .iter()
+        .position(|(p, _)| p == map.path())
+        .expect("file not in sources");
+    Ok(SourceInfo {
+        offset: saturate_u32(processed.clean_span(location).start),
+        file_index: file_index
             .try_into()
-            .expect("file index too large"),
-        file_line: map.start().line() as u16,
-    }
+            .map_err(|_| CompileError::TooManyFiles(processed.sources().len()))?,
+        file_line: saturate_u16(map.start().line()),
+    })
+}
+
+/// Convert to a `u32`, clamping to [`u32::MAX`]
+fn saturate_u32(value: usize) -> u32 {
+    u32::try_from(value).unwrap_or(u32::MAX)
+}
+
+/// Convert to a `u16`, clamping to [`u16::MAX`]
+fn saturate_u16(value: usize) -> u16 {
+    u16::try_from(value).unwrap_or(u16::MAX)
 }
 
 impl Statement {
@@ -134,7 +151,7 @@ impl Statement {
                 let name_index = ctx.add_name(name)?;
                 instructions.push(Instruction::AssignTo(
                     name_index,
-                    location_to_source(processed, location),
+                    location_to_source(processed, location)?,
                 ));
             }
             Self::AssignLocal(ref name, ref expression, ref location) => {
@@ -142,7 +159,7 @@ impl Statement {
                 let name_index = ctx.add_name(name)?;
                 instructions.push(Instruction::AssignToLocal(
                     name_index,
-                    location_to_source(processed, location),
+                    location_to_source(processed, location)?,
                 ));
             }
             Self::Expression(ref expression, _) => {
@@ -206,14 +223,14 @@ impl Expression {
 
                     instructions.push(Instruction::MakeArray(
                         array_len,
-                        location_to_source(processed, location),
+                        location_to_source(processed, location)?,
                     ));
                 }
                 Self::NularCommand(ref command, ref location) => {
                     let name_index = ctx.add_name(command.as_str())?;
                     instructions.push(Instruction::CallNular(
                         name_index,
-                        location_to_source(processed, location),
+                        location_to_source(processed, location)?,
                     ));
                 }
                 Self::UnaryCommand(ref command, ref expr, ref location) => {
@@ -221,7 +238,7 @@ impl Expression {
                     let name_index = ctx.add_name(command.as_str())?;
                     instructions.push(Instruction::CallUnary(
                         name_index,
-                        location_to_source(processed, location),
+                        location_to_source(processed, location)?,
                     ));
                 }
                 Self::BinaryCommand(ref command, ref expr1, ref expr2, ref location) => {
@@ -230,14 +247,14 @@ impl Expression {
                     let name_index = ctx.add_name(command.as_str())?;
                     instructions.push(Instruction::CallBinary(
                         name_index,
-                        location_to_source(processed, location),
+                        location_to_source(processed, location)?,
                     ));
                 }
                 Self::Variable(ref name, ref location) => {
                     let name_index = ctx.add_name(name)?;
                     instructions.push(Instruction::GetVariable(
                         name_index,
-                        location_to_source(processed, location),
+                        location_to_source(processed, location)?,
                     ));
                 }
                 Self::Code(_)
@@ -299,6 +316,8 @@ pub enum CompileError {
     TooManyConstants,
     #[error("too many unique command names, the limit is 65535")]
     TooManyNames,
+    #[error("code from {0} files, the limit is 255")]
+    TooManyFiles(usize),
     #[error("invalid name {0}")]
     InvalidName(String),
 }

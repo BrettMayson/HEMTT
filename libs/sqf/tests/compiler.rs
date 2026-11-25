@@ -62,10 +62,21 @@ fn optimize(folder: &str, file: &str) -> (Vec<u8>, Compiled) {
 }
 
 fn compile_source(name: &str, source: &str) -> Result<Compiled, hemtt_sqf::compiler::CompileError> {
+    compile_files(name, source, &[])
+}
+
+fn compile_files(
+    name: &str,
+    source: &str,
+    extra: &[(String, String)],
+) -> Result<Compiled, hemtt_sqf::compiler::CompileError> {
     let folder =
         std::env::temp_dir().join(format!("hemtt_sqf_compile_{name}_{}", std::process::id()));
     fs_err::create_dir_all(&folder).unwrap();
     fs_err::write(folder.join("test.sqf"), source).unwrap();
+    for (file, content) in extra {
+        fs_err::write(folder.join(file), content).unwrap();
+    }
     let workspace = hemtt_workspace::Workspace::builder()
         .physical(&folder, LayerType::Source)
         .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
@@ -105,4 +116,53 @@ fn constant_array_too_long() {
         compile_source("array", &format!("a = [{items}];")),
         Err(hemtt_sqf::compiler::CompileError::ListTooLong(70_000))
     ));
+}
+
+fn assignment_lines(compiled: &Compiled) -> Vec<u16> {
+    let hemtt_sqf::compiler::serializer::Constant::Code(code) =
+        &compiled.constants_cache[usize::from(compiled.entry_point)]
+    else {
+        panic!("entry point is not code");
+    };
+    code.contents
+        .iter()
+        .filter_map(|instruction| match instruction {
+            hemtt_sqf::compiler::serializer::Instruction::AssignTo(_, info) => Some(info.file_line),
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn line_past_u16_saturates() {
+    let source = format!("early = 1;\n{}late = 2;\n", "\n".repeat(70_000));
+    let compiled = compile_source("lines", &source).unwrap();
+    let lines = assignment_lines(&compiled);
+    assert_eq!(lines.len(), 2);
+    assert!(lines[0] < 2, "early line is kept, got {}", lines[0]);
+    assert_eq!(
+        lines[1],
+        u16::MAX,
+        "late line saturates instead of wrapping"
+    );
+}
+
+#[test]
+fn too_many_files() {
+    let extra = (0..260)
+        .map(|i| (format!("inc_{i}.sqf"), format!("a{i} = {i};\n")))
+        .collect::<Vec<_>>();
+    let source = extra
+        .iter()
+        .map(|(file, _)| format!("#include \"{file}\"\n"))
+        .collect::<String>();
+    let result = compile_files("files", &source, &extra);
+    assert!(
+        matches!(
+            result,
+            Err(hemtt_sqf::compiler::CompileError::TooManyFiles(n)) if n > 255
+        ),
+        "{:?}",
+        result.map(|c| c.file_names.len())
+    );
 }
