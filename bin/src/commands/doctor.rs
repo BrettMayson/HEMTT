@@ -22,7 +22,7 @@ use crate::{Error, report::Report};
 /// - Wine or Proton, on Linux, for binarizing
 /// - The P drive
 /// - The project configuration, when run in a project
-/// - The file patching link for the project, and broken links in the Arma 3 folder
+/// - Broken links in the Arma 3 folder
 ///
 /// Include the output when asking for help.
 pub struct Command {}
@@ -162,7 +162,7 @@ pub fn run() -> Vec<Check> {
             Status::Info,
             "not in a HEMTT project, skipping project checks",
         )),
-        Some(root) => checks.extend(project_checks(&root, arma3.as_deref())),
+        Some(root) => checks.extend(project_checks(&root)),
     }
 
     if let Some(arma3) = &arma3 {
@@ -251,7 +251,7 @@ fn pdrive() -> Check {
     }
 }
 
-fn project_checks(root: &Path, arma3: Option<&Path>) -> Vec<Check> {
+fn project_checks(root: &Path) -> Vec<Check> {
     let path = root.join(".hemtt").join("project.toml");
     if !path.exists() {
         return vec![
@@ -270,76 +270,11 @@ fn project_checks(root: &Path, arma3: Option<&Path>) -> Vec<Check> {
         }
     };
 
-    let mut checks = vec![Check::new(
+    vec![Check::new(
         "Project",
         Status::Ok,
         format!("{} ({})", config.name(), config.prefix()),
-    )];
-
-    let Some(mainprefix) = config.mainprefix() else {
-        checks.push(
-            Check::new("File patching", Status::Warn, "no mainprefix set")
-                .help("`hemtt dev` and `hemtt launch` need `mainprefix` in .hemtt/project.toml\nto create the file patching link."),
-        );
-        return checks;
-    };
-    let Some(arma3) = arma3 else {
-        return checks;
-    };
-    checks.push(file_patching_link(
-        &arma3.join(mainprefix).join(config.prefix()),
-        &root.join(".hemttout").join("dev"),
-    ));
-    checks
-}
-
-fn file_patching_link(link: &Path, expected: &Path) -> Check {
-    if fs_err::symlink_metadata(link).is_err() {
-        return Check::new(
-            "File patching",
-            Status::Info,
-            format!("no link at {}", link.display()),
-        )
-        .help("`hemtt dev` creates it.");
-    }
-    if !link.is_symlink() {
-        return Check::new(
-            "File patching",
-            Status::Warn,
-            format!("{} is not a link", link.display()),
-        )
-        .help("Something else is in the way of the file patching link, move or remove it.");
-    }
-    let target = fs_err::read_link(link).ok();
-    if !link.exists() {
-        return Check::new(
-            "File patching",
-            Status::Error,
-            format!("broken link at {}", link.display()),
-        )
-        .help(format!(
-            "It points to {}, which does not exist.\nRun `hemtt dev` to recreate it.",
-            target.map_or_else(|| "?".to_string(), |t| t.display().to_string())
-        ));
-    }
-    // canonicalize follows the link, which also handles relative targets
-    let same = fs_err::canonicalize(link)
-        .ok()
-        .zip(fs_err::canonicalize(expected).ok())
-        .is_some_and(|(a, b)| a == b);
-    if same {
-        Check::new("File patching", Status::Ok, link.display().to_string())
-    } else {
-        Check::new(
-            "File patching",
-            Status::Warn,
-            format!("{} points to another folder", link.display()),
-        )
-        .help(format!(
-            "It points to {}, not this project.\nRun `hemtt dev` here to replace it.",
-            target.map_or_else(|| "?".to_string(), |t| t.display().to_string())
-        ))
-    }
+    )]
 }
 
 /// Links left behind by a project that was moved or deleted
@@ -388,21 +323,14 @@ mod tests {
         let _ = fs_err::remove_dir_all(&dir);
         let arma = dir.join("arma");
         let project = dir.join("project");
-        let other = dir.join("other");
         fs_err::create_dir_all(arma.join("z")).expect("create arma");
         fs_err::create_dir_all(&project).expect("create project");
-        fs_err::create_dir_all(&other).expect("create other");
 
         let link = arma.join("z").join("test");
-        assert_eq!(file_patching_link(&link, &project).status, Status::Info);
-
         std::os::unix::fs::symlink(&project, &link).expect("link");
-        assert_eq!(file_patching_link(&link, &project).status, Status::Ok);
-        assert_eq!(file_patching_link(&link, &other).status, Status::Warn);
         assert_eq!(find_broken_links(&arma, 3), Vec::<PathBuf>::new());
 
         fs_err::remove_dir_all(&project).expect("remove project");
-        assert_eq!(file_patching_link(&link, &project).status, Status::Error);
         assert_eq!(find_broken_links(&arma, 3), vec![link.clone()]);
 
         fs_err::create_dir_all(arma.join("!Workshop")).expect("create workshop");
