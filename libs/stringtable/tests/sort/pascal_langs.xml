@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project name="HEMTT">
+    <Package name="Test">
+        <Key ID="test1">
+            <English>1E</English>
+            <SerboCroatian>1SCro</SerboCroatian>
+            <Chinese>1C</Chinese>
+            <ChineseSimp>1CSimp</ChineseSimp>
+        </Key>
+        <Key ID="test2">
+            <english>2E</english>
+            <Chinese>2C</Chinese>
+            <ChineseSimp>2CSimp</ChineseSimp>
+            <SerboCroatian>2SCro</SerboCroatian>
+        </Key>
+    </Package>
+</Project>

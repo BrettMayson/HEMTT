@@ -20,7 +20,7 @@ struct Language {
 }
 
 macro_rules! define_key {
-    ($( $field:ident => ($lower:literal, $upper:literal, $display:literal, $setter:ident) ),* $(,)?) => {
+    ($( $field:ident => ($lower:literal, $upper:literal, $pascalAlt:literal, $display:literal, $setter:ident) ),* $(,)?) => {
         #[derive(Clone, Debug, Default, Deserialize, Serialize)]
         #[serde(rename_all = "PascalCase")]
         pub struct Key {
@@ -30,7 +30,7 @@ macro_rules! define_key {
             allow_empty: Option<bool>,
             $(
                 #[serde(skip_serializing_if = "Option::is_none")]
-                #[serde(alias = $lower, alias = $upper)]
+                #[serde(alias = $lower, alias = $upper, alias = $pascalAlt)]
                 $field: Option<Language>,
             )*
             #[serde(flatten, skip_serializing)]
@@ -87,37 +87,38 @@ macro_rules! define_key {
     };
 }
 
+// $field:ident => ($lower:literal, $upper:literal, $pascalAlt:literal, $display:literal, $setter:ident)
 macro_rules! ALL_LANGUAGES {
     ($callback:ident) => {
         $callback! {
-            original => ("original", "ORIGINAL", "Original", english), // set maps to english
-            english => ("english", "ENGLISH", "English", english),
-            czech => ("czech", "CZECH", "Czech", czech),
-            french => ("french", "FRENCH", "French", french),
-            spanish => ("spanish", "SPANISH", "Spanish", spanish),
-            italian => ("italian", "ITALIAN", "Italian", italian),
-            polish => ("polish", "POLISH", "Polish", polish),
-            portuguese => ("portuguese", "PORTUGUESE", "Portuguese", portuguese),
-            russian => ("russian", "RUSSIAN", "Russian", russian),
-            german => ("german", "GERMAN", "German", german),
-            korean => ("korean", "KOREAN", "Korean", korean),
-            japanese => ("japanese", "JAPANESE", "Japanese", japanese),
-            chinese => ("chinese", "CHINESE", "Chinese", chinese),
-            chinesesimp => ("chinesesimp", "CHINESESIMP", "ChineseSimp", chinesesimp),
-            turkish => ("turkish", "TURKISH", "Turkish", turkish),
-            swedish => ("swedish", "SWEDISH", "Swedish", swedish),
-            slovak => ("slovak", "SLOVAK", "Slovak", slovak),
-            serbocroatian => ("serbocroatian", "SERBOCROATIAN", "Serbocroatian", serbocroatian),
-            norwegian => ("norwegian", "NORWEGIAN", "Norwegian", norwegian),
-            icelandic => ("icelandic", "ICELANDIC", "Icelandic", icelandic),
-            hungarian => ("hungarian", "HUNGARIAN", "Hungarian", hungarian),
-            greek => ("greek", "GREEK", "Greek", greek),
-            finnish => ("finnish", "FINNISH", "Finnish", finnish),
-            dutch => ("dutch", "DUTCH", "Dutch", dutch),
-            ukrainian => ("ukrainian", "UKRAINIAN", "Ukrainian", ukrainian),
-            danish => ("danish", "DANISH", "Danish", danish),
-            bulgarian => ("bulgarian", "BULGARIAN", "Bulgarian", bulgarian),
-            latin => ("latin", "LATIN", "Latin", latin),
+            original => ("original", "ORIGINAL", "Original", "Original", english), // set maps to english
+            english => ("english", "ENGLISH", "English","English", english),
+            czech => ("czech", "CZECH", "Czech", "Czech", czech),
+            french => ("french", "FRENCH", "French", "French", french),
+            spanish => ("spanish", "SPANISH", "Spanish", "Spanish", spanish),
+            italian => ("italian", "ITALIAN", "Italian", "Italian", italian),
+            polish => ("polish", "POLISH", "Polish", "Polish", polish),
+            portuguese => ("portuguese", "PORTUGUESE", "Portuguese", "Portuguese", portuguese),
+            russian => ("russian", "RUSSIAN", "Russian", "Russian", russian),
+            german => ("german", "GERMAN", "German", "German", german),
+            korean => ("korean", "KOREAN", "Korean", "Korean", korean),
+            japanese => ("japanese", "JAPANESE", "Japanese", "Japanese", japanese),
+            chinese => ("chinese", "CHINESE", "Chinese", "Chinese", chinese),
+            chinesesimp => ("chinesesimp", "CHINESESIMP", "ChineseSimp","ChineseSimp", chinesesimp),
+            turkish => ("turkish", "TURKISH", "Turkish", "Turkish", turkish),
+            swedish => ("swedish", "SWEDISH", "Swedish", "Swedish", swedish),
+            slovak => ("slovak", "SLOVAK", "Slovak", "Slovak", slovak),
+            serbocroatian => ("serbocroatian", "SERBOCROATIAN", "SerboCroatian", "Serbocroatian", serbocroatian),
+            norwegian => ("norwegian", "NORWEGIAN", "Norwegian", "Norwegian", norwegian),
+            icelandic => ("icelandic", "ICELANDIC", "Icelandic", "Icelandic", icelandic),
+            hungarian => ("hungarian", "HUNGARIAN", "Hungarian", "Hungarian", hungarian),
+            greek => ("greek", "GREEK", "Greek", "Greek", greek),
+            finnish => ("finnish", "FINNISH", "Finnish", "Finnish", finnish),
+            dutch => ("dutch", "DUTCH", "Dutch", "Dutch", dutch),
+            ukrainian => ("ukrainian", "UKRAINIAN", "Ukrainian", "Ukrainian", ukrainian),
+            danish => ("danish", "DANISH", "Danish", "Danish", danish),
+            bulgarian => ("bulgarian", "BULGARIAN", "Bulgarian", "Bulgarian", bulgarian),
+            latin => ("latin", "LATIN", "Latin", "Latin", latin),
         }
     };
 }
