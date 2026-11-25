@@ -114,10 +114,7 @@ impl LaunchOptions {
     /// Binary to launch, with `.exe`
     /// Defaults to `arma3_x64.exe`
     pub fn executable(&self) -> String {
-        let executable = &self
-            .executable
-            .as_ref()
-            .map_or_else(|| "arma3_x64", |e| e.as_str());
+        let executable = &self.executable.as_ref().map_or("arma3_x64", |e| e.as_str());
         if std::path::Path::new(executable)
             .extension()
             .is_some_and(|ext| ext.eq_ignore_ascii_case("exe"))

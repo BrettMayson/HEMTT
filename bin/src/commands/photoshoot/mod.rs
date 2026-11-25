@@ -204,8 +204,8 @@ impl Photoshoot {
 
     fn next_message(&self) -> toarma::Message {
         let mut pending = self.pending.lock().expect("pending lock");
-        pending.pop().map_or_else(
-            || toarma::Message::Photoshoot(toarma::Photoshoot::Done),
+        pending.pop().map_or(
+            toarma::Message::Photoshoot(toarma::Photoshoot::Done),
             toarma::Message::Photoshoot,
         )
     }

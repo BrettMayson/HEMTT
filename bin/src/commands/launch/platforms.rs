@@ -33,10 +33,7 @@ pub fn linux(args: &[String]) -> Result<Command, Error> {
         .arg("list")
         .arg("--app")
         .output()
-        .map_or_else(
-            |_| false,
-            |o| String::from_utf8_lossy(&o.stdout).contains("com.valvesoftware.Steam"),
-        );
+        .is_ok_and(|o| String::from_utf8_lossy(&o.stdout).contains("com.valvesoftware.Steam"));
     let cmd = if flatpak {
         warn!(
             "A flatpak override will be created to grant Steam access to the .hemttout directory"

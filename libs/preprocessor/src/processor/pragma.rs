@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, str::FromStr, sync::Arc};
 
 use hemtt_workspace::reporting::Token;
 
@@ -60,7 +60,7 @@ impl Pragma {
 
     pub fn suppress(&mut self, token: &Arc<Token>, scope: Scope) -> Result<(), Error> {
         let code = token.symbol().to_string();
-        let Ok(suppress) = Suppress::try_from(code.as_str()) else {
+        let Ok(suppress) = code.as_str().parse::<Suppress>() else {
             return Err(PragmaInvalidSuppress::code((**token).clone()));
         };
         if let Some(existing) = self.suppress.get(&suppress)
@@ -78,7 +78,7 @@ impl Pragma {
 
     pub fn flag(&mut self, token: &Arc<Token>, scope: Scope) -> Result<(), Error> {
         let code = token.symbol().to_string();
-        let Ok(flag) = Flag::try_from(code.as_str()) else {
+        let Ok(flag) = code.as_str().parse::<Flag>() else {
             return Err(PragmaInvalidFlag::code((**token).clone()));
         };
         if let Some(existing) = self.flags.get(&flag)
@@ -98,10 +98,10 @@ pub enum Scope {
     Config,
 }
 
-impl TryFrom<&str> for Scope {
-    type Error = ();
+impl FromStr for Scope {
+    type Err = ();
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
         match value {
             "line" => Ok(Self::Line),
             "file" => Ok(Self::File),
@@ -128,10 +128,10 @@ impl Flag {
     }
 }
 
-impl TryFrom<&str> for Flag {
-    type Error = ();
+impl FromStr for Flag {
+    type Err = ();
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
         match value {
             "pw3_ignore_format" => Ok(Self::Pw3IgnoreFormat),
             "pe23_ignore_has_include" => Ok(Self::Pe23IgnoreIfHasInclude),
@@ -152,10 +152,10 @@ impl Suppress {
     }
 }
 
-impl TryFrom<&str> for Suppress {
-    type Error = ();
+impl FromStr for Suppress {
+    type Err = ();
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
         match value {
             "pw3_padded_arg" => Ok(Self::Pw3PaddedArg),
             _ => Err(()),

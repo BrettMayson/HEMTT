@@ -81,7 +81,7 @@ exclude = ["test"]
 "#;
         let file: FilesSectionFile = toml::from_str(toml).expect("failed to deserialize");
         let config = FilesConfig::from(file);
-        assert!(config.include().contains(&"/test".to_string()));
+        assert!(config.include().iter().any(|i: &String| i == "/test"));
         assert_eq!(config.exclude(), &["test"]);
     }
 
@@ -90,7 +90,7 @@ exclude = ["test"]
         let toml = "";
         let file: FilesSectionFile = toml::from_str(toml).expect("failed to deserialize");
         let config = FilesConfig::from(file);
-        assert!(config.include().contains(&"/mod.cpp".to_string()));
+        assert!(config.include().iter().any(|i: &String| i == "/mod.cpp"));
         assert_eq!(config.exclude(), &[] as &[String; 0]);
     }
 }
