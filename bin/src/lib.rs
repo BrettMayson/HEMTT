@@ -21,6 +21,22 @@ pub const TEXT_EXTENSIONS: [&str; 10] = [
     "sqf", "hpp", "cpp", "rvmat", "ext", "sqm", "fsm", "bikb", "bisurf", "xml",
 ];
 
+/// Files that are checked for, and can be fixed of, a UTF-8 BOM
+///
+/// The BOM check and `hemtt utils bom` must use the same list, otherwise the
+/// check reports files that the util will never fix
+pub const BOM_EXTENSIONS: [&str; 13] = [
+    "sqf", "hpp", "cpp", "rvmat", "ext", "sqm", "fsm", "bikb", "bisurf", "xml", "inc", "h", "lip",
+];
+
+#[must_use]
+/// Should the file at `path` be checked for a UTF-8 BOM
+pub fn should_check_bom(path: &std::path::Path) -> bool {
+    path.extension()
+        .and_then(std::ffi::OsStr::to_str)
+        .is_some_and(|ext| BOM_EXTENSIONS.contains(&ext.to_lowercase().as_str()))
+}
+
 #[derive(clap::Parser)]
 #[command(arg_required_else_help = true)]
 #[command(version = env!("HEMTT_VERSION"), about, long_about = None)]

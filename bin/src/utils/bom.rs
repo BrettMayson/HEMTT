@@ -1,6 +1,9 @@
-use std::io::{Read, Seek, Write};
+use std::{
+    io::{Read, Seek, Write},
+    path::Path,
+};
 
-use crate::{Error, TEXT_EXTENSIONS};
+use crate::{Error, should_check_bom};
 
 #[derive(clap::Parser)]
 /// Convert UTF-8 with BOM to UTF-8 without BOM
@@ -12,7 +15,7 @@ use crate::{Error, TEXT_EXTENSIONS};
 ///
 /// This utility:
 /// - Scans your project for files with BOM markers
-/// - Removes them from supported file types (sqf, hpp, cpp, etc.)
+/// - Removes them from supported file types (sqf, hpp, cpp, inc, lip, etc.)
 /// - Reports how many files were modified
 ///
 /// BOM markers are often added by Windows text editors. Run this utility if you
@@ -27,19 +30,26 @@ pub struct Command {}
 /// # Panics
 /// If the args are not present from clap
 pub fn execute(_: &Command) -> Result<(), Error> {
+    let count = remove_bom(Path::new("."))?;
+    info!("Removed BOM from {} files", count);
+    Ok(())
+}
+
+/// Remove the UTF-8 BOM from all supported files under `root`
+///
+/// Returns the number of files that were modified
+///
+/// # Errors
+/// [`Error::Io`] if a file cannot be read or written
+pub fn remove_bom(root: &Path) -> Result<usize, Error> {
     let mut count = 0;
-    for entry in walkdir::WalkDir::new(".") {
+    for entry in walkdir::WalkDir::new(root) {
         let entry = entry?;
         let path = entry.path();
         if !path.is_file() {
             continue;
         }
-        let ext = path
-            .extension()
-            .unwrap_or_default()
-            .to_str()
-            .unwrap_or_default();
-        if !TEXT_EXTENSIONS.contains(&ext) {
+        if !should_check_bom(path) {
             debug!("Skipping {}", path.display());
             continue;
         }
@@ -64,8 +74,5 @@ pub fn execute(_: &Command) -> Result<(), Error> {
             count += 1;
         }
     }
-
-    info!("Removed BOM from {} files", count);
-
-    Ok(())
+    Ok(count)
 }
