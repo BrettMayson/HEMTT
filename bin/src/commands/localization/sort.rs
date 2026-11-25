@@ -64,7 +64,10 @@ pub fn sort(cmd: &Command) -> Result<Report, Error> {
                         project
                             .check_unknown_languages()
                             .map_err(|(_, unknown_info)| {
-                                Error::StringtableUnknownLanguage(unknown_info)
+                                Error::StringtableUnknownLanguage(format!(
+                                    "{}: {unknown_info}",
+                                    path.display()
+                                ))
                             })?;
                         if !cmd.only_lang {
                             project.sort();
