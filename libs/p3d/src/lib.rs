@@ -42,6 +42,9 @@ impl P3D {
 
         let mut buffer = [0; 4];
         reader.read_exact(&mut buffer)?;
+        if &buffer == b"ODOL" {
+            return Err(Error::BinarizedP3D);
+        }
         if &buffer != b"MLOD" {
             return Err(Error::UnsupportedP3DType(
                 String::from_utf8_lossy(&buffer).to_string(),

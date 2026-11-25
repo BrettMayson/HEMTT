@@ -5,6 +5,11 @@ pub enum Error {
     /// [`std::io::Error`]
     Io(#[from] std::io::Error),
 
+    #[error(
+        "Binarized (ODOL) P3D files are not supported, only unbinarized (MLOD) P3D files can be read"
+    )]
+    /// The P3D is binarized (ODOL)
+    BinarizedP3D,
     #[error("Unsupported p3d type: {0}")]
     /// Unsupported p3d type
     UnsupportedP3DType(String),
