@@ -5,6 +5,10 @@ use serde::{Deserialize, Serialize};
 /// Configuration for the HEMTT preprocessor
 pub struct PreprocessorOptions {
     runtime_macros: bool,
+    /// Define `__A3_DEBUG__` as `1`, as the game does when started with `-debug`
+    ///
+    /// Not configurable, used to build the debug code block of SQFC
+    debug: bool,
 }
 
 impl PreprocessorOptions {
@@ -17,6 +21,19 @@ impl PreprocessorOptions {
     #[must_use]
     pub const fn with_runtime_macros(mut self, value: bool) -> Self {
         self.runtime_macros = value;
+        self
+    }
+
+    #[must_use]
+    /// Is `__A3_DEBUG__` defined as `1`, as the game does when started with `-debug`
+    pub const fn debug(&self) -> bool {
+        self.debug
+    }
+
+    #[must_use]
+    /// Define `__A3_DEBUG__` as `1`, as the game does when started with `-debug`
+    pub const fn with_debug(mut self, value: bool) -> Self {
+        self.debug = value;
         self
     }
 }
@@ -32,6 +49,7 @@ impl From<PreprocessorOptionsFile> for PreprocessorOptions {
     fn from(file: PreprocessorOptionsFile) -> Self {
         Self {
             runtime_macros: file.runtime_macros.unwrap_or(false),
+            debug: false,
         }
     }
 }

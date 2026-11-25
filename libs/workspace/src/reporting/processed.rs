@@ -44,6 +44,9 @@ pub struct Processed {
     /// The preprocessor was able to check the file, but it should not be rapified
     no_rapify: bool,
 
+    /// `__A3_DEBUG__` was used, so the output may differ when the game is started with `-debug`
+    uses_debug_macro: bool,
+
     /// Macro expansion metadata
     pub expansions: ExpansionMetadataStore,
 }
@@ -338,6 +341,7 @@ impl Processed {
             usage,
             warnings,
             no_rapify,
+            uses_debug_macro: false,
             expansions: ExpansionMetadataStore::new(),
         };
 
@@ -442,6 +446,18 @@ impl Processed {
     /// Returns whether the file should not be rapified
     pub const fn no_rapify(&self) -> bool {
         self.no_rapify
+    }
+
+    #[must_use]
+    /// Returns whether `__A3_DEBUG__` was used, so the output may differ
+    /// when the game is started with `-debug`
+    pub const fn uses_debug_macro(&self) -> bool {
+        self.uses_debug_macro
+    }
+
+    /// Set whether `__A3_DEBUG__` was used, by the preprocessor
+    pub const fn set_uses_debug_macro(&mut self, value: bool) {
+        self.uses_debug_macro = value;
     }
 
     #[must_use]

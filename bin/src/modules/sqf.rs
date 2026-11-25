@@ -127,9 +127,20 @@ impl Module for SQFCompiler {
                             entry
                         );
                     } else {
+                        // The variant the game uses when started with `-debug`
+                        let debug = if processed.uses_debug_macro() {
+                            debug_variant(ctx, entry, &database, &processed, &mut report)?
+                                .map(|(sqf, processed)| (sqf.optimize(), processed))
+                        } else {
+                            None
+                        };
                         let mut buffer = Vec::new();
                         match (
-                            sqf.optimize().compile_to_writer(&processed, &mut buffer),
+                            sqf.optimize().compile_with_debug_to_writer(
+                                &processed,
+                                debug.as_ref().map(|(sqf, processed)| (sqf, processed)),
+                                &mut buffer,
+                            ),
                             mode,
                         ) {
                             (Ok(()), SqfcMode::Compile) => {
@@ -259,6 +270,49 @@ impl RequiresFutureVersion {
             required_version,
             required_by,
             wiki_version,
+        }
+    }
+}
+
+/// Preprocess and parse `entry` as the game would when started with `-debug`
+///
+/// Returns `None` when `__A3_DEBUG__` does not change the output,
+/// or when the debug variant has errors, which are added to `report`
+fn debug_variant(
+    ctx: &Context,
+    entry: &hemtt_workspace::WorkspacePath,
+    database: &Database,
+    processed: &hemtt_workspace::reporting::Processed,
+    report: &mut Report,
+) -> Result<Option<(hemtt_sqf::Statements, hemtt_workspace::reporting::Processed)>, Error> {
+    let debug_processed = match hemtt_preprocessor::Processor::run_with_sources(
+        entry,
+        &ctx.config().preprocessor().clone().with_debug(true),
+        ctx.sources(),
+    )
+    .map_err(|(_, e)| e)
+    {
+        Ok(processed) => processed,
+        Err(hemtt_preprocessor::Error::Code(code)) => {
+            report.push(code);
+            return Ok(None);
+        }
+        Err(e) => return Err(e.into()),
+    };
+    if debug_processed.as_str() == processed.as_str() {
+        trace!("`__A3_DEBUG__` does not change {}", entry);
+        return Ok(None);
+    }
+    match hemtt_sqf::parser::run(database, &debug_processed) {
+        Ok(statements) => Ok(Some((statements, debug_processed))),
+        Err(
+            hemtt_sqf::parser::ParserError::ParsingError(errors)
+            | hemtt_sqf::parser::ParserError::LexingError(errors),
+        ) => {
+            for error in errors {
+                report.push(error);
+            }
+            Ok(None)
         }
     }
 }

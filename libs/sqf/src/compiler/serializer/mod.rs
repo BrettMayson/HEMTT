@@ -421,6 +421,9 @@ impl BlockType {
 pub struct Compiled {
     /// Also known as `codeIndex`, the index to a code constant that should be run when this script is called.
     pub entry_point: u16,
+    /// The index to a code constant that should be run instead of [`Self::entry_point`]
+    /// when the game is started with `-debug`, if the script uses `__A3_DEBUG__`.
+    pub debug_entry_point: Option<u16>,
     /// Whether or not the constants cache should be compressed.
     pub constants_cache_compression: bool,
     /// Also known as `constants`, a list of hard-coded constant values used in the script.
@@ -456,6 +459,15 @@ impl Compiled {
             Err(SerializeError::InvalidNameIndex(index))
         } else {
             Ok(())
+        }
+    }
+
+    #[must_use]
+    /// The code run when the game is started with `-debug`, if the script has one
+    pub fn get_debug_entry_point(&self) -> Option<&Instructions> {
+        match self.get_constant(self.debug_entry_point?)? {
+            Constant::Code(entry_point) => Some(entry_point),
+            _ => None,
         }
     }
 
@@ -522,6 +534,13 @@ impl Compiled {
         writer.write_u8(BlockType::Code as u8)?;
         writer.write_u64::<LE>(u64::from(self.entry_point))?;
 
+        // Code used when the game is started with `-debug`
+        if let Some(debug_entry_point) = self.debug_entry_point {
+            self.assert_has_constant(debug_entry_point)?;
+            writer.write_u8(BlockType::CodeDebug as u8)?;
+            writer.write_u64::<LE>(u64::from(debug_entry_point))?;
+        }
+
         Ok(())
     }
 
@@ -571,6 +590,7 @@ impl Compiled {
         let mut constants_cache = None;
         let mut file_names = None;
         let mut entry_point = None;
+        let mut debug_entry_point = None;
 
         while constants_cache.is_none()
             || file_names.is_none()
@@ -597,6 +617,9 @@ impl Compiled {
                 BlockType::Code if entry_point.is_none() => {
                     entry_point = Some(reader.read_u64::<LE>()? as u16);
                 }
+                BlockType::CodeDebug if debug_entry_point.is_none() => {
+                    debug_entry_point = Some(reader.read_u64::<LE>()? as u16);
+                }
                 BlockType::NameCache if names_cache.is_none() => {
                     let buffer = decompress_buffer(reader, name_cache_buffer_len)?;
                     names_cache = Some(Self::deserialize_name_cache(&mut buffer.as_slice())?);
@@ -605,8 +628,26 @@ impl Compiled {
             }
         }
 
+        // The debug code block is optional, and written after the code block
+        if debug_entry_point.is_none() {
+            match reader.read_u8() {
+                Ok(tag) if tag == BlockType::CodeDebug as u8 => {
+                    debug_entry_point = Some(reader.read_u64::<LE>()? as u16);
+                }
+                Ok(tag) => {
+                    return Err(DeserializeError::UnexpectedBlock(
+                        BlockType::from_byte(tag)
+                            .map_err(DeserializeError::IncorrectBlockTypeTag)?,
+                    ));
+                }
+                Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => {}
+                Err(e) => return Err(e.into()),
+            }
+        }
+
         Ok(Self {
             entry_point: entry_point.expect("entry point not found"),
+            debug_entry_point,
             constants_cache_compression: true,
             constants_cache: constants_cache.expect("constants cache not found"),
             names_cache: names_cache.expect("names cache not found"),

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{cell::Cell, collections::HashMap, sync::Arc};
 
 use hemtt_workspace::{
     WorkspacePath,
@@ -25,7 +25,16 @@ pub struct Defines {
 
     /// Allow built-in runtime macros
     runtime: bool,
+
+    /// `__A3_DEBUG__` is defined as `1`, as the game does when started with `-debug`
+    debug: bool,
+
+    /// `__A3_DEBUG__` was looked up
+    debug_used: Cell<bool>,
 }
+
+/// Defined by the game, as `1`, when started with `-debug`
+pub const DEBUG_MACRO: &str = "__A3_DEBUG__";
 
 /// Built-in macros that HEMTT supports, constants
 const BUILTIN_CONST: [(&str, u8); 2] = [("__ARMA__", 1), ("__ARMA3__", 1)];
@@ -81,6 +90,15 @@ impl Defines {
         self.runtime = enable;
     }
 
+    pub const fn option_debug(&mut self, enable: bool) {
+        self.debug = enable;
+    }
+
+    /// Was `__A3_DEBUG__` used, so the output may differ with `-debug`
+    pub const fn debug_used(&self) -> bool {
+        self.debug_used.get()
+    }
+
     pub fn is_builtin(key: &str) -> bool {
         BUILTIN_GEN.contains(&key)
             || BUILTIN_SPECIAL.contains(&key)
@@ -101,6 +119,12 @@ impl Defines {
         if BUILTIN_GEN.contains(&key) {
             return true;
         }
+        if key == DEBUG_MACRO {
+            self.debug_used.set(true);
+            if self.debug {
+                return true;
+            }
+        }
         if let Some(last) = self.stack.last() {
             if *last.0 == *key {
                 return false;
@@ -118,6 +142,22 @@ impl Defines {
         site: Option<&Position>,
     ) -> Option<(Arc<Token>, Definition, DefineSource)> {
         let ident = key.to_string();
+        if ident == DEBUG_MACRO {
+            self.debug_used.set(true);
+            if self.debug {
+                return Some((
+                    Arc::new(Token::new(
+                        Symbol::Word(key.to_string()),
+                        key.position().clone(),
+                    )),
+                    Definition::Value(Arc::new(vec![Arc::new(Token::new(
+                        Symbol::Digit(1),
+                        key.position().clone(),
+                    ))])),
+                    DefineSource::Generated,
+                ));
+            }
+        }
         if let Some(site) = site {
             if self.runtime
                 && let Some((_, value)) = BUILTIN_RUNTIME.iter().find(|(k, _)| *k == ident)
