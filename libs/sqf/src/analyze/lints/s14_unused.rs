@@ -19,7 +19,7 @@ impl Lint<LintData> for LintS14Unused {
         "unused"
     }
     fn sort(&self) -> u32 {
-        120
+        140
     }
     fn description(&self) -> &'static str {
         "Unused Var"

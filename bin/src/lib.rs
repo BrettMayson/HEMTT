@@ -75,6 +75,8 @@ enum Commands {
     New(commands::new::Command),
     Check(commands::check::Command),
     Dev(commands::dev::Command),
+    Doctor(commands::doctor::Command),
+    Explain(commands::explain::Command),
     Launch(commands::launch::Command),
     License(commands::license::Command),
     Link(commands::link::Command),
@@ -131,6 +133,8 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
                 | Commands::License(_)
                 | Commands::Manage(_)
                 | Commands::Value(_)
+                | Commands::Doctor(_)
+                | Commands::Explain(_)
         )
     );
 
@@ -143,7 +147,11 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         logging::init(cli.global.verbosity, !is_simple_command)?;
     }
 
-    let update_thread = if debug || std::env::var("HEMTT_FROM_LAUNCHER").is_ok() {
+    // doctor reports the update status itself
+    let update_thread = if debug
+        || std::env::var("HEMTT_FROM_LAUNCHER").is_ok()
+        || matches!(cli.command, Some(Commands::Doctor(_)))
+    {
         std::thread::spawn(|| None)
     } else {
         std::thread::spawn(check_for_update)
@@ -171,6 +179,8 @@ pub fn execute(cli: &Cli) -> Result<(), Error> {
         Commands::New(cmd) => commands::new::execute(cmd, debug),
         Commands::Check(cmd) => commands::check::execute(cmd),
         Commands::Dev(cmd) => commands::dev::execute(cmd, &[], false).map(|(r, _)| r),
+        Commands::Doctor(cmd) => commands::doctor::execute(cmd),
+        Commands::Explain(cmd) => commands::explain::execute(cmd),
         Commands::Launch(cmd) => commands::launch::execute(cmd),
         Commands::License(cmd) => commands::license::execute(cmd),
         Commands::Link(cmd) => commands::link::execute(cmd),

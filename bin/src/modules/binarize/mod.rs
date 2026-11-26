@@ -66,24 +66,7 @@ impl Module for Binarize {
             return Ok(report);
         }
 
-        let folder = if let Ok(path) = std::env::var("HEMTT_BINARIZE_PATH") {
-            trace!("Using Binarize path from HEMTT_BINARIZE_PATH");
-            PathBuf::from(path)
-        } else {
-            trace!("Using Binarize path from registry");
-            let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
-            let Ok(key) = hkcu.open_subkey("Software\\Bohemia Interactive\\binarize") else {
-                report.push(ToolsNotFound::code(Severity::Warning));
-                return Ok(report);
-            };
-            let Ok(path) = key.get_value::<String, _>("path") else {
-                report.push(ToolsNotFound::code(Severity::Warning));
-                return Ok(report);
-            };
-            PathBuf::from(path)
-        };
-        let path = folder.join("binarize_x64.exe");
-        if path.exists() {
+        if let Some(path) = locate() {
             self.command = Some(path.display().to_string());
         } else {
             report.push(ToolsNotFound::code(Severity::Warning));
@@ -94,8 +77,6 @@ impl Module for Binarize {
 
     #[cfg(not(windows))]
     fn init(&mut self, ctx: &Context) -> Result<Report, Error> {
-        use hemtt_common::steam;
-
         let mut report = Report::new();
 
         if self.check_only {
@@ -107,24 +88,7 @@ impl Module for Binarize {
             return Ok(report);
         }
 
-        let tools_path = {
-            let default = dirs::home_dir()
-                .expect("home directory exists")
-                .join(".local/share/arma3tools");
-            if let Ok(path) = std::env::var("HEMTT_BI_TOOLS") {
-                PathBuf::from(path)
-            } else if !default.exists() {
-                let Some(tools_dir) = steam::find_app(233_800) else {
-                    report.push(ToolsNotFound::code(Severity::Warning));
-                    return Ok(report);
-                };
-                tools_dir
-            } else {
-                default
-            }
-        };
-        let path = tools_path.join("Binarize").join("binarize_x64.exe");
-        if path.exists() {
+        if let Some(path) = locate() {
             self.command = Some(path.display().to_string());
             let compatibility = CompatibiltyTool::determine();
             if let Some(tool) = compatibility {
@@ -723,6 +687,46 @@ impl Artifact {
     }
 }
 
+#[cfg(windows)]
+#[must_use]
+/// Find `binarize_x64.exe`, from `HEMTT_BINARIZE_PATH` or the registry
+pub fn locate() -> Option<PathBuf> {
+    let folder = if let Ok(path) = std::env::var("HEMTT_BINARIZE_PATH") {
+        trace!("Using Binarize path from HEMTT_BINARIZE_PATH");
+        PathBuf::from(path)
+    } else {
+        trace!("Using Binarize path from registry");
+        let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
+        let key = hkcu
+            .open_subkey("Software\\Bohemia Interactive\\binarize")
+            .ok()?;
+        PathBuf::from(key.get_value::<String, _>("path").ok()?)
+    };
+    let path = folder.join("binarize_x64.exe");
+    path.exists().then_some(path)
+}
+
+#[cfg(not(windows))]
+#[must_use]
+/// Find `binarize_x64.exe`, from `HEMTT_BI_TOOLS`, `~/.local/share/arma3tools` or Steam
+pub fn locate() -> Option<PathBuf> {
+    if cfg!(target_os = "macos") {
+        return None;
+    }
+    let tools_path = if let Ok(path) = std::env::var("HEMTT_BI_TOOLS") {
+        PathBuf::from(path)
+    } else {
+        let default = dirs::home_dir()?.join(".local/share/arma3tools");
+        if default.exists() {
+            default
+        } else {
+            hemtt_common::steam::find_app(233_800)?
+        }
+    };
+    let path = tools_path.join("Binarize").join("binarize_x64.exe");
+    path.exists().then_some(path)
+}
+
 #[derive(Default)]
 #[allow(dead_code)]
 pub enum CompatibiltyTool {
@@ -734,6 +738,7 @@ pub enum CompatibiltyTool {
 
 impl CompatibiltyTool {
     #[allow(dead_code)]
+    #[must_use]
     pub fn determine() -> Option<Self> {
         use dirs::home_dir;
         if cfg!(windows) {
@@ -749,11 +754,10 @@ impl CompatibiltyTool {
         if cmd.output().is_ok() {
             return Some(Self::Wine);
         }
-        if home_dir()
-            .expect("home directory exists")
-            .join(".local/share/Steam/steamapps/common/SteamLinuxRuntime_sniper/run")
-            .exists()
-        {
+        if home_dir().is_some_and(|home| {
+            home.join(".local/share/Steam/steamapps/common/SteamLinuxRuntime_sniper/run")
+                .exists()
+        }) {
             return Some(Self::Proton);
         }
         None

@@ -3,6 +3,8 @@ pub mod build;
 pub mod check;
 pub mod clean;
 pub mod dev;
+pub mod doctor;
+pub mod explain;
 pub mod keys;
 pub mod launch;
 pub mod license;
