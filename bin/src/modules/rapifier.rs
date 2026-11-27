@@ -1,5 +1,9 @@
-use std::{collections::HashMap, sync::RwLock};
+use std::{
+    collections::HashMap,
+    sync::{RwLock, atomic::AtomicUsize},
+};
 
+use hemtt_common::config::AutoAdd;
 use hemtt_config::{
     Config,
     analyze::{analyze_toml, lint_all, lint_check},
@@ -62,11 +66,14 @@ impl Module for Rapifier {
             return Ok(report);
         }
 
+        let auto_added_units = AtomicUsize::new(0);
+        let auto_added_weapons = AtomicUsize::new(0);
+
         let progress = progress_bar(entries.len() as u64).with_message("Rapifying Configs");
         let reports = entries
             .par_iter()
             .map(|(addon, entry)| {
-                let report = rapify(addon, entry, ctx)?;
+                let report = rapify(addon, entry, ctx, &auto_added_units, &auto_added_weapons)?;
                 progress.inc(1);
                 Ok(report)
             })
@@ -78,12 +85,26 @@ impl Module for Rapifier {
 
         progress.finish_and_clear();
         info!("Rapified {} addon configs", entries.len());
+        let auto_added_units = auto_added_units.load(std::sync::atomic::Ordering::SeqCst);
+        if auto_added_units > 0 {
+            info!("Auto-added {} units", auto_added_units);
+        }
+        let auto_added_weapons = auto_added_weapons.load(std::sync::atomic::Ordering::SeqCst);
+        if auto_added_weapons > 0 {
+            info!("Auto-added {} weapons", auto_added_weapons);
+        }
         report.extend(lint_all(Some(ctx.config()), &ctx.addons().to_vec()));
         Ok(report)
     }
 }
 
-pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Report, Error> {
+pub fn rapify(
+    addon: &Addon,
+    path: &WorkspacePath,
+    ctx: &Context,
+    auto_add_units: &AtomicUsize,
+    auto_add_weapons: &AtomicUsize,
+) -> Result<Report, Error> {
     let mut report = Report::new();
     let processed = match hemtt_preprocessor::Processor::run_with_sources(
         path,
@@ -117,6 +138,7 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
         configreport.push_to_addon(addon);
         return Ok(report);
     }
+    let mut config = configreport.config().clone();
     let out = if std::path::Path::new(&path.filename())
         .extension()
         .is_some_and(|ext| ext.eq_ignore_ascii_case("cpp"))
@@ -131,6 +153,34 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
                 file = map.original().path();
                 map.original().start().0..map.original().end().0
             });
+            if ctx.config().rapify().add_units_enabled() {
+                let prefixes = match ctx.config().rapify().auto_units() {
+                    AutoAdd::Bool(true) => Vec::from([ctx.config().prefix()]),
+                    AutoAdd::Prefixes(p) => p
+                        .iter()
+                        .map(std::string::String::as_str)
+                        .collect::<Vec<_>>(),
+                    AutoAdd::Bool(false) => Vec::new(),
+                };
+                auto_add_units.fetch_add(
+                    config.auto_units(&prefixes),
+                    std::sync::atomic::Ordering::SeqCst,
+                );
+            }
+            if ctx.config().rapify().add_weapons_enabled() {
+                let prefixes = match ctx.config().rapify().auto_weapons() {
+                    AutoAdd::Bool(true) => Vec::from([ctx.config().prefix()]),
+                    AutoAdd::Prefixes(p) => p
+                        .iter()
+                        .map(std::string::String::as_str)
+                        .collect::<Vec<_>>(),
+                    AutoAdd::Bool(false) => Vec::new(),
+                };
+                auto_add_weapons.fetch_add(
+                    config.auto_weapons(&prefixes),
+                    std::sync::atomic::Ordering::SeqCst,
+                );
+            }
             addon
                 .build_data()
                 .set_required_version(version, file.to_owned(), span);
@@ -140,7 +190,7 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
                 .expect("state is poisoned")
                 .entry((addon.name().to_owned(), *addon.location()))
                 .or_default()
-                .push((file.to_owned(), configreport.config().clone()));
+                .push((file.to_owned(), config.clone()));
         }
         path.with_extension("bin")?
     } else {
@@ -160,7 +210,7 @@ pub fn rapify(addon: &Addon, path: &WorkspacePath, ctx: &Context) -> Result<Repo
             return Err(e.into());
         }
     };
-    if let Err(e) = configreport.config().rapify(&mut output, 0) {
+    if let Err(e) = config.rapify(&mut output, 0) {
         return Err(e.into());
     }
     configreport.push_to_addon(addon);

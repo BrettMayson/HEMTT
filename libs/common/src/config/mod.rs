@@ -22,6 +22,7 @@ pub use project::{
     },
     lint::{LintConfig, LintConfigOverride, LintEnabled},
     preprocessor::PreprocessorOptions,
+    rapify::AutoAdd,
 };
 
 fn deprecated(file: &str, key: &str, replacement: &str, info: Option<&str>) {

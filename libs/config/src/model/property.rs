@@ -60,3 +60,20 @@ impl serde::Serialize for Property {
         }
     }
 }
+
+pub trait PropertyVecExt {
+    fn child(&self, name: &str) -> Option<&Property>;
+    fn child_mut(&mut self, name: &str) -> Option<&mut Property>;
+}
+
+impl PropertyVecExt for Vec<Property> {
+    fn child(&self, name: &str) -> Option<&Property> {
+        self.iter()
+            .find(|prop| prop.name().as_str().eq_ignore_ascii_case(name))
+    }
+
+    fn child_mut(&mut self, name: &str) -> Option<&mut Property> {
+        self.iter_mut()
+            .find(|prop| prop.name().as_str().eq_ignore_ascii_case(name))
+    }
+}
