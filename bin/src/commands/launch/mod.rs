@@ -65,7 +65,6 @@ pub mod preset;
 ///     "-noSplash",            # They do not need to be added to your list
 ///     "-showScriptErrors",    # You can add additional parameters here
 ///     "-filePatching",
-///     "-debug",               # Not passed by default, see below
 /// ]
 /// executable = "arma3" # Default: "arma3_x64"
 /// file_patching = false # Default: true
@@ -150,9 +149,6 @@ pub mod preset;
 /// A list of [Startup Parameters](https://community.bistudio.com/wiki/Arma_3:_Startup_Parameters) to pass to the Arma 3 executable.
 ///
 /// `-skipIntro`, `-noSplash` and `-showScriptErrors` are always passed.
-///
-/// `-debug` is not passed by default. It defines `__A3_DEBUG__`, so scripts and SQFC use their debug code,
-/// which players don't run. Add it here, or use `hemtt launch -- -debug` for a single launch.
 ///
 /// ### executable
 ///
