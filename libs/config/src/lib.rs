@@ -62,7 +62,8 @@ pub fn parse(
             )?;
             let lint_data = LintData::default();
             let codes = config.analyze(&lint_data, project, processed, &manager);
-            let (localized, functions_defined, magazine_well_info) = lint_data.unpack();
+            let (localized, functions_defined, magazine_well_info, quoted_code) =
+                lint_data.unpack();
             Ok(ConfigReport {
                 codes,
                 patches: config.get_patches(),
@@ -70,6 +71,7 @@ pub fn parse(
                 config,
                 functions_defined,
                 magazine_well_info,
+                quoted_code,
             })
         },
     )
@@ -83,6 +85,7 @@ pub struct ConfigReport {
     localized: Localizations,
     functions_defined: DefinedFunctions,
     magazine_well_info: MagazineWellInfo,
+    quoted_code: Vec<Arc<Processed>>,
 }
 
 impl ConfigReport {
@@ -170,6 +173,11 @@ impl ConfigReport {
             lock.0.extend(magazines);
             lock.1.extend(magwell_codes);
         }
+        if !self.quoted_code.is_empty()
+            && let Ok(mut lock) = build_data.quoted_code().lock()
+        {
+            lock.extend(self.quoted_code);
+        }
     }
 
     #[must_use]
@@ -188,5 +196,11 @@ impl ConfigReport {
     /// Get the `MagazineWellInfo`
     pub const fn magazine_well_info(&self) -> &MagazineWellInfo {
         &self.magazine_well_info
+    }
+
+    #[must_use]
+    /// Get the quoted code
+    pub const fn quoted_code(&self) -> &Vec<Arc<Processed>> {
+        &self.quoted_code
     }
 }

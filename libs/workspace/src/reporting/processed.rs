@@ -471,6 +471,95 @@ impl Processed {
     }
 
     #[must_use]
+    /// Extract a sub-region of the processed output and remap its source mappings.
+    /// # Panics
+    pub fn select_sub_region(
+        &self,
+        new_output: String,
+        from_span: &Range<usize>,
+        add_source: Option<&str>,
+    ) -> Self {
+        let mut boundaries = Vec::with_capacity(new_output.chars().count() + 1);
+        let mut byte_offset = 0;
+        for c in new_output.chars() {
+            boundaries.push(byte_offset);
+            byte_offset += c.len_utf8();
+        }
+        boundaries.push(byte_offset);
+
+        let mappings: Vec<Mapping> = self
+            .mappings
+            .iter()
+            .filter_map(|m| {
+                let start = m.processed_start().offset();
+                if start < from_span.start || start >= from_span.end {
+                    return None;
+                }
+                let end = m.processed_end().offset();
+                let start_idx = (start - from_span.start).min(boundaries.len() - 1);
+                let end_idx = (end - from_span.start).min(boundaries.len() - 1);
+                let start = boundaries[start_idx];
+                let end = boundaries[end_idx] + 1;
+                if start >= end {
+                    return None;
+                }
+                Some(Mapping {
+                    source: m.source,
+                    processed: (
+                        LineCol::from_content(&new_output, start),
+                        LineCol::from_content(&new_output, end),
+                    ),
+                    original: m.original.clone(),
+                    token: m.token.clone(),
+                    was_macro: m.was_macro,
+                })
+            })
+            .collect();
+
+        let mappings_interval = mappings
+            .iter()
+            .enumerate()
+            .map(|(idx, map)| {
+                (
+                    map.processed_start().offset()..map.processed_end().offset(),
+                    idx,
+                )
+            })
+            .collect();
+
+        let mut sources = self.sources.clone();
+        assert!(!sources.is_empty(), "Sources cannot be empty");
+        if let Some(add_source) = add_source
+            && !add_source.is_empty()
+            && let Some((dummy, _)) = sources.first()
+        {
+            sources.push((dummy.clone(), add_source.to_string()));
+        }
+
+        let total_chars = new_output.chars().count();
+        let mut processed = Self {
+            sources,
+            included_files: self.included_files.clone(),
+            output: new_output,
+            clean_output: String::new(),
+            clean_output_line_indexes: Vec::new(),
+            total_chars,
+            line_offsets: self.line_offsets.clone(),
+            mappings_interval,
+            mappings,
+            macros: self.macros.clone(),
+            #[cfg(feature = "lsp")]
+            usage: self.usage.clone(),
+            warnings: self.warnings.clone(),
+            no_rapify: self.no_rapify,
+            expansions: self.expansions.clone(),
+        };
+
+        clean_output(&mut processed);
+        processed
+    }
+
+    #[must_use]
     /// Return a string with the source from the span
     pub fn clean_span(&self, span: &Range<usize>) -> Range<usize> {
         fn find_point(processed: &Processed, target: usize) -> usize {

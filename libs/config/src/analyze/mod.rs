@@ -24,6 +24,7 @@ pub struct LintData {
     pub(crate) localizations: Arc<Mutex<Localizations>>,
     pub(crate) functions_defined: Arc<Mutex<DefinedFunctions>>,
     pub(crate) magazine_well_info: Arc<Mutex<MagazineWellInfo>>,
+    pub(crate) quoted_code: Arc<Mutex<Vec<Arc<Processed>>>>,
 }
 impl LintData {
     fn clone_with_path(&self, path: String) -> Self {
@@ -32,9 +33,17 @@ impl LintData {
             localizations: self.localizations.clone(),
             functions_defined: self.functions_defined.clone(),
             magazine_well_info: self.magazine_well_info.clone(),
+            quoted_code: self.quoted_code.clone(),
         }
     }
-    pub(crate) fn unpack(self) -> (Localizations, DefinedFunctions, MagazineWellInfo) {
+    pub(crate) fn unpack(
+        self,
+    ) -> (
+        Localizations,
+        DefinedFunctions,
+        MagazineWellInfo,
+        Vec<Arc<Processed>>,
+    ) {
         debug_assert_eq!(Arc::strong_count(&self.localizations), 1);
         (
             Arc::try_unwrap(self.localizations)
@@ -46,6 +55,10 @@ impl LintData {
                 .into_inner()
                 .expect("not poisoned"),
             Arc::try_unwrap(self.magazine_well_info)
+                .expect("not poisoned")
+                .into_inner()
+                .expect("not poisoned"),
+            Arc::try_unwrap(self.quoted_code)
                 .expect("not poisoned")
                 .into_inner()
                 .expect("not poisoned"),
