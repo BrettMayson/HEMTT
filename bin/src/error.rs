@@ -11,6 +11,9 @@ pub enum Error {
     #[error("No meta.cpp with publishedid found in current directory")]
     PublishedIdNotFound,
 
+    #[error("Steam Workshop error: {0}")]
+    Workshop(String),
+
     #[error("Unable to create link: {0}")]
     #[allow(dead_code)] // Unused on Linux and Mac
     Link(String),

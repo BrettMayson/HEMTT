@@ -222,7 +222,7 @@ impl HemttSectionFile {
             },
             build: self.build.into(),
             release: self.release.into_config(prefix),
-            publish: self.publish.into_config()?,
+            publish: self.publish.load(path)?,
             paa: self.paa.into_config(),
         })
     }

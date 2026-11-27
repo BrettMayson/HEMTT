@@ -70,6 +70,20 @@ impl Executor {
         self.stages.push("post_release");
     }
 
+    /// Run the build stages, retaining release stages for a subsequent `run`.
+    /// Publishing uses this boundary to include a newly assigned Workshop ID before metadata stamping, signing, archiving, and release hooks.
+    pub(crate) fn run_build(&mut self) -> Result<Report, Error> {
+        let boundary = self
+            .stages
+            .iter()
+            .position(|stage| *stage == "pre_release")
+            .unwrap_or(self.stages.len());
+        let release = self.stages.split_off(boundary);
+        let result = self.run();
+        self.stages = release;
+        result
+    }
+
     /// Execute the `run` phase
     ///
     /// # Errors
