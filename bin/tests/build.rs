@@ -237,3 +237,50 @@ fn build_unsupported_builtin_pragma_config() {
     );
     assert!(!output.contains("PE26"), "{output}");
 }
+
+/// Read a file out of the built main PBO
+fn pbo_file(name: &str) -> Vec<u8> {
+    use std::io::Read;
+    let mut pbo = hemtt_pbo::ReadablePbo::from(
+        fs_err::File::open(".hemttout/build/addons/test_main.pbo").expect("pbo was built"),
+    )
+    .unwrap();
+    let mut file = pbo.file(name).unwrap().expect("file in pbo");
+    let mut buffer = Vec::new();
+    file.read_to_end(&mut buffer).unwrap();
+    buffer
+}
+
+#[sealed_test]
+fn build_sqfc_debug_block() {
+    let _directory = copy_simple();
+    fs_err::write(
+        "addons/main/dbg.sqf",
+        "#ifdef __A3_DEBUG__\nhint \"debug\";\n#else\nhint \"not debug\";\n#endif\n",
+    )
+    .unwrap();
+    let (pbo, output) = build_with_sqfc(false, "");
+    assert!(pbo.is_some(), "{output}");
+
+    // ends with the code block (3), then the debug code block (4)
+    let dbg = pbo_file("dbg.sqfc");
+    assert_eq!(dbg[dbg.len() - 18], 3, "code block");
+    assert_eq!(dbg[dbg.len() - 9], 4, "debug code block");
+
+    // files that don't use `__A3_DEBUG__` have no debug block
+    let init = pbo_file("init.sqfc");
+    assert_eq!(init[init.len() - 9], 3, "ends with the code block");
+}
+
+#[sealed_test]
+fn build_sqfc_debug_block_error() {
+    let _directory = copy_simple();
+    // only invalid when the game is started with `-debug`
+    fs_err::write(
+        "addons/main/dbg.sqf",
+        "#ifdef __A3_DEBUG__\nhint \"debug\" +;\n#endif\nhint \"shared\";\n",
+    )
+    .unwrap();
+    let (pbo, output) = build_with_sqfc(false, "");
+    assert!(pbo.is_none(), "the build fails: {output}");
+}

@@ -134,6 +134,7 @@ impl Processor {
         };
 
         processor.defines.option_runtime(options.runtime_macros());
+        processor.defines.option_debug(options.debug());
 
         processor.file_stack.push(path.clone());
 
@@ -185,6 +186,7 @@ impl Processor {
         }
         expansions_store.build_interval_tree();
         processed.expansions = expansions_store;
+        processed.set_uses_debug_macro(processor.defines.debug_used());
 
         Ok(processed)
     }

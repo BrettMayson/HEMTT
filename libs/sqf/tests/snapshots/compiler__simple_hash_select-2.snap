@@ -4,6 +4,7 @@ expression: compiled
 ---
 Compiled {
     entry_point: 2,
+    debug_entry_point: None,
     constants_cache_compression: true,
     constants_cache: [
         Scalar(

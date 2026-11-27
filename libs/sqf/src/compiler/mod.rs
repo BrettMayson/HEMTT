@@ -28,29 +28,58 @@ impl Statements {
     /// # Errors
     /// [`CompileError`] is returned if the statements list contains an invalid name.
     pub fn compile(&self, processed: &Processed) -> CompileResult<Compiled> {
+        self.compile_with_debug(processed, None)
+    }
+
+    /// Converts this statements list into a [`Compiled`], with an optional debug variant.
+    ///
+    /// `debug` is the same file preprocessed with `__A3_DEBUG__` defined.
+    /// It is stored as a second entry point, which the game uses when started with `-debug`.
+    /// Both entry points share the constants, names and file names.
+    ///
+    /// # Errors
+    /// [`CompileError`] is returned if the statements list contains an invalid name,
+    /// or exceeds a limit of the SQFC format.
+    pub fn compile_with_debug(
+        &self,
+        processed: &Processed,
+        debug: Option<(&Self, &Processed)>,
+    ) -> CompileResult<Compiled> {
         let mut ctx = Context {
             constants_cache: IndexSet::new(),
             names_cache: IndexSet::new(),
-        };
-        let entrypoint_code = self.compile_to_instructions(processed, &mut ctx, true)?;
-        let entrypoint_index = ctx
-            .constants_cache
-            .len()
-            .try_into()
-            .map_err(|_| CompileError::TooManyConstants)?;
-        // The entry point is always added as a new constant, without deduplication
-        let mut constants_cache = ctx.constants_cache.into_iter().collect::<Vec<_>>();
-        constants_cache.push(Constant::Code(entrypoint_code));
-        Ok(Compiled {
-            entry_point: entrypoint_index,
-            constants_cache_compression: true,
-            constants_cache,
-            names_cache: ctx.names_cache.into_iter().collect(),
+            // Seeded in source order, so indices match the preprocessed sources
             file_names: processed
                 .sources()
                 .iter()
                 .map(|(s, _)| s.as_virtual_str().into())
                 .collect(),
+        };
+        let entrypoint_code = self.compile_to_instructions(processed, &mut ctx, true)?;
+        let debug_code = debug
+            .map(|(statements, processed)| {
+                statements.compile_to_instructions(processed, &mut ctx, true)
+            })
+            .transpose()?;
+        // Entry points are always added as new constants, without deduplication
+        let mut constants_cache = ctx.constants_cache.into_iter().collect::<Vec<_>>();
+        let mut push_entry = |code: Instructions| -> CompileResult<u16> {
+            let index = constants_cache
+                .len()
+                .try_into()
+                .map_err(|_| CompileError::TooManyConstants)?;
+            constants_cache.push(Constant::Code(code));
+            Ok(index)
+        };
+        let entry_point = push_entry(entrypoint_code)?;
+        let debug_entry_point = debug_code.map(&mut push_entry).transpose()?;
+        Ok(Compiled {
+            entry_point,
+            debug_entry_point,
+            constants_cache_compression: true,
+            constants_cache,
+            names_cache: ctx.names_cache.into_iter().collect(),
+            file_names: ctx.file_names.into_iter().collect(),
         })
     }
 
@@ -64,6 +93,23 @@ impl Statements {
         mut writer: impl std::io::Write,
     ) -> Result<(), Error> {
         Ok(self.compile(processed)?.serialize(&mut writer)?)
+    }
+
+    /// Compiles this statements list, with an optional debug variant, to a writer.
+    ///
+    /// See [`Statements::compile_with_debug`].
+    ///
+    /// # Errors
+    /// [`Error`] is returned if the statements list contains an invalid name.
+    pub fn compile_with_debug_to_writer(
+        &self,
+        processed: &Processed,
+        debug: Option<(&Self, &Processed)>,
+        mut writer: impl std::io::Write,
+    ) -> Result<(), Error> {
+        Ok(self
+            .compile_with_debug(processed, debug)?
+            .serialize(&mut writer)?)
     }
 
     pub(crate) fn compile_to_instructions(
@@ -109,23 +155,22 @@ impl Statements {
 ///
 /// # Panics
 /// Panics if the location is not mapped.
-pub fn location_to_source(
+pub(crate) fn location_to_source(
     processed: &Processed,
+    ctx: &mut Context,
     location: &Range<usize>,
 ) -> CompileResult<SourceInfo> {
     let map = processed.mapping(location.start).expect(
         "location not in mapping, this should not happen as the location is from the processed file",
     ).original();
-    let file_index = processed
-        .sources()
-        .iter()
-        .position(|(p, _)| p == map.path())
-        .expect("file not in sources");
+    let (file_index, _) = ctx
+        .file_names
+        .insert_full(map.path().as_virtual_str().into());
     Ok(SourceInfo {
         offset: to_offset(processed.clean_span(location).start)?,
         file_index: file_index
             .try_into()
-            .map_err(|_| CompileError::TooManyFiles(processed.sources().len()))?,
+            .map_err(|_| CompileError::TooManyFiles(ctx.file_names.len()))?,
         file_line: map
             .start()
             .line()
@@ -155,7 +200,7 @@ impl Statement {
                 let name_index = ctx.add_name(name)?;
                 instructions.push(Instruction::AssignTo(
                     name_index,
-                    location_to_source(processed, location)?,
+                    location_to_source(processed, ctx, location)?,
                 ));
             }
             Self::AssignLocal(ref name, ref expression, ref location) => {
@@ -163,7 +208,7 @@ impl Statement {
                 let name_index = ctx.add_name(name)?;
                 instructions.push(Instruction::AssignToLocal(
                     name_index,
-                    location_to_source(processed, location)?,
+                    location_to_source(processed, ctx, location)?,
                 ));
             }
             Self::Expression(ref expression, _) => {
@@ -227,14 +272,14 @@ impl Expression {
 
                     instructions.push(Instruction::MakeArray(
                         array_len,
-                        location_to_source(processed, location)?,
+                        location_to_source(processed, ctx, location)?,
                     ));
                 }
                 Self::NularCommand(ref command, ref location) => {
                     let name_index = ctx.add_name(command.as_str())?;
                     instructions.push(Instruction::CallNular(
                         name_index,
-                        location_to_source(processed, location)?,
+                        location_to_source(processed, ctx, location)?,
                     ));
                 }
                 Self::UnaryCommand(ref command, ref expr, ref location) => {
@@ -242,7 +287,7 @@ impl Expression {
                     let name_index = ctx.add_name(command.as_str())?;
                     instructions.push(Instruction::CallUnary(
                         name_index,
-                        location_to_source(processed, location)?,
+                        location_to_source(processed, ctx, location)?,
                     ));
                 }
                 Self::BinaryCommand(ref command, ref expr1, ref expr2, ref location) => {
@@ -251,14 +296,14 @@ impl Expression {
                     let name_index = ctx.add_name(command.as_str())?;
                     instructions.push(Instruction::CallBinary(
                         name_index,
-                        location_to_source(processed, location)?,
+                        location_to_source(processed, ctx, location)?,
                     ));
                 }
                 Self::Variable(ref name, ref location) => {
                     let name_index = ctx.add_name(name)?;
                     instructions.push(Instruction::GetVariable(
                         name_index,
-                        location_to_source(processed, location)?,
+                        location_to_source(processed, ctx, location)?,
                     ));
                 }
                 Self::Code(_)
@@ -336,6 +381,8 @@ type CompileResult<T = ()> = Result<T, CompileError>;
 pub(crate) struct Context {
     constants_cache: IndexSet<Constant>,
     names_cache: IndexSet<Arc<str>>,
+    /// Files referenced by [`SourceInfo`], shared by the normal and debug entry points
+    file_names: IndexSet<Arc<str>>,
 }
 
 impl Context {

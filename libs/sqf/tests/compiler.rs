@@ -179,3 +179,98 @@ fn too_many_files() {
         result.map(|c| c.file_names.len())
     );
 }
+
+fn parse_with(
+    folder: &std::path::Path,
+    options: &hemtt_common::config::PreprocessorOptions,
+) -> (hemtt_sqf::Statements, hemtt_workspace::reporting::Processed) {
+    let workspace = hemtt_workspace::Workspace::builder()
+        .physical(&folder.to_path_buf(), LayerType::Source)
+        .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
+        .unwrap();
+    let processed = Processor::run(&workspace.join("test.sqf").unwrap(), options).unwrap();
+    let statements = hemtt_sqf::parser::run(&Database::a3(false), &processed).unwrap();
+    (statements, processed)
+}
+
+fn strings(compiled: &Compiled) -> Vec<String> {
+    compiled
+        .constants_cache
+        .iter()
+        .filter_map(|c| match c {
+            hemtt_sqf::compiler::serializer::Constant::String(s) => Some(s.to_string()),
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn debug_entry_point() {
+    let folder =
+        std::env::temp_dir().join(format!("hemtt_sqf_compile_debug_{}", std::process::id()));
+    fs_err::create_dir_all(&folder).unwrap();
+    fs_err::write(
+        folder.join("test.sqf"),
+        "#ifdef __A3_DEBUG__\nhint \"debug\";\n#else\nhint \"not debug\";\n#endif\nhint \"shared\";\n",
+    )
+    .unwrap();
+    let options = hemtt_common::config::PreprocessorOptions::default();
+    let (statements, processed) = parse_with(&folder, &options);
+    let (debug_statements, debug_processed) = parse_with(&folder, &options.with_debug(true));
+    fs_err::remove_dir_all(&folder).unwrap();
+
+    let compiled = statements
+        .compile_with_debug(&processed, Some((&debug_statements, &debug_processed)))
+        .unwrap();
+    let debug_entry_point = compiled.debug_entry_point.expect("debug entry point");
+    assert_ne!(debug_entry_point, compiled.entry_point);
+
+    let normal = compiled
+        .get_entry_point()
+        .unwrap()
+        .display(&compiled)
+        .to_string();
+    let debug = compiled
+        .get_debug_entry_point()
+        .unwrap()
+        .display(&compiled)
+        .to_string();
+    assert!(
+        normal.contains("\"not debug\"") && !normal.contains("\"debug\""),
+        "{normal}"
+    );
+    assert!(
+        debug.contains("\"debug\"") && !debug.contains("\"not debug\""),
+        "{debug}"
+    );
+
+    // constants are shared between the two entry points
+    let strings = strings(&compiled);
+    assert_eq!(
+        strings.iter().filter(|s| *s == "shared").count(),
+        1,
+        "{strings:?}"
+    );
+
+    // the debug code block is written after the code block
+    let mut bytes = Vec::new();
+    compiled.serialize(&mut bytes).unwrap();
+    let (code, debug_code) = bytes[bytes.len() - 18..].split_at(9);
+    assert_eq!(code[0], 3, "code block");
+    assert_eq!(
+        u64::from_le_bytes(code[1..].try_into().unwrap()),
+        u64::from(compiled.entry_point)
+    );
+    assert_eq!(debug_code[0], 4, "debug code block");
+    assert_eq!(
+        u64::from_le_bytes(debug_code[1..].try_into().unwrap()),
+        u64::from(debug_entry_point)
+    );
+
+    // without a debug variant, nothing changes
+    let compiled = statements.compile(&processed).unwrap();
+    assert!(compiled.debug_entry_point.is_none());
+    let mut bytes = Vec::new();
+    compiled.serialize(&mut bytes).unwrap();
+    assert_eq!(bytes[bytes.len() - 9], 3, "ends with the code block");
+}

@@ -68,6 +68,8 @@ exclude = [
 
 HEMTT compiles SQF to SQFC (compiled SQF) for faster loading. Files listed here are still linted, but their SQFC is not included in the PBO, so the game uses the plain SQF.
 
+Files that check `__A3_DEBUG__` (e.g. `#ifdef __A3_DEBUG__`) are compiled twice, and the SQFC includes a second code block that the game uses when started with `-debug`. No configuration is needed.
+
 `sqfc.exclude` is an array of glob patterns for files that should never be compiled to SQFC.
 
 Files that check built-in macros HEMTT does not support, such as `#if __GAME_VER_MIN__`, should instead use `#pragma hemtt flag pe26_ignore_unsupported_builtin` in the file. HEMTT then skips SQFC for that file automatically, so the game evaluates the condition. See [Preprocessor Flags](../lints/preprocessor.md#preprocessor-flags).
