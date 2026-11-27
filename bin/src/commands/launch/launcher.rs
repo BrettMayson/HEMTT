@@ -70,7 +70,7 @@ impl<'a> Launcher<'a> {
             workshop: options.workshop().to_vec(),
             mission: options.mission().map(std::string::ToString::to_string),
             options: {
-                let mut args = ["-skipIntro", "-noSplash", "-showScriptErrors", "-debug"]
+                let mut args = ["-skipIntro", "-noSplash", "-showScriptErrors"]
                     .iter()
                     .map(std::string::ToString::to_string)
                     .collect::<Vec<_>>();
