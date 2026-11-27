@@ -1,0 +1,8 @@
+---
+source: libs/stringtable/tests/lints.rs
+expression: lint(stringify! (l04_language_empty))
+---
+[0m[1m[38;5;11mwarning[L-L04][0m[1m: Stringtable at `/l04_language_empty.xml` has empty localization tag[0m
+ [0m[36m=[0m [36mnote[0m: Key `MyID1` - Language `German`
+ [0m[36m=[0m [33mhelp[0m: Remove empty localization tags and provide appropriate translations.
+         Or add <Key allow-empty="true">.

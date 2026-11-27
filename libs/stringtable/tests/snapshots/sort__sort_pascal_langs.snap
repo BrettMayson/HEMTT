@@ -1,0 +1,166 @@
+---
+source: libs/stringtable/tests/sort.rs
+expression: stringtable
+---
+Project {
+    inner: InnerProject {
+        name: "HEMTT",
+        packages: [
+            Package {
+                name: "Test",
+                keys: [
+                    Key {
+                        id: "test1",
+                        allow_empty: None,
+                        original: None,
+                        english: Some(
+                            Language {
+                                content: "1E",
+                                attributes: {},
+                            },
+                        ),
+                        czech: None,
+                        french: None,
+                        spanish: None,
+                        italian: None,
+                        polish: None,
+                        portuguese: None,
+                        russian: None,
+                        german: None,
+                        korean: None,
+                        japanese: None,
+                        chinese: Some(
+                            Language {
+                                content: "1C",
+                                attributes: {},
+                            },
+                        ),
+                        chinesesimp: Some(
+                            Language {
+                                content: "1CSimp",
+                                attributes: {},
+                            },
+                        ),
+                        turkish: None,
+                        swedish: None,
+                        slovak: None,
+                        serbocroatian: Some(
+                            Language {
+                                content: "1SCro",
+                                attributes: {},
+                            },
+                        ),
+                        norwegian: None,
+                        icelandic: None,
+                        hungarian: None,
+                        greek: None,
+                        finnish: None,
+                        dutch: None,
+                        ukrainian: None,
+                        danish: None,
+                        bulgarian: None,
+                        latin: None,
+                        unknown_languages: {},
+                    },
+                    Key {
+                        id: "test2",
+                        allow_empty: None,
+                        original: None,
+                        english: Some(
+                            Language {
+                                content: "2E",
+                                attributes: {},
+                            },
+                        ),
+                        czech: None,
+                        french: None,
+                        spanish: None,
+                        italian: None,
+                        polish: None,
+                        portuguese: None,
+                        russian: None,
+                        german: None,
+                        korean: None,
+                        japanese: None,
+                        chinese: Some(
+                            Language {
+                                content: "2C",
+                                attributes: {},
+                            },
+                        ),
+                        chinesesimp: Some(
+                            Language {
+                                content: "2CSimp",
+                                attributes: {},
+                            },
+                        ),
+                        turkish: None,
+                        swedish: None,
+                        slovak: None,
+                        serbocroatian: Some(
+                            Language {
+                                content: "2SCro",
+                                attributes: {},
+                            },
+                        ),
+                        norwegian: None,
+                        icelandic: None,
+                        hungarian: None,
+                        greek: None,
+                        finnish: None,
+                        dutch: None,
+                        ukrainian: None,
+                        danish: None,
+                        bulgarian: None,
+                        latin: None,
+                        unknown_languages: {},
+                    },
+                ],
+                containers: [],
+            },
+        ],
+    },
+    path: "/pascal_langs.xml",
+    keys: {
+        "test1": [
+            Position {
+                start: LineCol(
+                    105,
+                    (
+                        4,
+                        18,
+                    ),
+                ),
+                end: LineCol(
+                    110,
+                    (
+                        4,
+                        23,
+                    ),
+                ),
+                path: "/pascal_langs.xml",
+            },
+        ],
+        "test2": [
+            Position {
+                start: LineCol(
+                    308,
+                    (
+                        10,
+                        18,
+                    ),
+                ),
+                end: LineCol(
+                    313,
+                    (
+                        10,
+                        23,
+                    ),
+                ),
+                path: "/pascal_langs.xml",
+            },
+        ],
+    },
+    source: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<Project name=\"HEMTT\">\n    <Package name=\"Test\">\n        <Key ID=\"test1\">\n            <English>1E</English>\n            <SerboCroatian>1SCro</SerboCroatian>\n            <Chinese>1C</Chinese>\n            <ChineseSimp>1CSimp</ChineseSimp>\n        </Key>\n        <Key ID=\"test2\">\n            <english>2E</english>\n            <Chinese>2C</Chinese>\n            <ChineseSimp>2CSimp</ChineseSimp>\n            <SerboCroatian>2SCro</SerboCroatian>\n        </Key>\n    </Package>\n</Project>\n",
+    comments: [],
+}

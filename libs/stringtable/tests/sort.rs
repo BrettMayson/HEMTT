@@ -57,3 +57,31 @@ fn sort_containers() {
 
     insta::assert_snapshot!(out);
 }
+
+#[test]
+fn sort_tags() {
+    let mut stringtable =
+        Project::read(WorkspacePath::slim_file("tests/sort/tags.xml").unwrap()).unwrap();
+    stringtable.sort();
+
+    insta::assert_debug_snapshot!(stringtable);
+
+    let mut out = String::new();
+    stringtable.to_writer(&mut out, false).unwrap();
+
+    insta::assert_snapshot!(out);
+}
+
+#[test]
+fn sort_pascal_langs() {
+    let mut stringtable =
+        Project::read(WorkspacePath::slim_file("tests/sort/pascal_langs.xml").unwrap()).unwrap();
+    stringtable.sort();
+
+    insta::assert_debug_snapshot!(stringtable);
+
+    let mut out = String::new();
+    stringtable.to_writer(&mut out, false).unwrap();
+
+    insta::assert_snapshot!(out);
+}

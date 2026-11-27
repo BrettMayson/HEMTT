@@ -1,0 +1,21 @@
+---
+source: libs/stringtable/tests/sort.rs
+expression: out
+---
+<?xml version="1.0" encoding="utf-8"?>
+<Project name="HEMTT">
+    <Package name="Test">
+        <Key ID="test1">
+            <English>1E</English>
+            <Chinese>1C</Chinese>
+            <Chinesesimp>1CSimp</Chinesesimp>
+            <Serbocroatian>1SCro</Serbocroatian>
+        </Key>
+        <Key ID="test2">
+            <English>2E</English>
+            <Chinese>2C</Chinese>
+            <Chinesesimp>2CSimp</Chinesesimp>
+            <Serbocroatian>2SCro</Serbocroatian>
+        </Key>
+    </Package>
+</Project>

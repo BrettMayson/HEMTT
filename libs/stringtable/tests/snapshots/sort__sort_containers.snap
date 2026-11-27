@@ -11,8 +11,12 @@ Project {
                 keys: [
                     Key {
                         id: "A1",
+                        allow_empty: None,
                         original: Some(
-                            "Origin",
+                            Language {
+                                content: "Origin",
+                                attributes: {},
+                            },
                         ),
                         english: None,
                         czech: None,
@@ -50,8 +54,12 @@ Project {
                         keys: [
                             Key {
                                 id: "A3",
+                                allow_empty: None,
                                 original: Some(
-                                    "Origin",
+                                    Language {
+                                        content: "Origin",
+                                        attributes: {},
+                                    },
                                 ),
                                 english: None,
                                 czech: None,
@@ -90,9 +98,13 @@ Project {
                         keys: [
                             Key {
                                 id: "A2",
+                                allow_empty: None,
                                 original: None,
                                 english: Some(
-                                    "EN",
+                                    Language {
+                                        content: "EN",
+                                        attributes: {},
+                                    },
                                 ),
                                 czech: None,
                                 french: None,
@@ -102,7 +114,10 @@ Project {
                                 portuguese: None,
                                 russian: None,
                                 german: Some(
-                                    "DE",
+                                    Language {
+                                        content: "DE",
+                                        attributes: {},
+                                    },
                                 ),
                                 korean: None,
                                 japanese: None,
@@ -126,8 +141,12 @@ Project {
                             },
                             Key {
                                 id: "B1",
+                                allow_empty: None,
                                 original: Some(
-                                    "Origin",
+                                    Language {
+                                        content: "Origin",
+                                        attributes: {},
+                                    },
                                 ),
                                 english: None,
                                 czech: None,
