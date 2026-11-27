@@ -13,6 +13,16 @@ use crate::{
     model::{Checksum, Header, Mime},
 };
 
+/// Read a file name or property from a PBO
+///
+/// Names that are not valid UTF-8 are an error. Reading them as an empty
+/// string would end the header list early and misread the rest of the PBO.
+pub fn read_name<I: Read>(input: &mut I) -> Result<String, Error> {
+    let bytes = input.read_cstring_bytes()?;
+    String::from_utf8(bytes)
+        .map_err(|e| Error::InvalidName(String::from_utf8_lossy(e.as_bytes()).into_owned()))
+}
+
 /// An existing PBO file that can be read from
 pub struct ReadablePbo<I: Seek + Read> {
     properties: IndexMap<String, String>,
@@ -39,12 +49,12 @@ impl<I: Seek + Read> ReadablePbo<I> {
             if header.mime() == &Mime::Vers {
                 vers_header = Some(header);
                 loop {
-                    let key = input.read_cstring()?;
+                    let key = read_name(&mut input)?;
                     blob_start += key.len() as u64 + 1;
                     if key.is_empty() {
                         break;
                     }
-                    let value = input.read_cstring()?;
+                    let value = read_name(&mut input)?;
                     blob_start += value.len() as u64 + 1;
                     properties.insert(key, value);
                 }
@@ -118,7 +128,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
                 .filename()
                 .eq_ignore_ascii_case(&name.replace('/', "\\"))
             {
-                return Ok(Some(File::new(header, &mut self.input)));
+                return Ok(Some(File::new(header, &mut self.input)?));
             }
             self.input
                 .seek(SeekFrom::Current(i64::from(header.size())))?;
@@ -139,7 +149,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
             {
                 // Lie that the file is uncompressed, so it won't be decompressed when read
                 let header = header.as_blank();
-                return Ok(Some(File::new(&header, &mut self.input)));
+                return Ok(Some(File::new(&header, &mut self.input)?));
             }
             self.input
                 .seek(SeekFrom::Current(i64::from(header.size())))?;
@@ -259,7 +269,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
                 .expect("file with header should exist");
             self.input.seek(SeekFrom::Start(start))?;
             let blank = header.as_blank();
-            let mut file = File::new(&blank, &mut self.input);
+            let mut file = File::new(&blank, &mut self.input)?;
             std::io::copy(&mut file, &mut hasher)?;
         }
 
@@ -314,7 +324,7 @@ impl<I: Seek + Read> ReadablePbo<I> {
                 continue;
             };
             self.input.seek(SeekFrom::Start(start))?;
-            let mut file = File::new(header, &mut self.input);
+            let mut file = File::new(header, &mut self.input)?;
             std::io::copy(&mut file, &mut hasher)?;
         }
 

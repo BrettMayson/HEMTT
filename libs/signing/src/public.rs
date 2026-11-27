@@ -87,9 +87,6 @@ impl BIPublicKey {
     ///
     /// # Errors
     /// If the reader fails to read
-    ///
-    /// # Panics
-    /// If the public key is invalid
     pub fn read<I: Read>(input: &mut I) -> Result<Self, Error> {
         let authority = input.read_cstring()?;
         let temp = input.read_u32::<LittleEndian>()?;
@@ -99,11 +96,15 @@ impl BIPublicKey {
         let length = input.read_u32::<LittleEndian>()?;
         let exponent = BoxedUint::from(input.read_u32::<LittleEndian>()?);
 
-        assert_eq!(temp, length / 8 + 20);
+        crate::check_length(length)?;
+        if temp != length / 8 + 20 {
+            return Err(Error::InvalidLength);
+        }
 
         let mut buffer = vec![0; (length / 8) as usize];
         input.read_exact(&mut buffer)?;
         let n = BoxedUint::from_le_slice_vartime(&buffer);
+        crate::check_modulus(&n)?;
 
         Ok(Self {
             authority,
@@ -136,7 +137,12 @@ impl BIPublicKey {
         let (real_hash1, real_hash2, real_hash3) =
             generate_hashes(pbo, signature.version, self.length)?;
 
-        let (signed_hash1, signed_hash2, signed_hash3) = signature.signatures_modpow();
+        // Use this key's modulus and exponent, not the ones stored in the signature,
+        // otherwise a signature made by any key with the same authority would pass
+        let (sig1, sig2, sig3) = signature.signatures();
+        let signed_hash1 = crate::modpow(sig1, &self.exponent, &self.n);
+        let signed_hash2 = crate::modpow(sig2, &self.exponent, &self.n);
+        let signed_hash3 = crate::modpow(sig3, &self.exponent, &self.n);
 
         if real_hash1 != signed_hash1 {
             let (s, r) = super::display_hashes(&signed_hash1, &real_hash1);

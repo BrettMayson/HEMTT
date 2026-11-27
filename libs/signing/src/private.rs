@@ -99,6 +99,7 @@ impl BIPrivateKey {
         input.read_u32::<LittleEndian>()?;
         let length = input.read_u32::<LittleEndian>()?;
 
+        crate::check_length(length)?;
         if temp != length / 16 * 9 + 20 {
             return Err(Error::InvalidLength);
         }
@@ -228,10 +229,7 @@ impl HEMTTPrivateKey {
     /// Reads an encrypted private key from the given input.
     ///
     /// # Errors
-    /// If the input fails to read or decrypt.
-    ///
-    /// # Panics
-    /// If the version is not 1.
+    /// If the input fails to read or decrypt, or the version is not 1.
     pub fn read_encrypted<I: Read>(input: &mut I, password: &str) -> Result<Self, Error> {
         let mut data = Vec::with_capacity(2048);
         input.read_to_end(&mut data)?;
@@ -243,7 +241,9 @@ impl HEMTTPrivateKey {
             return Err(Error::InvalidMagic);
         }
         let version = cursor.read_u32::<LittleEndian>()?;
-        assert_eq!(version, 1);
+        if version != 1 {
+            return Err(Error::InvalidMagic);
+        }
         let prefix = cursor.read_cstring()?;
         let git_hash = cursor.read_cstring()?;
         let project = cursor.read_cstring()?;

@@ -58,8 +58,7 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
     let root_path = PathBuf::from(&cmd.path);
 
     if !root_path.exists() {
-        error!("Path does not exist: {}", root_path.display());
-        return Ok(());
+        return Err(Error::NotFound(root_path.display().to_string()));
     }
 
     info!("Scanning for PAA files in: {}", root_path.display());

@@ -93,7 +93,7 @@ impl LOD {
                 let null_pos = name_buffer.iter().position(|&b| b == 0).unwrap_or(64);
                 String::from_utf8_lossy(&name_buffer[..null_pos]).into_owned()
             } else {
-                input.read_cstring()?
+                input.read_cstring_lossy()?
             };
             let size = input.read_u32::<LittleEndian>()?;
             let mut buffer = vec![0; size as usize].into_boxed_slice();

@@ -189,9 +189,10 @@ impl<D> LintManager<D> {
     /// # Errors
     /// Returns a list of lints that are enabled OR codes if the lint config is invalid
     pub fn check_and_filter(&mut self, lints: Lints<D>) -> Result<Lints<D>, Codes> {
-        fn enabled(config: &LintConfig, runtime: &RuntimeArguments) -> bool {
+        fn enabled(ident: &str, config: &LintConfig, runtime: &RuntimeArguments) -> bool {
             config.enabled() == LintEnabled::Enabled
                 || (runtime.is_pedantic() && config.enabled() == LintEnabled::Pedantic)
+                || runtime.explicit_lints().iter().any(|l| l == ident)
         }
         let mut enabled_lints = vec![];
         let mut errors: Codes = vec![];
@@ -214,13 +215,15 @@ impl<D> LintManager<D> {
                         ),
                     }));
                 }
-                if !enabled(&config, &self.runtime) && lint.minimum_severity() == Severity::Error {
+                if !enabled(lint.ident(), &config, &self.runtime)
+                    && lint.minimum_severity() == Severity::Error
+                {
                     errors.push(Arc::new(InvalidLintConfig {
                         message: format!("Lint `{}` cannot be disabled", lint.ident()),
                     }));
                 }
             }
-            if enabled(&config, &self.runtime) {
+            if enabled(lint.ident(), &config, &self.runtime) {
                 enabled_lints.push(lint);
             }
         }

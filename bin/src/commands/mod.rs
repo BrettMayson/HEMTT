@@ -37,6 +37,26 @@ pub fn global_modules(executor: &mut crate::executor::Executor) {
     executor.add_module(Box::<crate::modules::PboPrefix>::default());
 }
 
+/// Check that every addon named with `--just` exists, a typo would otherwise
+/// build nothing and still succeed
+///
+/// # Errors
+/// [`Error::Addon`] if an addon is not found
+pub fn check_just(ctx: &crate::context::Context, just: &[String]) -> Result<(), crate::Error> {
+    for name in just {
+        if !ctx
+            .addons()
+            .iter()
+            .any(|a| a.name().eq_ignore_ascii_case(name))
+        {
+            return Err(crate::Error::Addon(
+                hemtt_workspace::addons::Error::AddonNotFound(name.clone()),
+            ));
+        }
+    }
+    Ok(())
+}
+
 #[derive(clap::Args, Debug)]
 pub struct JustArgs {
     #[arg(long, action = clap::ArgAction::Append)]

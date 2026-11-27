@@ -230,21 +230,27 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         return Ok(Report::new());
     }
 
+    let mut report = Report::new();
+    report.push(unknown_lint(&cmd.code));
+    Ok(report)
+}
+
+#[must_use]
+/// An error for a query that matches no lint, suggesting similar lints
+pub fn unknown_lint(query: &str) -> Arc<dyn Code> {
     let lints = all();
     let haystack = lints
         .iter()
         .flat_map(|e| [e.code.as_str(), e.ident])
         .collect::<Vec<_>>();
-    let similar = hemtt_common::similar_values(cmd.code.trim(), &haystack)
+    let similar = hemtt_common::similar_values(query.trim(), &haystack)
         .into_iter()
         .map(ToOwned::to_owned)
         .collect();
-    let mut report = Report::new();
-    report.push(Arc::new(UnknownLint {
-        query: cmd.code.trim().to_string(),
+    Arc::new(UnknownLint {
+        query: query.trim().to_string(),
         similar,
-    }));
-    Ok(report)
+    })
 }
 
 fn fancy_render(explanation: &Explanation) -> String {

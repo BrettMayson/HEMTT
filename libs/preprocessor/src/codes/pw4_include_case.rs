@@ -27,7 +27,10 @@ impl Code for IncludeCase {
     }
 
     fn note(&self) -> Option<String> {
-        Some("this will fail builds on platforms with case-sensitive filesystems".to_string())
+        Some(
+            "HEMTT ignores the case, but other tools on case-sensitive filesystems will not find the file"
+                .to_string(),
+        )
     }
 
     fn expand_diagnostic(&self, diag: Diagnostic) -> Diagnostic {

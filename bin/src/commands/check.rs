@@ -37,8 +37,10 @@ pub struct CheckArgs {
     #[arg(long, short = 'L', action = clap::ArgAction::Append)]
     /// Explicit Lints
     ///
-    /// Enable specific lints by name. Can be used multiple times.
-    /// Example: `hemtt check -L s01-invalid-command -L s02-unknown-command`
+    /// Enable specific lints, even ones that are disabled by default or in the project config.
+    /// A lint can be given by its code or its name, the same as [`hemtt explain`](./explain.md).
+    /// Can be used multiple times.
+    /// Example: `hemtt check -L S14 -L unused_external`
     lints: Vec<String>,
 }
 
@@ -60,11 +62,18 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
     }
 
     if !cmd.check.lints.is_empty() {
-        let runtime = ctx
-            .config()
-            .runtime()
-            .clone()
-            .with_explicit_lints(cmd.check.lints.clone());
+        let mut idents = Vec::with_capacity(cmd.check.lints.len());
+        let mut report = Report::new();
+        for query in &cmd.check.lints {
+            match crate::commands::explain::find(query) {
+                Some(lint) => idents.push(lint.ident.to_string()),
+                None => report.push(crate::commands::explain::unknown_lint(query)),
+            }
+        }
+        if report.failed() {
+            return Ok(report);
+        }
+        let runtime = ctx.config().runtime().clone().with_explicit_lints(idents);
         let config = ctx.config().clone().with_runtime(runtime);
         ctx = ctx.with_config(config);
     }

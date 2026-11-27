@@ -19,7 +19,7 @@ pub struct FilePatching {
 impl Default for FilePatching {
     fn default() -> Self {
         Self {
-            arma3dir: hemtt_common::steam::find_app(107_410),
+            arma3dir: hemtt_common::steam::find_arma3(),
         }
     }
 }

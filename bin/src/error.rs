@@ -74,6 +74,12 @@ pub enum Error {
     Zip(#[from] zip::result::ZipError),
     #[error("Stringtable unknown language: {0}")]
     StringtableUnknownLanguage(String),
+    #[error("Stringtable error: {0}")]
+    Stringtable(String),
+    #[error("`{0}` was not found")]
+    NotFound(String),
+    #[error("PBO entry `{0}` would be written outside the output folder")]
+    UnsafePboPath(String),
 }
 
 impl From<vfs::VfsError> for Error {

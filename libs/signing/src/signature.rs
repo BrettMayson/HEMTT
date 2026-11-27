@@ -107,10 +107,7 @@ impl BISign {
     /// Read a signature from a reader
     ///
     /// # Errors
-    /// If the reader fails to read
-    ///
-    /// # Panics
-    /// If the signature is invalid
+    /// If the reader fails to read, or the signature is invalid
     pub fn read<I: Read>(input: &mut I) -> Result<Self, Error> {
         let authority = input.read_cstring()?;
         let temp = input.read_u32::<LittleEndian>()?;
@@ -120,11 +117,15 @@ impl BISign {
         let length = input.read_u32::<LittleEndian>()?;
         let exponent = BoxedUint::from(input.read_u32::<LittleEndian>()?);
 
-        assert_eq!(temp, length / 8 + 20);
+        crate::check_length(length)?;
+        if temp != length / 8 + 20 {
+            return Err(Error::InvalidLength);
+        }
 
         let mut buffer = vec![0; (length / 8) as usize];
         input.read_exact(&mut buffer)?;
         let n = BoxedUint::from_le_slice_vartime(&buffer);
+        crate::check_modulus(&n)?;
 
         input.read_u32::<LittleEndian>()?;
 

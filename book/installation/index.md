@@ -39,3 +39,9 @@ HEMTT can be compiled from [source](https://github.com/brettmayson/HEMTT) using 
 HEMTT usually requires the latest stable version of Rust, older versions may work but are not supported.
 
 You can use the `cargo install --path bin` command to install HEMTT while in the root of the repository.
+
+## Arma 3 Location
+
+HEMTT finds Arma 3 through Steam. It is used by [`hemtt dev`](../commands/dev.md) to set up file patching, by [`hemtt launch`](../commands/launch.md) and by [`hemtt doctor`](../commands/doctor.md).
+
+If Arma 3 is installed somewhere Steam doesn't know about, set the `HEMTT_ARMA3_PATH` environment variable to the folder that contains `arma3_x64.exe`. HEMTT always uses this path if it is set.

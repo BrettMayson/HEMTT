@@ -23,14 +23,12 @@ pub fn execute(args: &PboExtractArgs) -> Result<(), Error> {
     let path = PathBuf::from(&args.pbo);
     let mut pbo = ReadablePbo::from(File::open(path)?)?;
     let Some(mut file) = pbo.file(&args.file)? else {
-        error!("File `{}` not found in PBO", args.file);
-        return Ok(());
+        return Err(Error::NotFound(format!("{} in {}", args.file, args.pbo)));
     };
     let output = args.output.as_ref().map(PathBuf::from);
     if let Some(output) = output {
         if output.exists() {
-            error!("Output file already exists");
-            return Ok(());
+            return Err(Error::OutputExists(output.display().to_string()));
         }
         let _ = fs_err::create_dir_all(
             output

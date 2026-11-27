@@ -12,11 +12,19 @@ static GLOBAL_LOCK: AtomicBool = AtomicBool::new(false);
 ///
 /// The current working directory is changed to the temporary directory, and
 /// restored when the `TemporaryDirectory` is dropped.
+///
+/// `HEMTT_ARMA3_PATH` is pointed at an empty `arma3` folder inside the temporary
+/// directory, so commands like `hemtt dev` never create links in a real Arma 3
+/// installation.
 #[derive(Debug)]
 pub struct TemporaryDirectory {
     path: PathBuf,
     original: PathBuf,
+    original_arma3: Option<std::ffi::OsString>,
 }
+
+/// Overrides where HEMTT looks for Arma 3, matches `hemtt_common::steam::ARMA3_PATH_VAR`
+pub const ARMA3_PATH_VAR: &str = "HEMTT_ARMA3_PATH";
 
 impl TemporaryDirectory {
     #[must_use]
@@ -51,7 +59,16 @@ impl TemporaryDirectory {
         fs_err::create_dir(&path).expect("Failed to create temporary directory");
         let original = std::env::current_dir().expect("Failed to get current directory");
         std::env::set_current_dir(&path).expect("Failed to set current directory");
-        Self { path, original }
+        let arma3 = path.join("arma3");
+        fs_err::create_dir(&arma3).expect("Failed to create the Arma 3 sandbox");
+        let original_arma3 = std::env::var_os(ARMA3_PATH_VAR);
+        // SAFETY: the global lock means only one `TemporaryDirectory` changes it at a time
+        unsafe { std::env::set_var(ARMA3_PATH_VAR, &arma3) };
+        Self {
+            path,
+            original,
+            original_arma3,
+        }
     }
 
     #[must_use]
@@ -93,9 +110,16 @@ impl Default for TemporaryDirectory {
 
 impl Drop for TemporaryDirectory {
     fn drop(&mut self) {
-        GLOBAL_LOCK.store(false, std::sync::atomic::Ordering::SeqCst);
         std::env::set_current_dir(&self.original).expect("Failed to set current directory");
+        // SAFETY: still holding the global lock
+        unsafe {
+            match &self.original_arma3 {
+                Some(value) => std::env::set_var(ARMA3_PATH_VAR, value),
+                None => std::env::remove_var(ARMA3_PATH_VAR),
+            }
+        }
         fs_err::remove_dir_all(&self.path).expect("Failed to remove temporary directory");
+        GLOBAL_LOCK.store(false, std::sync::atomic::Ordering::SeqCst);
     }
 }
 
@@ -158,6 +182,16 @@ mod tests {
             "Threads appear to have run in parallel ({}ms), lock may not be working",
             elapsed.as_millis()
         );
+    }
+
+    #[test]
+    fn arma3_is_sandboxed() {
+        let temp_dir = TemporaryDirectory::new();
+        let arma3 = std::path::PathBuf::from(
+            std::env::var_os(super::ARMA3_PATH_VAR).expect("variable is set"),
+        );
+        assert_eq!(arma3, temp_dir.join("arma3"));
+        assert!(arma3.is_dir());
     }
 
     #[test]

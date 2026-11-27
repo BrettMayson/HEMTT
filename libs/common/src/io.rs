@@ -10,15 +10,29 @@
 use std::io;
 use std::io::{Read, Write};
 
-use tracing::trace;
-
 /// Read extension trait
 pub trait ReadExt: Read {
     /// Read a null-terminated string from the input.
     ///
     /// # Errors
-    /// If the input fails to read.
+    /// If the input fails to read, or the string is not valid UTF-8
+    /// ([`io::ErrorKind::InvalidData`]).
     fn read_cstring(&mut self) -> io::Result<String>;
+    /// Read a null-terminated string from the input, replacing invalid UTF-8.
+    ///
+    /// For names that are only displayed, where losing the value entirely is worse
+    /// than showing a replacement character.
+    ///
+    /// # Errors
+    /// If the input fails to read.
+    fn read_cstring_lossy(&mut self) -> io::Result<String>;
+    /// Read the bytes of a null-terminated string from the input, without the terminator.
+    ///
+    /// Reaching the end of the input also ends the string.
+    ///
+    /// # Errors
+    /// If the input fails to read.
+    fn read_cstring_bytes(&mut self) -> io::Result<Vec<u8>>;
     /// Reads a compressed `u32` from the input.
     ///
     /// # Errors
@@ -37,7 +51,7 @@ impl<T: Read> ReadExt for T {
     /// Reads a null-terminated string from the input.
     ///
     /// Uses `.bytes()` internally, a buffered reader should be used if performance is a concern.
-    fn read_cstring(&mut self) -> io::Result<String> {
+    fn read_cstring_bytes(&mut self) -> io::Result<Vec<u8>> {
         let mut bytes: Vec<u8> = Vec::new();
         for byte in self.bytes() {
             let b = byte?;
@@ -46,14 +60,23 @@ impl<T: Read> ReadExt for T {
             }
             bytes.push(b);
         }
+        Ok(bytes)
+    }
 
-        String::from_utf8(bytes).map_or_else(
-            |_| {
-                trace!("Failed to convert bytes to string");
-                Ok(String::new())
-            },
-            Ok,
-        )
+    fn read_cstring(&mut self) -> io::Result<String> {
+        String::from_utf8(self.read_cstring_bytes()?).map_err(|e| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!(
+                    "string is not valid UTF-8: `{}`",
+                    String::from_utf8_lossy(e.as_bytes())
+                ),
+            )
+        })
+    }
+
+    fn read_cstring_lossy(&mut self) -> io::Result<String> {
+        Ok(String::from_utf8_lossy(&self.read_cstring_bytes()?).into_owned())
     }
 
     #[rustversion::attr(
@@ -135,6 +158,37 @@ pub const fn compressed_int_len(x: u32) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn cstring() {
+        let mut input = std::io::Cursor::new(b"one\0two\0three".to_vec());
+        assert_eq!(input.read_cstring().expect("read"), "one");
+        assert_eq!(input.read_cstring().expect("read"), "two");
+        assert_eq!(
+            input.read_cstring().expect("read"),
+            "three",
+            "ends at end of input"
+        );
+        assert_eq!(input.read_cstring().expect("read"), "");
+    }
+
+    #[test]
+    fn cstring_invalid_utf8() {
+        let bytes = b"caf\xE9\0next\0".to_vec();
+        let error = std::io::Cursor::new(bytes.clone())
+            .read_cstring()
+            .expect_err("invalid utf-8 is an error");
+        assert_eq!(error.kind(), io::ErrorKind::InvalidData);
+        assert!(error.to_string().contains("caf\u{FFFD}"), "{error}");
+
+        let mut input = std::io::Cursor::new(bytes);
+        assert_eq!(input.read_cstring_lossy().expect("read"), "caf\u{FFFD}");
+        assert_eq!(
+            input.read_cstring_lossy().expect("read"),
+            "next",
+            "the terminator is consumed"
+        );
+    }
 
     #[test]
     fn compress_int() {

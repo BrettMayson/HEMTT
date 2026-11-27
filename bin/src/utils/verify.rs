@@ -81,7 +81,8 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
         println!("Verification Warning: PBO reports an invalid hash");
     }
 
-    match publickey.verify(&mut pbo, &signature) {
+    let result = publickey.verify(&mut pbo, &signature);
+    match &result {
         Ok(()) => println!("Verified!"),
         Err(hemtt_signing::Error::AuthorityMismatch { .. }) => {
             error!("Verification Failed: Authority does not match");
@@ -107,6 +108,9 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
         Err(hemtt_signing::Error::InvalidLength) => {
             error!("Verification Failed: Invalid length");
         }
+        Err(hemtt_signing::Error::InvalidModulus) => {
+            error!("Verification Failed: Invalid modulus");
+        }
         Err(hemtt_signing::Error::AuthorityMissing) => {
             error!("Verification Failed: Missing authority");
         }
@@ -119,5 +123,6 @@ pub fn execute(cmd: &Command) -> Result<(), Error> {
         }
     }
 
-    Ok(())
+    // A failed verification must fail the command, so scripts and CI can rely on it
+    result.map_err(Error::from)
 }

@@ -196,7 +196,7 @@ pub fn search() -> Option<PDrive> {
     }
 
     // Check if Arma 3 is installed and use it on demand
-    if let Some(arma3_path) = steam::find_app(107_410) {
+    if let Some(arma3_path) = steam::find_arma3() {
         info!("Using Arma 3 on demand as P drive");
         return Some(PDrive::OnDemand(
             PDriveOnDemand::new(&arma3_path).expect("on demand pdrive"),

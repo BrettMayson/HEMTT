@@ -119,6 +119,7 @@ pub fn execute(cmd: &Command) -> Result<Report, Error> {
         true,
     )?;
     if !just.is_empty() {
+        super::check_just(&ctx, &just)?;
         ctx = ctx.filter(|a, _| just.contains(&a.name().to_lowercase()));
         let runtime = ctx.config().runtime().clone().with_just(true);
         let config = ctx.config().clone().with_runtime(runtime);

@@ -129,7 +129,7 @@ pub fn context(
         .map(|s| s.to_lowercase())
         .collect::<Vec<_>>();
 
-    let mut ctx = Context::new(
+    let ctx = Context::new(
         Some("dev"),
         if just.is_empty() {
             crate::context::PreservePrevious::Remove
@@ -138,8 +138,9 @@ pub fn context(
             crate::context::PreservePrevious::Keep
         },
         true,
-    )?
-    .filter(|a, config| {
+    )?;
+    super::check_just(&ctx, &just)?;
+    let mut ctx = ctx.filter(|a, config| {
         if !just.is_empty() && !just.contains(&a.name().to_lowercase()) {
             return false;
         }

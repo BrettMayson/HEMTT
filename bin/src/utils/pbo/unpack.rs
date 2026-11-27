@@ -42,8 +42,14 @@ pub fn execute(args: &PboUnpackArgs) -> Result<(), Error> {
         |output| PathBuf::from(&output),
     );
     if output.exists() {
-        error!("Output directory already exists");
-        return Ok(());
+        return Err(Error::OutputExists(output.display().to_string()));
+    }
+    // Check every entry before writing anything, a crafted PBO could use
+    // `..` or an absolute path to write outside the output folder
+    for header in pbo.files() {
+        if !is_safe_entry(header.filename()) {
+            return Err(Error::UnsafePboPath(header.filename().to_string()));
+        }
     }
     fs_err::create_dir_all(&output)?;
     for (key, value) in pbo.properties() {
@@ -128,4 +134,49 @@ pub fn execute(args: &PboUnpackArgs) -> Result<(), Error> {
         std::io::copy(&mut file, &mut out)?;
     }
     Ok(())
+}
+
+/// Is the entry a plain relative path, that stays inside the folder it is joined to
+fn is_safe_entry(name: &str) -> bool {
+    let path = std::path::Path::new(name);
+    !name.is_empty()
+        && !name.replace('\\', "/").starts_with('/')
+        && path
+            .components()
+            .all(|c| matches!(c, std::path::Component::Normal(_)))
+        && name
+            .split(['\\', '/'])
+            .all(|part| !part.is_empty() && part != ".." && !part.contains(':'))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_safe_entry;
+
+    #[test]
+    fn safe_entries() {
+        assert!(is_safe_entry("config.bin"));
+        assert!(is_safe_entry("functions\\fnc_a.sqf"));
+        assert!(is_safe_entry("data/icon.paa"));
+        assert!(is_safe_entry("..hidden.sqf"));
+    }
+
+    #[test]
+    fn unsafe_entries() {
+        for name in [
+            "",
+            "..",
+            "..\\escape.txt",
+            "a\\..\\..\\escape.txt",
+            "../escape.txt",
+            "\\absolute.txt",
+            "/absolute.txt",
+            "C:\\windows.txt",
+            "C:relative.txt",
+            "a\\\\b.txt",
+            "./a.txt",
+        ] {
+            assert!(!is_safe_entry(name), "{name:?} is accepted");
+        }
+    }
 }

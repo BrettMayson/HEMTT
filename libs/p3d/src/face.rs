@@ -74,8 +74,8 @@ impl Face {
             }
 
             let flags = input.read_u32::<LittleEndian>()?;
-            let texture = input.read_cstring()?;
-            let material = input.read_cstring()?;
+            let texture = input.read_cstring_lossy()?;
+            let material = input.read_cstring_lossy()?;
 
             Ok(Self {
                 vertices,
