@@ -790,6 +790,8 @@ fn invalid_stringtable_fails() {
         .prints("/addons/main/stringtable.xml");
 }
 
+// Needs a case-sensitive filesystem: on macOS and Windows both folders are the same folder
+#[cfg(target_os = "linux")]
 #[sealed_test]
 fn addon_names_differing_by_case_fail() {
     let _directory = cba_project();
