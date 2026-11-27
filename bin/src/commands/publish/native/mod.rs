@@ -1,3 +1,9 @@
+//! Direct Steamworks SDK calls for Workshop publishing
+//!
+//! The `steamworks` crate is only used to initialize the client.
+//! Every Workshop call goes through `steamworks_sys`, and results are collected
+//! with Steam's manual callback dispatch, see [`SteamWorkshop::wait`].
+
 use std::{
     ffi::CString,
     mem::{MaybeUninit, size_of},
@@ -10,8 +16,11 @@ use crate::Error;
 
 mod item;
 
+/// How long to wait for a query, item creation, or Required Item change
 const CALL_TIMEOUT: Duration = Duration::from_secs(60);
+/// How long to wait for the content upload to finish
 const UPLOAD_TIMEOUT: Duration = Duration::from_hours(1);
+/// How often to poll the callback queue while waiting
 const CALLBACK_INTERVAL: Duration = Duration::from_millis(50);
 
 /// Owns the initialized client and drives its manual callback queue on this thread.
@@ -23,6 +32,10 @@ pub(super) struct SteamWorkshop {
 }
 
 impl SteamWorkshop {
+    /// Load the Steam API, and connect to the running Steam client as Arma 3
+    ///
+    /// # Errors
+    /// If the library cannot be loaded, Steam is not running, or the UGC interface is unavailable
     pub(super) fn connect() -> Result<Self, Error> {
         sys::load_steam_library()
             .map_err(|error| Error::Workshop(format!("Loading Steam API: {error}")))?;
@@ -101,6 +114,7 @@ impl SteamWorkshop {
         }
     }
 
+    /// Copy the result of a completed API call into a `T`
     fn call_result<T: Copy>(
         &self,
         completed: &sys::SteamAPICallCompleted_t,
@@ -132,10 +146,12 @@ impl SteamWorkshop {
                 "{operation}: failed to retrieve Steam API result"
             )));
         }
+        // SAFETY: Steam reported that it wrote exactly `size_of::<T>()` bytes into `result`.
         Ok(unsafe { result.assume_init() })
     }
 }
 
+/// Turn a `false` from a synchronous SDK setter into an error
 fn checked(ok: bool, operation: &str) -> Result<(), Error> {
     if ok {
         Ok(())
@@ -144,6 +160,7 @@ fn checked(ok: bool, operation: &str) -> Result<(), Error> {
     }
 }
 
+/// Turn a non-OK `EResult` from a call result into an error
 fn succeeded(result: sys::EResult, operation: &str) -> Result<(), Error> {
     if result == sys::EResult::k_EResultOK {
         Ok(())
@@ -155,10 +172,12 @@ fn succeeded(result: sys::EResult, operation: &str) -> Result<(), Error> {
     }
 }
 
+/// Convert to a C string for the SDK, rejecting interior NULs
 fn string(value: &str) -> Result<CString, Error> {
     CString::new(value).map_err(|error| Error::Workshop(format!("Invalid Steam string: {error}")))
 }
 
+/// Convert a path to a C string for the SDK, which only accepts UTF-8
 fn path_string(path: &std::path::Path) -> Result<CString, Error> {
     let path = path
         .to_str()

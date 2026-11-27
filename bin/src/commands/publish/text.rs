@@ -1,7 +1,34 @@
+//! Conversion of the description and changelog sources into the text Steam displays
+//!
+//! The Workshop renders its own `BBCode` dialect and no HTML or Markdown,
+//! so Markdown sources are converted and HTML blocks are reduced to text.
+
+use std::path::Path;
+
 use markdown::{Constructs, ParseOptions, mdast::Node};
 use markdown_bbcode::MdToBbcode;
 use regex::Regex;
 
+/// Whether a description file is Markdown, decided by its `.md` or `.markdown` extension
+///
+/// Markdown descriptions are converted with [`description`].
+/// Any other file is already Workshop `BBCode` (or plain text) and is uploaded unchanged,
+/// since running `BBCode` through the Markdown converter mangles list items and links.
+pub(super) fn is_markdown(path: &Path) -> bool {
+    path.extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| {
+            extension.eq_ignore_ascii_case("md") || extension.eq_ignore_ascii_case("markdown")
+        })
+}
+
+/// Convert a Markdown description to Workshop `BBCode`
+///
+/// HTML blocks are reduced to their text first (see [`strip_html`]),
+/// and headings deeper than `###` become `[h3]`, the deepest heading Steam supports.
+///
+/// # Errors
+/// If the converter rejects the Markdown, or produces invalid UTF-8
 pub(super) fn description(input: &str) -> Result<String, String> {
     let input = markdown_headings_to_steam(&strip_html(input));
     let mut output = Vec::new();
@@ -11,6 +38,13 @@ pub(super) fn description(input: &str) -> Result<String, String> {
     String::from_utf8(output).map_err(|error| error.to_string())
 }
 
+/// Build the Steam Change Note from the changelog entry for `version`
+///
+/// The changelog must follow [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+/// The note starts with a `Version <version>` heading, followed by the entry's notes.
+///
+/// # Errors
+/// If the changelog cannot be parsed, or has no entry for `version`
 pub(super) fn change_note(input: &str, version: &str) -> Result<String, String> {
     let changelog =
         parse_changelog::parse(input).map_err(|error| format!("Invalid changelog: {error}"))?;
@@ -124,6 +158,9 @@ fn strip_inline_tags(input: &str) -> String {
     text.replace(BR_PLACEHOLDER, "\n").trim().to_string()
 }
 
+/// Convert ATX Markdown headings (`# Title`) to Steam `[h1]`-`[h3]` tags
+///
+/// Steam only has three heading levels, so `####` and deeper become `[h3]`.
 pub fn markdown_headings_to_steam(input: &str) -> String {
     input
         .lines()

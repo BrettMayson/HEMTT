@@ -1,3 +1,9 @@
+//! `hemtt publish`: build a release and upload it to the Steam Workshop
+//!
+//! [`update::prepare`] validates the metadata and builds the release,
+//! [`workflow::publish`] sequences the Steam operations,
+//! and [`native`] makes the Steamworks SDK calls.
+
 use steamworks::PublishedFileId;
 
 use crate::{
@@ -7,6 +13,7 @@ use crate::{
 };
 
 mod create;
+#[deny(clippy::undocumented_unsafe_blocks)]
 mod native;
 mod preflight;
 mod text;
@@ -16,6 +23,7 @@ mod workflow;
 #[cfg(test)]
 mod tests;
 
+/// Arma 3's Steam app ID
 const APP_ID: steamworks::AppId = steamworks::AppId(107_410);
 
 #[derive(clap::Parser)]
@@ -31,6 +39,17 @@ const APP_ID: steamworks::AppId = steamworks::AppId(107_410);
 /// you will be prompted to create a new Steam Workshop item.
 /// This will generate a `meta.cpp` file in the current directory with your published item ID.
 /// Subsequent runs will update the existing item without prompting.
+///
+/// The release is finished after the item is created, so the new ID is included in the uploaded `meta.cpp` and in the release archives.
+///
+/// Steam must be running and logged in.
+///
+/// ### Workshop legal agreement
+///
+/// Steam keeps an item hidden until its owner has accepted the [Steam Workshop legal agreement](https://steamcommunity.com/sharedfiles/workshoplegalagreement).
+/// If it has not been accepted, HEMTT warns when creating the item, and the publish fails after the upload:
+/// the content is on the Workshop, but the item stays hidden and Required Items are not updated.
+/// Accept the agreement, then run `hemtt publish` again.
 ///
 /// ## meta.cpp
 ///
@@ -59,7 +78,8 @@ const APP_ID: steamworks::AppId = steamworks::AppId(107_410);
 ///
 /// Configure publishing in `.hemtt/publish.toml`,
 /// or in `[hemtt.publish]` in `.hemtt/project.toml`.
-/// Use one source only.
+/// Use one source only: if `publish.toml` exists, setting anything in `[hemtt.publish]` is an error.
+/// Unknown keys are an error in both, so a misspelled setting fails instead of being ignored.
 /// Paths in either source are relative to the project root.
 /// The separate file has no table header:
 ///
@@ -84,40 +104,79 @@ const APP_ID: steamworks::AppId = steamworks::AppId(107_410);
 /// On updates, omitted settings preserve the corresponding Workshop metadata.
 /// On creation, the title defaults to the project name and tags default to `["Mod"]`.
 /// Configured titles and tags also apply to subsequent updates.
-/// HEMTT's automatic Arma metadata is preserved.
 ///
 /// - `title`: the Workshop item title, at most 128 UTF-8 bytes.
-/// - `language`: the [Steam API language code](https://partner.steamgames.com/doc/store/localization/languages) for the title and description in this update.
+/// - `language`: the [Steam API language code](https://partner.steamgames.com/doc/store/localization/languages) that the title and description are written in.
 ///   Steam defaults to `english`.
+///   One of `arabic`, `brazilian`, `bulgarian`, `czech`, `danish`, `dutch`, `english`, `finnish`, `french`, `german`, `greek`, `hungarian`, `indonesian`, `italian`, `japanese`, `koreana`, `latam`, `malay`, `norwegian`, `polish`, `portuguese`, `romanian`, `russian`, `schinese`, `spanish`, `swedish`, `tchinese`, `thai`, `turkish`, `ukrainian`, or `vietnamese`.
 /// - `visibility`: `public`, `friends_only`, `private`, or `unlisted`.
-/// - `tags`: the exact Steam tag strings, passed through without label conversion.
-///   Duplicate strings are removed, preserving their first occurrence.
-/// - `description`: a UTF-8 file containing Workshop formatting or Markdown, converted to Steam `BBCode`.
-///   The converted text must be shorter than 8,000 bytes.
+/// - `tags`: the exact Steam tag names, see [Tags](#tags).
+///   Each tag must be 1 to 255 printable ASCII characters, without commas.
+///   Duplicate tags are removed, keeping the first occurrence.
+/// - `description`: a UTF-8 file with the Workshop description.
+///   Files ending in `.md` or `.markdown` are converted from Markdown to Steam `BBCode`.
+///   Any other file, such as `DESCRIPTION.txt`, is uploaded as-is, so write it in Steam `BBCode`.
+///   The uploaded text must be shorter than 8,000 bytes.
 /// - `changelog`: a UTF-8 file following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ///   The current project version must have an entry.
-///   Its notes become the Steam Change Note; when omitted, HEMTT submits `Version <version>`.
+///   Its notes, under a `Version <version>` heading, become the Steam Change Note, which must be shorter than 8,000 bytes.
+///   When omitted, HEMTT submits `Version <version>`.
 /// - `preview`: a local primary Workshop picture.
 /// - `required_items`: Workshop item IDs as nonzero decimal strings, such as `CBA_A3` and ACE3 in the example.
 ///   These are Workshop dependencies, not DLC IDs.
+///   Duplicate IDs are removed, and the item cannot require itself.
 /// - `additional_previews`: the ordered gallery, separate from `preview`.
 ///   Images use `type = "image"` and `path`; `YouTube` videos use `type = "youtube"` and the existing video's 11-character `video_id`.
 ///   Local video upload is not supported.
+///   Unlike tags and Required Items, a duplicate image path or video ID is an error.
+///
+/// ### Replacement lists
 ///
 /// Configured `tags`, `required_items`, and `additional_previews` are complete replacement lists.
 /// Omit a list to preserve it; set `[]` to clear it.
-/// Gallery order follows the list.
-/// Each publish replaces the managed gallery, including changed local images, rather than appending duplicate entries.
+///
+/// When `additional_previews` is configured, every publish removes **all** additional previews on the item,
+/// including any added by hand on the Workshop page, and adds the configured list in order.
+/// Every listed image is uploaded again each time, so changed images are picked up.
+/// To manage the gallery on the Workshop page instead, leave `additional_previews` out.
+///
+/// ### Automatic Arma metadata
+///
+/// When creating an item, HEMTT also sets the `bis_platform` and `bis_displayName` key-value tags that Arma 3 reads.
+/// `bis_displayName` is always the project `name`, even when `title` is configured.
+/// These are only set on creation, and are not changed by later updates.
+///
+/// ### Validation
 ///
 /// Before building or connecting to Steam, HEMTT checks all local metadata sources and reports validation errors together.
 /// Primary and additional images must be readable, nonempty PNG, JPEG, or GIF files strictly smaller than 1,000,000 bytes,
 /// with a matching filename extension.
 /// HEMTT decodes images locally, including every GIF frame, and rejects invalid files without resizing or converting them.
-/// `YouTube` availability and Workshop dependency existence require live testing.
+/// HEMTT cannot check tag names, `YouTube` video availability, or whether Required Items exist; these need a real publish to test.
 ///
 /// The upload and Required Items updates are separate Steam operations.
 /// HEMTT waits for their results and reports failures, including dependency failures after a successful content upload.
 /// Such an error does not roll back the upload.
+/// HEMTT waits up to 1 hour for the upload, and 60 seconds for every other Steam operation.
+/// After a timeout, Steam may still finish the operation, so check the item before publishing again.
+///
+/// ### Tags
+///
+/// Steam silently ignores tags it does not know, so a misspelled tag is dropped without an error.
+/// HEMTT checks tag syntax only, so use these exact names.
+/// The categories are for reference; `tags` is one flat list.
+///
+/// | Category | Tags |
+/// |---|---|
+/// | Item type | `Mod`, `Campaign` |
+/// | Mod type | `Animation`, `Boat`, `Character`, `Editor Extension`, `Equipment`, `Helicopter`, `Mechanics`, `Plane`, `Sound`, `Structure`, `Terrain`, `Tracked`, `Weapon`, `Wheeled` |
+/// | Mod target | `Server` |
+/// | Scenario gameplay | `Singleplayer`, `Multiplayer`, `Coop`, `Persistent`, `PvP`, `FiringDrill`, `TimeTrial`, `Zeus` |
+/// | Scenario type | `Air`, `Infantry`, `Vehicles`, `Water` |
+/// | Scenario map | `Altis`, `Malden 2035`, `Stratis`, `Tanoa`, `Livonia`, `Weferlingen`, `Weferlingen (Winter)`, `Cam Lao Nam`, `Khe Sanh`, `Gabreta`, `Sefrou-Ramal`, `Normandy`, `Mortain`, `VR`, `OtherMap` |
+/// | DLC classification | `KartsDLC`, `HelicoptersDLC`, `MarksmenDLC`, `Apex`, `Jets`, `Malden`, `Laws of War`, `Tanks`, `Contact`, `Contact (Platform)`, `Global Mobilization`, `S.O.G. Prairie Fire`, `CSLA Iron Curtain`, `Western Sahara`, `Spearhead 1944`, `Reaction Forces`, `Expeditionary Forces` |
+///
+/// DLC classification tags only label the item, they are not Required Items.
 ///
 /// ## Build Configuration
 ///
@@ -220,6 +279,9 @@ pub fn get_id() -> Result<PublishedFileId, Error> {
     Ok(PublishedFileId(id))
 }
 
+/// Ask whether to create a new item or enter an existing ID, and store the ID in `meta.cpp`
+///
+/// Returns the ID, and whether the item was created here.
 fn prompt_create_item(steam: &native::SteamWorkshop) -> Result<(PublishedFileId, bool), Error> {
     match dialoguer::Select::new()
         .with_prompt("Workshop item not found")
@@ -258,6 +320,7 @@ fn prompt_create_item(steam: &native::SteamWorkshop) -> Result<(PublishedFileId,
     }
 }
 
+/// Run `f` with stdout and stderr captured, hiding the Steam SDK's console output
 fn silence_steam_output<F, R>(f: F) -> R
 where
     F: FnOnce() -> R,

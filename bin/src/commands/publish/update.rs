@@ -1,3 +1,5 @@
+//! Preparing a publish: validation, the release build, and `--dry-run` output
+
 use std::path::PathBuf;
 
 use hemtt_common::version::Version;
@@ -7,12 +9,22 @@ use crate::{Error, report::Report, utils::bytes_to_human_readable};
 
 use super::preflight::{GalleryPreview, Metadata, PreviewImage};
 
+/// A validated publish, with the release built up to the `pre_release` stage
+///
+/// The release is finished by [`Prepared::finish_release`] once the published ID is known,
+/// so a newly created ID is included in the uploaded `meta.cpp` and the archives.
 pub(super) struct Prepared {
+    /// The validated metadata to send
     pub metadata: Metadata,
+    /// Canonical path of the release build folder that is uploaded
     pub content_path: PathBuf,
+    /// Size of the content, shown by `--dry-run`
     content_size: u64,
+    /// The project version, shown by `--dry-run`
     version: Version,
+    /// The existing published ID, `None` if an item will be created
     id: Option<PublishedFileId>,
+    /// The paused release build
     executor: crate::executor::Executor,
 }
 
@@ -53,6 +65,9 @@ pub(super) fn prepare(
 }
 
 impl Prepared {
+    /// Run the remaining release stages: signing, archives, and so on
+    ///
+    /// `assigned_id` copies the `meta.cpp` written after creating an item into the content first.
     pub(super) fn finish_release(&mut self, assigned_id: bool) -> Result<Report, Error> {
         if assigned_id {
             // Files were copied before Steam assigned the first published ID.
@@ -67,6 +82,7 @@ impl Prepared {
         Ok(report)
     }
 
+    /// Print what would be sent to Steam, for `--dry-run`
     pub(super) fn print(&self) {
         let create = self.id.is_none();
         info!("Dry run, nothing was submitted to Steam");
@@ -138,6 +154,7 @@ impl Prepared {
     }
 }
 
+/// Print one validated image line for `--dry-run`
 fn print_image(label: &str, image: &PreviewImage) {
     println!(
         "{label}: {} ({:?}, {}x{}, {} bytes)",
@@ -149,6 +166,7 @@ fn print_image(label: &str, image: &PreviewImage) {
     );
 }
 
+/// Total size of every file below `path`
 fn dir_size(path: &std::path::Path) -> Result<u64, Error> {
     walkdir::WalkDir::new(path)
         .into_iter()

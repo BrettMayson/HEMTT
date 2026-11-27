@@ -42,7 +42,7 @@ fn checks_converted_description_size_and_utf8_sources() {
     let error = Metadata::prepare(&options, "Project", &version(), None)
         .expect_err("converted description exceeds limit")
         .to_string();
-    assert!(error.contains("converted description"));
+    assert!(error.contains("description must be shorter than 8000"));
     fs_err::write(description, [0xff, 0xfe]).expect("invalid UTF-8");
     assert!(Metadata::prepare(&options, "Project", &version(), None).is_err());
 }
@@ -154,4 +154,22 @@ fn duplicate_gallery_entries_are_reported_but_media_order_is_preserved() {
             .to_string()
             .contains("duplicate")
     );
+}
+
+#[test]
+fn bbcode_descriptions_are_uploaded_unchanged() {
+    // https://github.com/BrettMayson/HEMTT/issues/1389
+    let source = "[h1] Features [/h1]\n[list]\n[*] Many new tools\n[*] [url=https://example.com]Complete list[/url]\n[/list]\n";
+    let project = Project::new();
+    for name in ["description.txt", "description.bbcode", "DESCRIPTION"] {
+        fs_err::write(project.root.join(name), source).expect("description");
+        let metadata = project.metadata(&format!("description = '{name}'"));
+        assert_eq!(metadata.description.as_deref(), Some(source), "{name}");
+    }
+    for name in ["description.md", "description.MARKDOWN"] {
+        fs_err::write(project.root.join(name), "* One\n").expect("description");
+        let metadata = project.metadata(&format!("description = '{name}'"));
+        let text = metadata.description.expect("description");
+        assert!(text.contains("[list]"), "{name}: {text}");
+    }
 }

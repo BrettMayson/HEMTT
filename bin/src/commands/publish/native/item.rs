@@ -1,3 +1,10 @@
+//! Workshop item operations: creating, inspecting, updating, and Required Items
+//!
+//! Every `unsafe` block here calls an `ISteamUGC` function through `self.ugc`,
+//! which is valid while `SteamWorkshop` holds the initialized client.
+//! The SDK copies every string and array argument before the call returns,
+//! so the `CString`s only need to outlive the call they are passed to.
+
 use std::mem::MaybeUninit;
 
 use hemtt_common::config::Visibility;
@@ -12,6 +19,10 @@ use crate::commands::publish::{
     workflow::{ItemUpdate, RemoteState, Workshop},
 };
 
+/// Steam's documented URL for the Workshop legal agreement
+const LEGAL_AGREEMENT_URL: &str = "https://steamcommunity.com/sharedfiles/workshoplegalagreement";
+
+/// A UGC details query, released when dropped
 struct Query<'a> {
     steam: &'a SteamWorkshop,
     handle: sys::UGCQueryHandle_t,
@@ -27,6 +38,9 @@ impl Drop for Query<'_> {
 }
 
 impl SteamWorkshop {
+    /// Create an empty Arma 3 Workshop item and return its new ID
+    ///
+    /// The item stays hidden until it is updated, so a failed first upload leaves an empty, hidden item.
     pub(in crate::commands::publish) fn create_item(&self) -> Result<PublishedFileId, Error> {
         // SAFETY: the live client owns the UGC interface; no borrowed data is retained.
         let call = unsafe {
@@ -50,7 +64,7 @@ impl SteamWorkshop {
         }
         if result.m_bUserNeedsToAcceptWorkshopLegalAgreement {
             warn!(
-                "Steam requires acceptance of the Workshop legal agreement before publishing can complete"
+                "Steam requires acceptance of the Workshop legal agreement before the item can be published, accept it at {LEGAL_AGREEMENT_URL}"
             );
         }
         Ok(PublishedFileId(result.m_nPublishedFileId))
@@ -93,6 +107,7 @@ impl Workshop for SteamWorkshop {
                 "uncached Workshop query",
             )?;
         }
+        // SAFETY: `handle` is a valid query, owned by `query` until the result has been read.
         let call = unsafe { sys::SteamAPI_ISteamUGC_SendQueryUGCRequest(self.ugc, handle) };
         let result: sys::SteamUGCQueryCompleted_t = self.wait(
             call,
@@ -108,6 +123,8 @@ impl Workshop for SteamWorkshop {
         }
         let mut details = MaybeUninit::<sys::SteamUGCDetails_t>::uninit();
         checked(
+            // SAFETY: the query completed with exactly one result, at index 0.
+            // `details` is writable storage for one `SteamUGCDetails_t`.
             unsafe {
                 sys::SteamAPI_ISteamUGC_GetQueryUGCResult(self.ugc, handle, 0, details.as_mut_ptr())
             },
@@ -126,6 +143,8 @@ impl Workshop for SteamWorkshop {
         if children && details.m_unNumChildren > 0 {
             required_items.resize(details.m_unNumChildren as usize, 0);
             checked(
+                // SAFETY: `required_items` was resized to `m_unNumChildren` elements,
+                // the exact count passed, so Steam cannot write past its end.
                 unsafe {
                     sys::SteamAPI_ISteamUGC_GetQueryUGCChildren(
                         self.ugc,
@@ -139,6 +158,7 @@ impl Workshop for SteamWorkshop {
             )?;
         }
         let additional_previews = if previews {
+            // SAFETY: result 0 of the live query was read successfully above.
             unsafe { sys::SteamAPI_ISteamUGC_GetQueryUGCNumAdditionalPreviews(self.ugc, handle, 0) }
         } else {
             0
@@ -153,8 +173,9 @@ impl Workshop for SteamWorkshop {
     fn submit(&self, id: PublishedFileId, update: &ItemUpdate<'_>) -> Result<(), Error> {
         let metadata = update.metadata;
         let content = path_string(update.content)?;
-        // SAFETY: all setter strings live through each synchronous SDK call.
-        // The SDK copies their contents into this pending update before returning.
+        // SAFETY: the client is live and no pointers are passed.
+        // Each setter below is synchronous and copies its string into the pending update,
+        // so their `CString`s only need to outlive the call.
         let handle = unsafe {
             sys::SteamAPI_ISteamUGC_StartItemUpdate(self.ugc, super::super::APP_ID.0, id.0)
         };
@@ -164,12 +185,14 @@ impl Workshop for SteamWorkshop {
             ));
         }
         checked(
+            // SAFETY: `handle` is the pending update, and the string argument outlives this call.
             unsafe { sys::SteamAPI_ISteamUGC_SetItemContent(self.ugc, handle, content.as_ptr()) },
             "mod content",
         )?;
         if let Some(language) = &metadata.language {
             let language = string(language)?;
             checked(
+                // SAFETY: `handle` is the pending update, and the string argument outlives this call.
                 unsafe {
                     sys::SteamAPI_ISteamUGC_SetItemUpdateLanguage(
                         self.ugc,
@@ -183,6 +206,7 @@ impl Workshop for SteamWorkshop {
         if let Some(title) = metadata.effective_title(update.create) {
             let title = string(title)?;
             checked(
+                // SAFETY: `handle` is the pending update, and the string argument outlives this call.
                 unsafe { sys::SteamAPI_ISteamUGC_SetItemTitle(self.ugc, handle, title.as_ptr()) },
                 "Workshop title",
             )?;
@@ -190,6 +214,7 @@ impl Workshop for SteamWorkshop {
         if let Some(description) = &metadata.description {
             let description = string(description)?;
             checked(
+                // SAFETY: `handle` is the pending update, and the string argument outlives this call.
                 unsafe {
                     sys::SteamAPI_ISteamUGC_SetItemDescription(
                         self.ugc,
@@ -208,6 +233,7 @@ impl Workshop for SteamWorkshop {
                 Visibility::Unlisted => sys::ERemoteStoragePublishedFileVisibility::k_ERemoteStoragePublishedFileVisibilityUnlisted,
             };
             checked(
+                // SAFETY: `handle` is the pending update, and `visibility` is a plain enum.
                 unsafe { sys::SteamAPI_ISteamUGC_SetItemVisibility(self.ugc, handle, visibility) },
                 "Workshop visibility",
             )?;
@@ -229,6 +255,7 @@ impl Workshop for SteamWorkshop {
                     .map_err(|error| Error::Workshop(error.to_string()))?,
             };
             checked(
+                // SAFETY: `raw` points to `pointers`, which point into `tags`, and all three outlive the call.
                 unsafe {
                     sys::SteamAPI_ISteamUGC_SetItemTags(self.ugc, handle, &raw const raw, true)
                 },
@@ -242,6 +269,7 @@ impl Workshop for SteamWorkshop {
             let name = string("bis_displayName")?;
             let project_name = string(&metadata.default_title)?;
             checked(
+                // SAFETY: `handle` is the pending update, and the string argument outlives this call.
                 unsafe {
                     sys::SteamAPI_ISteamUGC_AddItemKeyValueTag(
                         self.ugc,
@@ -253,6 +281,7 @@ impl Workshop for SteamWorkshop {
                 "automatic Arma platform metadata",
             )?;
             checked(
+                // SAFETY: `handle` is the pending update, and the string argument outlives this call.
                 unsafe {
                     sys::SteamAPI_ISteamUGC_AddItemKeyValueTag(
                         self.ugc,
@@ -267,6 +296,7 @@ impl Workshop for SteamWorkshop {
         if let Some(preview) = &metadata.preview {
             let preview = path_string(&preview.path)?;
             checked(
+                // SAFETY: `handle` is the pending update, and the string argument outlives this call.
                 unsafe {
                     sys::SteamAPI_ISteamUGC_SetItemPreview(self.ugc, handle, preview.as_ptr())
                 },
@@ -278,6 +308,7 @@ impl Workshop for SteamWorkshop {
             // Rebuilding this authoritative list also replaces changed image files at the same path, preserves order, and never appends duplicates.
             for index in (0..update.remove_previews).rev() {
                 checked(
+                    // SAFETY: `handle` is the pending update, and `index` is below the remote preview count.
                     unsafe { sys::SteamAPI_ISteamUGC_RemoveItemPreview(self.ugc, handle, index) },
                     "removing an additional preview",
                 )?;
@@ -287,6 +318,7 @@ impl Workshop for SteamWorkshop {
                     GalleryPreview::Image(image) => {
                         let path = path_string(&image.path)?;
                         checked(
+                            // SAFETY: `handle` is the pending update, and the string argument outlives this call.
                             unsafe {
                                 sys::SteamAPI_ISteamUGC_AddItemPreviewFile(
                                     self.ugc,
@@ -301,6 +333,7 @@ impl Workshop for SteamWorkshop {
                     GalleryPreview::Youtube(video_id) => {
                         let video_id = string(video_id)?;
                         checked(
+                            // SAFETY: `handle` is the pending update, and the string argument outlives this call.
                             unsafe {
                                 sys::SteamAPI_ISteamUGC_AddItemPreviewVideo(
                                     self.ugc,
@@ -315,6 +348,7 @@ impl Workshop for SteamWorkshop {
             }
         }
         let change_note = string(&metadata.change_note)?;
+        // SAFETY: `handle` is the pending update, and Steam copies the Change Note before returning.
         let call = unsafe {
             sys::SteamAPI_ISteamUGC_SubmitItemUpdate(self.ugc, handle, change_note.as_ptr())
         };
@@ -331,13 +365,16 @@ impl Workshop for SteamWorkshop {
             ));
         }
         if result.m_bUserNeedsToAcceptWorkshopLegalAgreement {
-            return Err(Error::Workshop("Steam requires acceptance of the Workshop legal agreement; publication is not complete".to_string()));
+            return Err(Error::Workshop(format!(
+                "The content was uploaded, but the item stays hidden until the Workshop legal agreement is accepted at {LEGAL_AGREEMENT_URL}"
+            )));
         }
         Ok(())
     }
 
     fn dependency(&self, id: PublishedFileId, child: u64, add: bool) -> Result<(), Error> {
         if add {
+            // SAFETY: both IDs are plain integers and the client is live.
             let call = unsafe { sys::SteamAPI_ISteamUGC_AddDependency(self.ugc, id.0, child) };
             let result: sys::AddUGCDependencyResult_t = self.wait(
                 call,
@@ -347,6 +384,7 @@ impl Workshop for SteamWorkshop {
             )?;
             succeeded(result.m_eResult, "Adding Required Item")
         } else {
+            // SAFETY: both IDs are plain integers and the client is live.
             let call = unsafe { sys::SteamAPI_ISteamUGC_RemoveDependency(self.ugc, id.0, child) };
             let result: sys::RemoveUGCDependencyResult_t = self.wait(
                 call,

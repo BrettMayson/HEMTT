@@ -1,3 +1,8 @@
+//! Local validation of every Workshop metadata source, run before building or connecting to Steam
+//!
+//! Every problem is collected and reported at once, so a misconfigured project fails fast
+//! instead of after a release build or a partial upload.
+
 use std::{
     collections::HashSet,
     io::Cursor,
@@ -13,9 +18,15 @@ use steamworks::PublishedFileId;
 
 use crate::Error;
 
-// Use a conservative interpretation of Steam's under-1-MB preview limit.
+/// Largest accepted preview image, exclusive
+///
+/// A conservative reading of Steam's "under 1 MB" limit for preview images.
 pub(super) const MAX_IMAGE_BYTES: usize = 1_000_000;
+/// Longest accepted tag, in bytes
 const MAX_TAG_BYTES: usize = 255;
+/// Steam API language codes accepted for `language`
+///
+/// <https://partner.steamgames.com/doc/store/localization/languages>
 const LANGUAGES: &[&str] = &[
     "arabic",
     "bulgarian",
@@ -51,36 +62,65 @@ const LANGUAGES: &[&str] = &[
 ];
 
 #[derive(Debug, Clone)]
+/// A local image that passed [`validate_image`]
 pub(super) struct PreviewImage {
+    /// Canonical, UTF-8 path, as Steam reads the file itself during the upload
     pub path: PathBuf,
+    /// Detected format, which matches the filename extension
     pub format: ImageFormat,
+    /// Width in pixels, shown by `--dry-run`
     pub width: u32,
+    /// Height in pixels, shown by `--dry-run`
     pub height: u32,
+    /// File size in bytes, below [`MAX_IMAGE_BYTES`]
     pub bytes: usize,
 }
 
 #[derive(Debug, Clone)]
+/// A validated `additional_previews` entry
 pub(super) enum GalleryPreview {
+    /// A local image, uploaded on every publish
     Image(PreviewImage),
+    /// An 11 character `YouTube` video ID, the video must already exist
     Youtube(String),
 }
 
 #[derive(Debug, Clone)]
+/// Everything HEMTT will send to Steam, validated and converted
+///
+/// `None` means "leave the Workshop value unchanged" on updates.
+/// On creation, [`Metadata::effective_title`] and the default `Mod` tag fill the gaps.
 pub(super) struct Metadata {
+    /// Configured title, applied on every publish
     pub title: Option<String>,
+    /// The project name, used as the title on creation when none is configured,
+    /// and always used for the `bis_displayName` key-value tag on creation
     pub default_title: String,
+    /// Description converted to Workshop `BBCode`, see [`super::text::is_markdown`]
     pub description: Option<String>,
+    /// Change Note, from the changelog entry or `Version <version>`
     pub change_note: String,
+    /// Steam API language code that the title and description are written in
     pub language: Option<String>,
+    /// Requested visibility
     pub visibility: Option<Visibility>,
+    /// Replacement tags, deduplicated, keeping the first occurrence
     pub tags: Option<Vec<String>>,
+    /// Primary preview image
     pub preview: Option<PreviewImage>,
+    /// Replacement Required Items, deduplicated, never including the item itself
     pub required_items: Option<Vec<u64>>,
+    /// Replacement gallery, in display order, `Some(vec![])` clears it
     pub additional_previews: Option<Vec<GalleryPreview>>,
 }
 
 impl Metadata {
     /// Validate every local source before building or initializing Steam.
+    ///
+    /// `id` is the existing published ID, `None` when a new item will be created.
+    ///
+    /// # Errors
+    /// [`Error::Config`] listing every validation error found
     pub(super) fn prepare(
         options: &PublishOptions,
         project_name: &str,
@@ -139,10 +179,15 @@ impl Metadata {
         }
         let description = options.description().and_then(|path| {
             read_text(path, "description", &mut errors).and_then(|source| {
-                match super::text::description(&source) {
+                let converted = if super::text::is_markdown(path) {
+                    super::text::description(&source)
+                } else {
+                    Ok(source)
+                };
+                match converted {
                     Ok(text) => {
                         validate_text(
-                            "converted description",
+                            "description",
                             &text,
                             steamworks_sys::k_cchPublishedDocumentDescriptionMax as usize,
                             &mut errors,
@@ -253,6 +298,9 @@ impl Metadata {
         })
     }
 
+    /// The title to send: the configured title, or the project name when creating an item
+    ///
+    /// `None` leaves the existing title unchanged.
     pub(super) fn effective_title(&self, create: bool) -> Option<&str> {
         self.title
             .as_deref()
@@ -260,6 +308,7 @@ impl Metadata {
     }
 }
 
+/// Check that `value` fits into Steam's fixed `buffer_bytes` buffer, including the NUL terminator
 fn validate_text(field: &str, value: &str, buffer_bytes: usize, errors: &mut Vec<String>) {
     if value.len() >= buffer_bytes || value.contains('\0') {
         errors.push(format!(
@@ -268,6 +317,7 @@ fn validate_text(field: &str, value: &str, buffer_bytes: usize, errors: &mut Vec
     }
 }
 
+/// Read a UTF-8 source file, recording an error instead of returning it
 fn read_text(path: &Path, field: &str, errors: &mut Vec<String>) -> Option<String> {
     match fs_err::read_to_string(path) {
         Ok(source) => Some(source),
@@ -278,6 +328,7 @@ fn read_text(path: &Path, field: &str, errors: &mut Vec<String>) -> Option<Strin
     }
 }
 
+/// [`validate_image`], recording an error instead of returning it
 fn checked_image(path: &Path, errors: &mut Vec<String>) -> Option<PreviewImage> {
     match validate_image(path) {
         Ok(image) => Some(image),
@@ -288,6 +339,14 @@ fn checked_image(path: &Path, errors: &mut Vec<String>) -> Option<PreviewImage> 
     }
 }
 
+/// Validate a preview image without modifying it
+///
+/// The file must be a non-empty PNG, JPEG or GIF smaller than [`MAX_IMAGE_BYTES`],
+/// with a matching extension, that decodes fully (every frame for a GIF).
+/// The returned path is canonical, since Steam reads the file itself.
+///
+/// # Errors
+/// A description of the first problem found
 pub(super) fn validate_image(path: &Path) -> Result<PreviewImage, String> {
     let metadata = fs_err::metadata(path).map_err(|error| error.to_string())?;
     if !metadata.is_file() || metadata.len() == 0 || metadata.len() >= MAX_IMAGE_BYTES as u64 {

@@ -8,9 +8,13 @@ use crate::Error;
 #[serde(rename_all = "snake_case")]
 /// Visibility of a Steam Workshop item.
 pub enum Visibility {
+    /// Visible to everyone, and listed in Workshop searches
     Public,
+    /// Visible only to the owner's Steam friends
     FriendsOnly,
+    /// Visible only to the owner
     Private,
+    /// Visible to anyone with the link, but not listed in searches
     Unlisted,
 }
 
@@ -18,13 +22,24 @@ pub enum Visibility {
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 /// An additional Workshop gallery image or an existing `YouTube` video.
 pub enum AdditionalPreview {
-    Image { path: PathBuf },
-    Youtube { video_id: String },
+    /// `{ type = "image", path = "..." }`
+    Image {
+        /// PNG, JPEG or GIF file, relative to the project root until loaded
+        path: PathBuf,
+    },
+    /// `{ type = "youtube", video_id = "..." }`
+    Youtube {
+        /// The 11 character ID of an existing video, as in `youtube.com/watch?v=<video_id>`
+        video_id: String,
+    },
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 /// Configuration for `hemtt publish`. Omitted metadata is left unchanged on updates.
+///
+/// Every path has been resolved against the project root. Values are not validated here,
+/// `hemtt publish` checks them all before building.
 pub struct PublishOptions {
     title: Option<String>,
     description: Option<PathBuf>,
@@ -44,7 +59,7 @@ impl PublishOptions {
         self.title.as_deref()
     }
 
-    /// Get the description source.
+    /// Get the description source. Markdown (`.md`) is converted to `BBCode`, other files are used as-is.
     #[must_use]
     pub const fn description(&self) -> Option<&PathBuf> {
         self.description.as_ref()
@@ -97,6 +112,8 @@ impl PublishOptions {
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 /// Publish options in `.hemtt/project.toml` or the separate `.hemtt/publish.toml`.
+///
+/// Unknown keys are rejected, so a typo fails instead of being silently ignored.
 pub struct PublishOptionsFile {
     title: Option<String>,
     description: Option<PathBuf>,
@@ -111,6 +128,10 @@ pub struct PublishOptionsFile {
 
 impl PublishOptionsFile {
     /// Load one configuration source, resolving file paths against the project root.
+    ///
+    /// `self` is the `[hemtt.publish]` table of `project_path`.
+    /// If a `publish.toml` exists next to it, that file is used instead,
+    /// and it is an error for `[hemtt.publish]` to also set anything.
     ///
     /// # Errors
     /// Returns an error for unreadable files, invalid TOML, or conflicting sources.
@@ -133,6 +154,7 @@ impl PublishOptionsFile {
         Ok(source.resolve(root))
     }
 
+    /// Join every configured path onto the project `root`
     fn resolve(self, root: &Path) -> PublishOptions {
         PublishOptions {
             title: self.title,
