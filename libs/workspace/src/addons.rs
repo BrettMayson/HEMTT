@@ -79,7 +79,15 @@ impl Addon {
                     return Err(Error::PrefixMissing(name).into());
                 };
                 let content = fs_err::read_to_string(&file)?;
-                Prefix::new(&content)?
+                Prefix::new(&content).map_err(|e| {
+                    e.in_file(
+                        &file
+                            .strip_prefix(root)
+                            .unwrap_or(&file)
+                            .display()
+                            .to_string(),
+                    )
+                })?
             },
             location,
             name,

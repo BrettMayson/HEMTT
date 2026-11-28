@@ -137,7 +137,8 @@ fn internal_build(
             }
 
             if FILES.contains(&entry.filename().to_lowercase().as_str()) {
-                let prefix = Prefix::new(&entry.read_to_string()?)?;
+                let prefix =
+                    Prefix::new(&entry.read_to_string()?).map_err(|e| e.in_file(entry.as_str()))?;
                 pbo.add_property("prefix", prefix.to_string());
                 pbo.add_property("version", version.to_string());
                 if let Some(hash) = git_hash {

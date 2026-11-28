@@ -124,7 +124,8 @@ impl Workspace {
                     _ => {
                         if FILES.contains(&entry.filename().to_lowercase().as_str()) {
                             trace!("Prefix: {:?}", entry);
-                            let prefix = Prefix::new(&entry.read_to_string()?)?;
+                            let prefix = Prefix::new(&entry.read_to_string()?)
+                                .map_err(|e| e.in_file(entry.as_str()))?;
                             let prefix_str = format!(
                                 "/{}",
                                 prefix.to_string().to_lowercase().replace('\\', "/")

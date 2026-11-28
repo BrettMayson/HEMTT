@@ -561,6 +561,27 @@ fn missing_prefix_file_fails() {
     ));
 }
 
+#[sealed_test]
+fn leading_backslash_prefix_names_the_file() {
+    let _directory = cba_project();
+    write("addons/main/$PBOPREFIX$", "\\z\\tst\\addons\\main");
+    let result = run(&["build"]);
+    let error = result.fails();
+    assert!(
+        matches!(
+            error,
+            hemtt::Error::Workspace(hemtt_workspace::Error::Prefix(
+                hemtt_common::prefix::Error::File { path, source }
+            )) if path == "addons/main/$PBOPREFIX$"
+                && matches!(**source, hemtt_common::prefix::Error::LeadingBackslash(_))
+        ),
+        "{error:?}"
+    );
+    let message = error.to_string();
+    assert!(message.contains("addons/main/$PBOPREFIX$"), "{message}");
+    assert!(message.contains("use `z\\tst\\addons\\main`"), "{message}");
+}
+
 // addon.toml
 
 #[sealed_test]
