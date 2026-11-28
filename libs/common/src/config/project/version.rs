@@ -1,4 +1,4 @@
-use std::{mem::MaybeUninit, sync::RwLock};
+use std::sync::RwLock;
 
 use git2::Repository;
 use serde::{Deserialize, Serialize};
@@ -15,8 +15,8 @@ pub struct VersionConfig {
     git_hash: u8,
 }
 
-static VERSION: RwLock<MaybeUninit<Version>> = RwLock::new(MaybeUninit::uninit());
-static mut INIT: bool = false;
+/// The version is read once per command, it is used by every PBO and the archive
+static VERSION: RwLock<Option<Version>> = RwLock::new(None);
 
 impl VersionConfig {
     /// Get the version of the project
@@ -26,15 +26,8 @@ impl VersionConfig {
     /// Returns an error if the version is not a valid semver version
     /// or a points to a file that does not contain a valid version macro
     pub fn get(&self, vfs: &VfsPath) -> Result<Version, Error> {
-        // Check for a cached version
-        unsafe {
-            if INIT {
-                return Ok(VERSION
-                    .read()
-                    .expect("VERSION poisoned")
-                    .assume_init_ref()
-                    .clone());
-            }
+        if let Some(version) = VERSION.read().expect("VERSION poisoned").as_ref() {
+            return Ok(version.clone());
         }
 
         let mut version = self.internal_get(vfs)?;
@@ -46,23 +39,17 @@ impl VersionConfig {
             version.set_build(&id[0..length as usize]);
         }
 
-        unsafe {
-            *VERSION.write().expect("VERSION poisoned") = MaybeUninit::new(version.clone());
-            INIT = true;
-            Ok(VERSION
-                .read()
-                .expect("VERSION poisoned")
-                .assume_init_ref()
-                .clone())
-        }
+        *VERSION.write().expect("VERSION poisoned") = Some(version.clone());
+        Ok(version)
     }
 
-    /// Invalidate the cached version
+    /// Invalidate the cached version, so it is read again
+    ///
+    /// Call this when the version may have changed, such as after a hook
+    /// or at the start of a new command.
     #[allow(clippy::unused_self)]
     pub fn invalidate(&self) {
-        unsafe {
-            INIT = false;
-        }
+        *VERSION.write().expect("VERSION poisoned") = None;
     }
 
     fn internal_get(&self, vfs: &VfsPath) -> Result<Version, Error> {

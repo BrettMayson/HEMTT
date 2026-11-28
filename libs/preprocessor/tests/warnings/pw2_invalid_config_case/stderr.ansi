@@ -1,0 +1,3 @@
+[0m[1m[38;5;11mwarning[PW2][0m[1m: `Config.cpp` is not a valid case for a config[0m
+ [0m[36m=[0m [33mhelp[0m: Rename to `/config.cpp`
+

@@ -118,9 +118,10 @@ pub fn coverage(cmd: &Command) -> Result<Report, Error> {
             let project = match Project::read(stringtable_path) {
                 Ok(project) => project,
                 Err(e) => {
-                    error!("Failed to read stringtable for {}", addon.folder());
-                    error!("{:?}", e);
-                    return Ok(Report::new());
+                    return Err(Error::Stringtable(format!(
+                        "Failed to read stringtable for {}: {e}",
+                        addon.folder()
+                    )));
                 }
             };
             project.packages().iter().for_each(|package| {

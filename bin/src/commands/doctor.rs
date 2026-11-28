@@ -138,7 +138,7 @@ impl Code for DoctorFailed {
 pub fn run() -> Vec<Check> {
     let mut checks = vec![version(), platform()];
 
-    let arma3 = hemtt_common::steam::find_app(107_410);
+    let arma3 = hemtt_common::steam::find_arma3();
     checks.push(arma3.as_ref().map_or_else(
         || {
             Check::new("Arma 3", Status::Warn, "not found")

@@ -1,0 +1,8 @@
+[0m[1m[38;5;11mwarning[PW4][0m[1m: on disk: `/includes/thing.hpp`[0m
+  [0m[36m┌─[0m source.hpp:1:11
+  [0m[36m│[0m
+[0m[36m1[0m [0m[36m│[0m #include "[0m[33mIncludes\Thing.hpp[0m"
+  [0m[36m│[0m           [0m[33m^^^^^^^^^^^^^^^^^^[0m [0m[33mon disk: `/includes/thing.hpp`[0m
+  [0m[36m│[0m
+  [0m[36m=[0m [36mnote[0m: HEMTT ignores the case, but other tools on case-sensitive filesystems will not find the file
+

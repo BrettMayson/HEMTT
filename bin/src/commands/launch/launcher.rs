@@ -56,7 +56,7 @@ impl<'a> Launcher<'a> {
         options: &LaunchOptions,
     ) -> Result<(Report, Option<Self>), Error> {
         let mut report = Report::new();
-        let Some(arma3) = steam::find_app(107_410) else {
+        let Some(arma3) = steam::find_arma3() else {
             report.push(ArmaNotFound::code());
             return Ok((report, None));
         };

@@ -74,20 +74,18 @@ pub fn sort(cmd: &Command) -> Result<Report, Error> {
                         }
                         let mut writer = String::new();
                         if let Err(e) = project.to_writer(&mut writer, false) {
-                            error!("Failed to write stringtable for {}", path.display());
-                            error!("{:?}", e);
-                            return Ok(Report::new());
+                            return Err(Error::Stringtable(format!(
+                                "Failed to write stringtable for {}: {e}",
+                                path.display()
+                            )));
                         }
-                        if let Err(e) = fs_err::write(&path, writer) {
-                            error!("Failed to write stringtable for {}", path.display());
-                            error!("{:?}", e);
-                            return Ok(Report::new());
-                        }
+                        fs_err::write(&path, writer)?;
                     }
                     Err(e) => {
-                        error!("Failed to read stringtable for {}", path.display());
-                        error!("{:?}", e);
-                        return Ok(Report::new());
+                        return Err(Error::Stringtable(format!(
+                            "Failed to read stringtable for {}: {e}",
+                            path.display()
+                        )));
                     }
                 }
             }

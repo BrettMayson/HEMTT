@@ -296,6 +296,8 @@ fn version_check(
     workspace: &WorkspacePath,
     print_info: bool,
 ) -> Result<(), Error> {
+    // Each command reads the version fresh, the files may have changed since the last one
+    config.version().invalidate();
     let version = config.version().get(workspace.vfs());
     if let Err(hemtt_common::Error::Git(_)) = version {
         error!(

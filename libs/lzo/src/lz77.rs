@@ -99,7 +99,7 @@ pub fn compress(input: &[u8], out_buf: &mut [u8]) -> Result<usize, &'static str>
 
                 // Update checksum
                 for i in 0..best_match_len {
-                    checksum += u32::from(input[pi + i]);
+                    checksum = checksum.wrapping_add(u32::from(input[pi + i]));
                 }
 
                 pi += best_match_len;
@@ -111,7 +111,7 @@ pub fn compress(input: &[u8], out_buf: &mut [u8]) -> Result<usize, &'static str>
 
                 flag |= 1 << bit;
                 out_buf[po] = input[pi];
-                checksum += u32::from(input[pi]);
+                checksum = checksum.wrapping_add(u32::from(input[pi]));
                 po += 1;
                 pi += 1;
             }

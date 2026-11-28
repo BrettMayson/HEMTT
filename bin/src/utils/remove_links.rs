@@ -26,7 +26,7 @@ pub struct Command {}
 /// If the args are not present from clap
 pub fn execute(_: &Command) -> Result<Report, Error> {
     let mut report = Report::new();
-    let Some(arma3) = steam::find_app(107_410) else {
+    let Some(arma3) = steam::find_arma3() else {
         report.push(ArmaNotFound::code());
         return Ok(report);
     };

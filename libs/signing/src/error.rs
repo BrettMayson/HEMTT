@@ -15,6 +15,10 @@ pub enum Error {
     /// Invalid length while reading a file
     InvalidLength,
 
+    #[error("Invalid modulus while reading")]
+    /// The modulus read from a file can not be an RSA modulus
+    InvalidModulus,
+
     #[error("Invalid private key format")]
     /// Invalid private key format
     InvalidMagic,

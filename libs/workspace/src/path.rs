@@ -310,100 +310,33 @@ impl WorkspacePath {
     fn locate_internal(&self, path: &str) -> Result<Option<LocateResult>, Error> {
         let path = path.replace('\\', "/");
         let path_lower = path.to_lowercase();
-        if path.starts_with('/') {
-            if self.data.workspace.vfs.join(&path)?.exists()? {
-                let ret_path = self.data.workspace.vfs.join(&path)?;
-                return Ok(Some(LocateResult {
-                    case_mismatch: if is_wrong_case(&ret_path, &path) {
-                        Some(ret_path.as_str().to_string())
-                    } else {
-                        None
-                    },
-                    path: Self {
-                        data: Arc::new(WorkspacePathData {
-                            path: ret_path,
-                            workspace: self.data.workspace.clone(),
-                        }),
-                    },
-                }));
-            }
-            if let Some((base, root)) = self
+        let vfs = &self.data.workspace.vfs;
+        let found = if path.starts_with('/') {
+            if let Some(found) = resolve(&vfs.root(), &path)? {
+                Some(found)
+            } else if let Some((base, root)) = self
                 .data
                 .workspace
                 .pointers
                 .iter()
                 .find(|(p, _)| path_lower.starts_with(&format!("{}/", p.to_lowercase())))
             {
-                let ret_path = root.join(
-                    path.strip_prefix_insensitive(base)
-                        .unwrap_or(&path)
-                        .strip_prefix('/')
-                        .unwrap_or(&path),
-                )?;
-                let path_str = ret_path.as_str().trim_start_matches('/');
-                if ret_path.exists()? {
-                    return Ok(Some(LocateResult {
-                        case_mismatch: if is_wrong_case(&ret_path, &path) {
-                            Some(ret_path.as_str().to_string())
-                        } else {
-                            None
-                        },
-                        path: Self {
-                            data: Arc::new(WorkspacePathData {
-                                path: ret_path,
-                                workspace: self.data.workspace.clone(),
-                            }),
-                        },
-                    }));
-                } else if let Some(insensitive) = exists_case_insensitive(Path::new(path_str)) {
-                    return Ok(Some(LocateResult {
-                        case_mismatch: Some(insensitive.to_string_lossy().to_string()),
-                        path: Self {
-                            data: Arc::new(WorkspacePathData {
-                                path: self
-                                    .data
-                                    .workspace
-                                    .vfs
-                                    .join(insensitive.to_str().expect("utf-8"))?,
-                                workspace: self.data.workspace.clone(),
-                            }),
-                        },
-                    }));
-                }
-            } else if let Some(insensitive) = exists_case_insensitive(Path::new(&path)) {
-                return Ok(Some(LocateResult {
-                    case_mismatch: Some(insensitive.to_string_lossy().to_string()),
-                    path: Self {
-                        data: Arc::new(WorkspacePathData {
-                            path: self
-                                .data
-                                .workspace
-                                .vfs
-                                .join(insensitive.to_str().expect("utf-8"))?,
-                            workspace: self.data.workspace.clone(),
-                        }),
-                    },
-                }));
+                resolve(root, path.strip_prefix_insensitive(base).unwrap_or(&path))?
+            } else {
+                resolve(&vfs.join("include")?, &path)?
             }
-        }
-        let ret_path = self.data.path.parent().join(&path)?;
-        if ret_path.exists()? {
-            Ok(Some(LocateResult {
-                case_mismatch: if is_wrong_case(&ret_path, &path) {
-                    Some(ret_path.as_str().to_string())
-                } else {
-                    None
-                },
-                path: Self {
-                    data: Arc::new(WorkspacePathData {
-                        path: ret_path,
-                        workspace: self.data.workspace.clone(),
-                    }),
-                },
-            }))
         } else {
-            Ok(None)
-        }
+            resolve(&self.data.path.parent(), &path)?
+        };
+        Ok(found.map(|(found, case_mismatch)| LocateResult {
+            case_mismatch: case_mismatch.then(|| found.as_str().to_string()),
+            path: Self {
+                data: Arc::new(WorkspacePathData {
+                    path: found,
+                    workspace: self.data.workspace.clone(),
+                }),
+            },
+        }))
     }
 
     #[must_use]
@@ -519,35 +452,52 @@ fn is_wrong_case(on_disk: &VfsPath, requested: &str) -> bool {
     on_disk.eq_ignore_ascii_case(requested) && on_disk != requested
 }
 
-/// Check if a path exists in a case-insensitive manner.
-fn exists_case_insensitive(path: &Path) -> Option<PathBuf> {
-    exists_case_insensitive_from(path, PathBuf::from("."))
-        .or_else(|| exists_case_insensitive_from(path, PathBuf::from("./include")))
-}
-
-fn exists_case_insensitive_from(path: &Path, from: PathBuf) -> Option<PathBuf> {
-    let mut current_path = from;
-    for component in path.components() {
-        if let std::path::Component::Normal(name) = component {
-            let mut found = false;
-            if let Ok(entries) = fs_err::read_dir(&current_path) {
-                for entry in entries.filter_map(Result::ok) {
-                    if entry.file_name().eq_ignore_ascii_case(name) {
-                        current_path.push(entry.file_name());
-                        found = true;
-                        break;
-                    }
-                }
+/// Find `relative` under `base`, matching each part of the path regardless of case.
+///
+/// Returns the path with the case it has on disk, and whether that differs from
+/// the request. The directories are read to find the real names, so the result
+/// is the same on case-sensitive and case-insensitive filesystems, Arma itself
+/// does not care about case.
+fn resolve(base: &VfsPath, relative: &str) -> Result<Option<(VfsPath, bool)>, Error> {
+    let mut current = base.clone();
+    let mut mismatch = false;
+    let mut any = false;
+    for part in relative.split(['/', '\\']) {
+        match part {
+            "" | "." => continue,
+            ".." => {
+                current = current.parent();
+                continue;
             }
-            if !found {
-                return None;
+            _ => {}
+        }
+        any = true;
+        let Ok(entries) = current.read_dir() else {
+            return Ok(None);
+        };
+        let mut insensitive = None;
+        let mut exact = None;
+        for entry in entries {
+            let name = entry.filename();
+            if name == part {
+                exact = Some(entry);
+                break;
+            }
+            if insensitive.is_none() && name.eq_ignore_ascii_case(part) {
+                insensitive = Some(entry);
             }
         }
+        current = match (exact, insensitive) {
+            (Some(entry), _) => entry,
+            (None, Some(entry)) => {
+                mismatch = true;
+                entry
+            }
+            (None, None) => return Ok(None),
+        };
     }
-
-    if current_path.exists() {
-        Some(current_path)
-    } else {
-        None
+    if !any || !current.exists()? {
+        return Ok(None);
     }
+    Ok(Some((current, mismatch)))
 }

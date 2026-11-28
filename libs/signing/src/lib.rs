@@ -10,7 +10,7 @@
 use std::io::{Read, Seek, Write};
 
 use crypto_bigint::{
-    Odd, Resize,
+    Integer, Odd, Resize,
     modular::{BoxedMontyForm, BoxedMontyParams},
 };
 use hemtt_common::BISignVersion;
@@ -29,6 +29,30 @@ pub use error::Error;
 pub use private::{BIPrivateKey, HEMTTPrivateKey};
 pub use public::BIPublicKey;
 pub use signature::BISign;
+
+/// The smallest and largest key lengths, in bits, accepted when reading.
+///
+/// Anything outside this is not a real key, and checking it first stops
+/// a damaged or unrelated file from causing huge allocations or underflows.
+const KEY_LENGTHS: std::ops::RangeInclusive<u32> = 512..=16384;
+
+/// Check a key length read from a file
+fn check_length(length: u32) -> Result<(), Error> {
+    if KEY_LENGTHS.contains(&length) && length.is_multiple_of(16) {
+        Ok(())
+    } else {
+        Err(Error::InvalidLength)
+    }
+}
+
+/// Check a modulus read from a file, an RSA modulus is always odd
+fn check_modulus(n: &BoxedUint) -> Result<(), Error> {
+    if bool::from(n.is_odd()) {
+        Ok(())
+    } else {
+        Err(Error::InvalidModulus)
+    }
+}
 
 /// Writes a [`BoxedUint`] to the given output.
 ///

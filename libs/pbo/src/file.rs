@@ -2,7 +2,7 @@
 
 use std::io::Read;
 
-use crate::model::Header;
+use crate::{Error, model::Header};
 
 /// A file in a PBO
 pub struct File<'a, I: Read> {
@@ -15,10 +15,10 @@ pub struct File<'a, I: Read> {
 impl<'a, I: Read> File<'a, I> {
     /// Create a new file from a header and a reader
     ///
-    /// # Panics
+    /// # Errors
     /// If the file is compressed and the compressed data cannot be read or decompressed
-    pub fn new(header: &Header, input: &'a mut I) -> Self {
-        Self {
+    pub fn new(header: &Header, input: &'a mut I) -> Result<Self, Error> {
+        Ok(Self {
             size: if header.mime().is_compressed() {
                 header.original()
             } else {
@@ -27,18 +27,20 @@ impl<'a, I: Read> File<'a, I> {
             read: 0,
             decompressed: if header.mime().is_compressed() {
                 let mut compressed = vec![0; header.size() as usize];
-                input
-                    .read_exact(&mut compressed)
-                    .expect("Failed to read compressed file");
+                input.read_exact(&mut compressed)?;
                 let mut decompressed = vec![0; header.original() as usize];
-                hemtt_lzo::lz77::decompress(&compressed, &mut decompressed)
-                    .expect("Failed to decompress file");
+                hemtt_lzo::lz77::decompress(&compressed, &mut decompressed).map_err(|e| {
+                    Error::Decompress {
+                        file: header.filename().to_string(),
+                        reason: e,
+                    }
+                })?;
                 Some(decompressed)
             } else {
                 None
             },
             input,
-        }
+        })
     }
 }
 

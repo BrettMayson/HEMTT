@@ -1,5 +1,4 @@
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use hemtt_common::io::ReadExt;
 
 use crate::{ReadPbo, WritePbo};
 
@@ -105,7 +104,7 @@ impl WritePbo for Header {
 impl ReadPbo for Header {
     fn read_pbo<I: std::io::Read>(input: &mut I) -> Result<(Self, usize), crate::error::Error> {
         let mut size = 4 * 5;
-        let filename = input.read_cstring()?;
+        let filename = crate::read::read_name(input)?;
         size += filename.len() + 1;
         let mime = input.read_u32::<LittleEndian>()?;
         Ok((

@@ -73,14 +73,17 @@ pub fn checkable(root: &WorkspacePath, addon: &Addon) -> Result<Vec<WorkspacePat
         ..Default::default()
     };
     let mut files = Vec::new();
+    let addon_root = format!("/{}/", addon.folder());
     for entry in root.join(addon.folder())?.walk_dir()? {
         if !entry.is_file()? || !can_rapify(&entry)? {
             continue;
         }
-        if excludes
-            .iter()
-            .any(|pattern| pattern.matches_with(entry.as_str(), options))
-        {
+        // Patterns are relative to the addon folder, like the other `addon.toml` excludes,
+        // full paths from the project root are also accepted
+        let relative = entry.as_str().trim_start_matches(&addon_root);
+        if excludes.iter().any(|pattern| {
+            pattern.matches_with(relative, options) || pattern.matches_with(entry.as_str(), options)
+        }) {
             tracing::debug!("skipping {}", entry.as_str());
             continue;
         }

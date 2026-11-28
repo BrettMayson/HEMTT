@@ -25,6 +25,8 @@ pub enum Error {
     LocationInvalid(String),
     #[error("Optional addon not found: {0}")]
     OptionalNotFound(String),
+    #[error("Addon not found: {0}")]
+    AddonNotFound(String),
     #[error("Addon prefix not found: {0}")]
     PrefixMissing(String),
 }
@@ -58,26 +60,34 @@ impl Addon {
                 }
             },
             prefix: {
-                let mut prefix = None;
-                let mut files = FILES
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<_>>();
-                files.append(
-                    &mut FILES
-                        .iter()
-                        .map(|f| f.to_uppercase())
-                        .collect::<Vec<String>>(),
-                );
-                'search: for file in &files {
-                    let path = path.join(file);
-                    if path.exists() {
-                        let content = fs_err::read_to_string(path)?;
-                        prefix = Some(Prefix::new(&content)?);
-                        break 'search;
-                    }
-                }
-                prefix.ok_or_else(|| Error::PrefixMissing(name.clone()))?
+                // Match the file name regardless of case, `$PBOPREFIX$.txt` is common
+                // and would not be found on a case-sensitive filesystem otherwise
+                let mut found: Vec<(usize, PathBuf)> = fs_err::read_dir(&path)?
+                    .filter_map(Result::ok)
+                    .filter(|e| e.path().is_file())
+                    .filter_map(|e| {
+                        let file_name = e.file_name().to_string_lossy().to_lowercase();
+                        FILES
+                            .iter()
+                            .position(|f| *f == file_name)
+                            .map(|i| (i, e.path()))
+                    })
+                    .collect();
+                // The order of `FILES` decides which wins if there are several
+                found.sort();
+                let Some((_, file)) = found.into_iter().next() else {
+                    return Err(Error::PrefixMissing(name).into());
+                };
+                let content = fs_err::read_to_string(&file)?;
+                Prefix::new(&content).map_err(|e| {
+                    e.in_file(
+                        &file
+                            .strip_prefix(root)
+                            .unwrap_or(&file)
+                            .display()
+                            .to_string(),
+                    )
+                })?
             },
             location,
             name,

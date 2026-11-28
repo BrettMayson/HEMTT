@@ -24,7 +24,13 @@ fn check(dir: &str) {
         .physical(&folder, LayerType::Source)
         .finish(None, false, &hemtt_common::config::PDriveOption::Disallow)
         .unwrap();
-    let source = workspace.join("source.hpp").unwrap();
+    // Most fixtures use `source.hpp`, some need a specific file name
+    let entry = if folder.join("Config.cpp").exists() {
+        "Config.cpp"
+    } else {
+        "source.hpp"
+    };
+    let source = workspace.join(entry).unwrap();
     let processed = Processor::run(
         &source,
         &hemtt_common::config::PreprocessorOptions::default(),
@@ -65,8 +71,10 @@ fn check(dir: &str) {
 
 bootstrap!(pw1_redefine);
 bootstrap!(pw1_redefine_stack);
+bootstrap!(pw2_invalid_config_case);
 bootstrap!(pw3_padded_arg);
 bootstrap!(pw3_padded_arg_duplicates);
 bootstrap!(pw3_padded_arg_inner);
+bootstrap!(pw4_include_case);
 bootstrap!(pw5_undef_not_defined);
 bootstrap!(pw6_include_forward_slash);

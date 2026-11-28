@@ -116,6 +116,7 @@ impl RuntimeArguments {
     }
 
     #[must_use]
+    /// The idents of lints enabled with `hemtt check -L`
     pub fn explicit_lints(&self) -> &[String] {
         &self.explicit_lints
     }

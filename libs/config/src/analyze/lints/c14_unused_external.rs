@@ -341,7 +341,7 @@ impl CodeC14UnusedExternal {
             explicit: runtime
                 .explicit_lints()
                 .iter()
-                .any(|l| l.eq_ignore_ascii_case("c14")),
+                .any(|l| l == "unused_external"),
         }
         .generate_processed(processed)
     }

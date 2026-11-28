@@ -1,4 +1,4 @@
-use hemtt_common::steam::find_app;
+use hemtt_common::steam::find_arma3;
 use tracing::info;
 
 use crate::Backend;
@@ -14,7 +14,7 @@ impl Backend {
         _: serde_json::Value,
     ) -> tower_lsp::jsonrpc::Result<Option<serde_json::Value>> {
         info!("Locating Arma 3 installation path via Steam...");
-        find_app(107_410)
+        find_arma3()
             .map(|path| {
                 info!("Located Arma 3 installation at {}", path.display());
                 Some(serde_json::Value::String(

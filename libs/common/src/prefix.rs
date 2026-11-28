@@ -43,7 +43,7 @@ impl Prefix {
         let line_count = content.lines().count();
         if line_count == 1 && !content.contains('=') {
             if content.starts_with('\\') {
-                return Err(Error::InvalidPrefix(content.to_string()));
+                return Err(Error::LeadingBackslash(content.to_string()));
             }
             return Ok(Self(
                 content
@@ -58,7 +58,7 @@ impl Prefix {
                 if key == "prefix" {
                     let content = split.1.trim();
                     if content.starts_with('\\') {
-                        return Err(Error::InvalidPrefix(content.to_string()));
+                        return Err(Error::LeadingBackslash(content.to_string()));
                     }
                     return Ok(Self(
                         content
@@ -102,6 +102,17 @@ impl Prefix {
     }
 }
 
+impl Error {
+    #[must_use]
+    /// Attach the prefix file the error came from
+    pub fn in_file(self, path: &str) -> Self {
+        Self::File {
+            path: path.trim_start_matches('/').replace('\\', "/"),
+            source: Box::new(self),
+        }
+    }
+}
+
 impl Display for Prefix {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0.join("\\"))
@@ -117,6 +128,20 @@ pub enum Error {
     #[error("Invalid prefix: {0}")]
     /// Invalid prefix
     InvalidPrefix(String),
+    #[error(
+        "Prefix can not start with a backslash: `{0}`, use `{fixed}` instead",
+        fixed = .0.trim_start_matches('\\')
+    )]
+    /// Prefix starts with a backslash
+    LeadingBackslash(String),
+    #[error("Invalid prefix file {path}: {source}")]
+    /// A prefix error, with the file it came from
+    File {
+        /// The prefix file, relative to the project root
+        path: String,
+        /// The error
+        source: Box<Self>,
+    },
     #[error("Duplicate prefix: {0}\nFound in:\n{1}\n{2}")]
     /// Duplicate prefix
     DuplicatePrefix(String, String, String),
@@ -142,7 +167,12 @@ mod tests {
         );
         assert_eq!(prefix.into_inner(), vec!["z", "test", "addons", "main"]);
         assert!(Prefix::new("z/test/addons/main").is_err());
-        assert!(Prefix::new("\\z\\test\\addons\\main").is_err());
+        assert_eq!(
+            Prefix::new("\\z\\test\\addons\\main"),
+            Err(super::Error::LeadingBackslash(
+                "\\z\\test\\addons\\main".to_string()
+            ))
+        );
     }
 
     #[test]
@@ -152,7 +182,12 @@ mod tests {
         assert_eq!(prefix.main_prefix(), "z");
         assert_eq!(prefix.mod_prefix().unwrap(), "test");
         assert!(Prefix::new("prefix=z/test/addons/main").is_err());
-        assert!(Prefix::new("prefix=\\z\\test\\addons\\main").is_err());
+        assert_eq!(
+            Prefix::new("prefix=\\z\\test\\addons\\main"),
+            Err(super::Error::LeadingBackslash(
+                "\\z\\test\\addons\\main".to_string()
+            ))
+        );
     }
 
     #[test]
